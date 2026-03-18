@@ -1,53 +1,43 @@
-import Image from "next/image";
+import DashboardCard from "./components/DashboardCard";
 
-export default function LoginPage() {
+import {
+  Users,
+  UserCheck,
+  Zap,
+  Layers,
+  Package,
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  Wallet,
+  HelpCircle,
+  Barcode,
+  ScanLine,
+} from "lucide-react";
+
+export default function Page() {
+  const cards = [
+    { title: "Total Users", value: 3226, color: "bg-red-500", icon: <Users /> },
+    { title: "Total Dealers", value: 346, color: "bg-green-500", icon: <UserCheck /> },
+    { title: "Total Electricians", value: 2880, color: "bg-yellow-500", icon: <Zap /> },
+    { title: "Category", value: 29, color: "bg-green-600", icon: <Layers /> },
+
+    { title: "Product", value: 274, color: "bg-yellow-500", icon: <Package /> },
+    { title: "Incomplete KYC", value: 656, color: "bg-blue-500", icon: <AlertCircle /> },
+    { title: "Pending KYC", value: 1, color: "bg-blue-400", icon: <Clock /> },
+    { title: "Completed KYC", value: 2569, color: "bg-yellow-500", icon: <CheckCircle /> },
+
+    { title: "Withdraw Points", value: "₹49405", color: "bg-green-600", icon: <Wallet /> },
+    { title: "Enquiry", value: 5, color: "bg-red-500", icon: <HelpCircle /> },
+    { title: "QR Code", value: 6783266, color: "bg-red-600", icon: <Barcode /> },
+    { title: "Redeemed QR Code", value: 23239, color: "bg-green-600", icon: <ScanLine /> },
+  ];
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-xl flex flex-col items-center">
-        
-        {/* Logo Section */}
-        <div className="mb-6">
-          {/* Replace src with your actual logo path in /public */}
-          <div className="text-red-600 font-bold text-5xl mb-2">SRV</div>
-          <p className="text-xs text-center font-semibold text-gray-600 uppercase tracking-widest">
-            always improving <br /> BOND 2035
-          </p>
-        </div>
-
-        <h1 className="text-2xl font-semibold text-blue-700 mb-8">SRV Electricals</h1>
-
-        {/* Form Section */}
-        <form className="w-full space-y-4">
-          <div className="relative">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
-              👤
-            </span>
-            <input 
-              type="text" 
-              placeholder="Admin"
-              className="w-full pl-10 pr-4 py-3 bg-blue-50 border border-transparent focus:border-blue-500 rounded outline-none transition-all"
-            />
-          </div>
-
-          <div className="relative">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
-              🔒
-            </span>
-            <input 
-              type="password" 
-              placeholder="••••••••••••"
-              className="w-full pl-10 pr-4 py-3 bg-blue-50 border border-transparent focus:border-blue-500 rounded outline-none transition-all"
-            />
-          </div>
-
-          <button 
-            type="submit"
-            className="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-4 rounded shadow-md transition-colors mt-6 uppercase"
-          >
-            Login
-          </button>
-        </form>
-      </div>
+    <div className="grid gap-5 [grid-template-columns:repeat(auto-fit,minmax(250px,1fr))]">
+      {cards.map((card, i) => (
+        <DashboardCard key={i} {...card} />
+      ))}
     </div>
   );
 }
