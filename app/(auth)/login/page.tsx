@@ -8,7 +8,14 @@ export default function LoginPage() {
         {/* Logo Section */}
         <div className="mb-6">
           {/* Replace src with your actual logo path in /public */}
-          <div className="text-red-600 font-bold text-5xl mb-2">SRV</div>
+          <div className="text-red-600 font-bold text-5xl mb-2"><Image 
+  src="/srv.png"   // The path starts from the 'public' folder
+  alt="SRV Logo"         // Description for screen readers
+  width={150}            // The width in pixels
+  height={100}           // The height in pixels
+  priority               // Tells Next.js to load this instantly
+/></div>
+          
           <p className="text-xs text-center font-semibold text-gray-600 uppercase tracking-widest">
             always improving <br /> BOND 2035
           </p>
