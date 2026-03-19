@@ -11,13 +11,13 @@ export default function RootLayout({
       <body className="flex h-screen bg-gray-100">
 
         {/* Sidebar */}
-        <Sidebar />
+        {/* <Sidebar /> */}
 
         {/* Right Section */}
         <div className="flex flex-col flex-1">
 
           {/* Navbar */}
-          <Navbar />
+          {/* <Navbar /> */}
 
           {/* Main Content */}
           <main className="flex-1 overflow-y-auto p-6 bg-gray-100">
@@ -31,3 +31,6 @@ export default function RootLayout({
     </html>
   );
 }
+
+
+

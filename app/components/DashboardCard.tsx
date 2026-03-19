@@ -1,21 +1,28 @@
-export default function DashboardCard({ title, value, color, icon }: Props) {
+// components/DashboardCard.tsx
+
+interface propType{
+  title: string,
+  value: string,
+  color: string,
+  icon: React.ReactNode,
+}
+
+export default function DashboardCard({ title, value, color, icon }:
+  propType
+) {
+  // Extract the color name (e.g., "bg-red-500" -> "red")
+  const colorName = color.split('-')[1];
+
   return (
-    <div className={`${color} text-white p-5 rounded-xl shadow flex justify-between items-center h-full transform transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer group relative overflow-hidden`}>
-
-      {/* Light overlay */}
-      <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-50 transition duration-300"></div>
-
-      {/* Content */}
-      <div className="relative z-10">
-        <p className="text-sm">{title}</p>
-        <h2 className="text-2xl font-bold">{value}</h2>
+    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between">
+      <div>
+        <p className="text-gray-500 text-sm font-semibold uppercase tracking-wider">{title}</p>
+        <h3 className="text-3xl font-bold mt-1 text-gray-800">{value}</h3>
       </div>
-
-      {/* Icon */}
-      <div className="relative z-10 bg-white text-black p-3 rounded-full w-12 h-12 flex items-center justify-center transition-transform duration-300 group-hover:rotate-12">
+      {/* Icon with light background circle */}
+      <div className={`p-4 rounded-full ${color} text-white bg-opacity-90 shadow-lg`}>
         {icon}
       </div>
-
     </div>
   );
 }
