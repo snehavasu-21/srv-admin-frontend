@@ -111,7 +111,7 @@ export default function Sidebar() {
         </div>
         <div>
           <h1 className="text-sm font-bold">SRV</h1>
-          <p className="text-xs text-gray-300">always improving</p>
+          <p className="text-xs text-gray-300">Always Improving</p>
         </div>
       </div>
 
