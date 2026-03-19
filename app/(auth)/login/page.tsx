@@ -2,56 +2,59 @@ import Image from "next/image";
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-xl flex flex-col items-center">
+    <div className="flex min-h-screen items-center justify-center bg-gray-200">
+      
+      {/* Card */}
+      <div className="w-full max-w-sm bg-gray-100 rounded-lg shadow-lg p-8 text-center">
         
-        {/* Logo Section */}
-        <div className="mb-6">
-          {/* Replace src with your actual logo path in /public */}
-          <div className="text-red-600 font-bold text-5xl mb-2"><Image 
-  src="/srv.png"   // The path starts from the 'public' folder
-  alt="SRV Logo"         // Description for screen readers
-  width={150}            // The width in pixels
-  height={100}           // The height in pixels
-  priority               // Tells Next.js to load this instantly
-/></div>
-          
-          <p className="text-xs text-center font-semibold text-gray-600 uppercase tracking-widest">
+        {/* Logo */}
+        <div className="flex flex-col items-center mb-4">
+          <Image
+            src="/srv.png"
+            alt="SRV Logo"
+            width={100}
+            height={70}
+            priority
+          />
+          <p className="text-xs text-gray-600 mt-2 leading-tight">
             always improving <br /> BOND 2035
           </p>
         </div>
 
-        <h1 className="text-2xl font-semibold text-blue-700 mb-8">SRV Electricals</h1>
+        {/* Title */}
+        <h1 className="text-lg font-semibold text-blue-600 mb-6">
+          SRV Electricals
+        </h1>
 
-        {/* Form Section */}
-        <form className="w-full space-y-4">
-          <div className="relative">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
-              👤
-            </span>
-            <input 
-              type="text" 
+        {/* Form */}
+        <form className="space-y-4">
+          
+          {/* Username */}
+          <div className="flex items-center border border-gray-300 rounded overflow-hidden">
+            <span className="px-3 bg-gray-200 text-gray-600">👤</span>
+            <input
+              type="text"
               placeholder="Admin"
-              className="w-full pl-10 pr-4 py-3 bg-blue-50 border border-transparent focus:border-blue-500 rounded outline-none transition-all"
+              className="w-full px-3 py-2 bg-gray-100 outline-none"
             />
           </div>
 
-          <div className="relative">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
-              🔒
-            </span>
-            <input 
-              type="password" 
-              placeholder="••••••••••••"
-              className="w-full pl-10 pr-4 py-3 bg-blue-50 border border-transparent focus:border-blue-500 rounded outline-none transition-all"
+          {/* Password */}
+          <div className="flex items-center border border-gray-300 rounded overflow-hidden">
+            <span className="px-3 bg-gray-200 text-gray-600">🔒</span>
+            <input
+              type="password"
+              placeholder="••••••••"
+              className="w-full px-3 py-2 bg-gray-100 outline-none"
             />
           </div>
 
-          <button 
+          {/* Button */}
+          <button
             type="submit"
-            className="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-4 rounded shadow-md transition-colors mt-6 uppercase"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded shadow-md transition-all mt-2"
           >
-            Login
+            LOGIN
           </button>
         </form>
       </div>
