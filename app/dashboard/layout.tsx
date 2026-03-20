@@ -8,7 +8,9 @@ export default function DashboardLayout({
 }) {
   return (
      <div className="flex h-screen bg-gray-100">
-      {"this is for demo"}
+      {/*"this is for demo"*/}
+
+      
 
 
        <div className="flex flex-col flex-1">

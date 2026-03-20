@@ -32,7 +32,7 @@ export default function Sidebar() {
 
     if (menu === "Product") {
       if (sub === "Category") return "/dashboard/product/category";
-      if (sub === "Product") return "/dashboard/product/product-list";
+      if (sub === "Product List") return "/dashboard/product/product-list";
     }
 
     if (menu === "Others") {
@@ -73,7 +73,7 @@ export default function Sidebar() {
 
     {
       name: "Product",
-      submenu: ["Category", "Product"],
+      submenu: ["Category", "Product List"],
     },
 
     // ✅ NORMAL LINKS (UPDATED)
