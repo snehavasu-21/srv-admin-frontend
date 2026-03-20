@@ -17,7 +17,7 @@ export default function LoginPage() {
             priority
           />
           <p className="text-xs text-gray-600 mt-2 leading-tight">
-            always improving <br /> BOND 2035
+            Always Improving <br /> BOND 2035
           </p>
         </div>
 
