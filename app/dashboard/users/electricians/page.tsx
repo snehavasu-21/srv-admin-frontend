@@ -32,7 +32,7 @@ export default function ElectriciansPage() {
             <Plus size={18} /> Add New
           </button>
         </div>
-      </div>
+      </div>  
 
       {/* SEARCH & FILTERS - COMPACT & FUNCTIONAL */}
       <div className="bg-white p-4 rounded-2xl shadow-sm border border-white mb-6 flex flex-col md:flex-row justify-between items-center gap-4">

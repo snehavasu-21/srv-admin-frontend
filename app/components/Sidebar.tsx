@@ -43,6 +43,10 @@ export default function Sidebar() {
       if (sub === "Banner") return "/dashboard/others/banner";
     }
 
+    if (menu === "Notification"){
+      if(sub === "Notification") return "/dashboard/notification";
+    }
+
     if (menu === "Settings") {
       if (sub === "General Settings") return "/dashboard/settings/general";
       if (sub === "Pages Settings") return "/dashboard/settings/pages";
@@ -88,6 +92,11 @@ export default function Sidebar() {
     {
       name: "All QR Codes",
       link: "/dashboard/all-qr-codes",
+    },
+
+    {
+      name: "Notification",
+      link: "/dashboard/notification",
     },
 
     {

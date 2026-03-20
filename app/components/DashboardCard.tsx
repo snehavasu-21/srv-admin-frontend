@@ -1,4 +1,4 @@
-// // components/DashboardCard.tsx
+// components/DashboardCard.tsx
 
 // interface propType{
 //   title: string,
