@@ -76,10 +76,10 @@ export default function DashboardPage() {
 
   return (
     <div className="p-8 bg-[#F8FAFC] min-h-screen">
-      <div className="mb-10">
+      {/* <div className="mb-10">
         <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Dashboard Overview</h1>
-        <p className="text-slate-500 mt-2 font-medium">Welcome back, Admin. Here is what&apos;s happening today.</p>
-      </div>
+        <p className="text-slate-500 mt-2 font-medium">Welcome back, Admin. Here is what's happening today.</p>
+      </div> */}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         {cards.map((card, index) => (
