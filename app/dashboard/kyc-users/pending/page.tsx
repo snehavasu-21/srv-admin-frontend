@@ -62,7 +62,7 @@ export default function PendingKYCPage() {
       <div className="bg-white rounded-[1.5rem] shadow overflow-hidden">
 
         {/* 🔥 IMPORTANT SCROLL FIX */}
-        <div className="w-full overflow-x-auto">
+       <div className="flex-1 p-6 overflow-y-auto">
           
           <table className="min-w-[1200px] w-full text-left">
 
