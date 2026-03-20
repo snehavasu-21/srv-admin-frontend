@@ -53,36 +53,32 @@
 "use client"; // Agar aap icons ya animations use kar rahe hain toh ye zaroori hai
 
 import DashboardCard from "../components/DashboardCard";
-import { 
-  Users, Building2, Zap, Layers2, Package, 
-  UserPlus, Clock, UserCheck, Wallet, 
-  HelpCircle, Barcode, Scan 
-} from "lucide-react";
+import * as lucideReact from "lucide-react";
 
 // 1. Ensure karein ki 'export default function' likha ho
 export default function DashboardPage() {
   const cards = [
-    { title: "Total Users", value: "3,244", color: "text-rose-500", bgColor: "bg-rose-50", icon: <Users size={24} /> },
-    { title: "Total Dealers", value: "350", color: "text-emerald-600", bgColor: "bg-emerald-50", icon: <Building2 size={24} /> },
-    { title: "Total Electricians", value: "2,894", color: "text-amber-500", bgColor: "bg-amber-50", icon: <Zap size={24} /> },
-    { title: "Category", value: "29", color: "text-indigo-500", bgColor: "bg-indigo-50", icon: <Layers2 size={24} /> },
+    { title: "Total Users", value: "3,244", color: "text-rose-500", bgColor: "bg-rose-50", icon: <lucideReact.Users size={24} /> },
+    { title: "Total Dealers", value: "350", color: "text-emerald-600", bgColor: "bg-emerald-50", icon: <lucideReact.Building2 size={24} /> },
+    { title: "Total Electricians", value: "2,894", color: "text-amber-500", bgColor: "bg-amber-50", icon: <lucideReact.Zap size={24} /> },
+    { title: "Category", value: "29", color: "text-indigo-500", bgColor: "bg-indigo-50", icon: <lucideReact.Layers2 size={24} /> },
     
-    { title: "Product", value: "274", color: "text-orange-500", bgColor: "bg-orange-50", icon: <Package size={24} /> },
-    { title: "Incomplete KYC", value: "659", color: "text-blue-600", bgColor: "bg-blue-50", icon: <UserPlus size={24} /> },
-    { title: "Pending KYC", value: "2", color: "text-sky-500", bgColor: "bg-sky-50", icon: <Clock size={24} /> },
-    { title: "Completed KYC", value: "2,583", color: "text-teal-500", bgColor: "bg-teal-50", icon: <UserCheck size={24} /> },
+    { title: "Product", value: "274", color: "text-orange-500", bgColor: "bg-orange-50", icon: <lucideReact.Package size={24} /> },
+    { title: "Incomplete KYC", value: "659", color: "text-blue-600", bgColor: "bg-blue-50", icon: <lucideReact.UserPlus size={24} /> },
+    { title: "Pending KYC", value: "2", color: "text-sky-500", bgColor: "bg-sky-50", icon: <lucideReact.Clock size={24} /> },
+    { title: "Completed KYC", value: "2,583", color: "text-teal-500", bgColor: "bg-teal-50", icon: <lucideReact.UserCheck size={24} /> },
     
-    { title: "Withdraw Points", value: "₹49,405", color: "text-green-600", bgColor: "bg-green-50", icon: <Wallet size={24} /> },
-    { title: "Enquiry", value: "5", color: "text-pink-600", bgColor: "bg-pink-50", icon: <HelpCircle size={24} /> },
-    { title: "QR Code", value: "6,783,267", color: "text-slate-700", bgColor: "bg-slate-100", icon: <Barcode size={24} /> },
-    { title: "Redeemed QRCode", value: "23,677", color: "text-cyan-600", bgColor: "bg-cyan-50", icon: <Scan size={24} /> },
+    { title: "Withdraw Points", value: "₹49,405", color: "text-green-600", bgColor: "bg-green-50", icon: <lucideReact.Wallet size={24} /> },
+    { title: "Enquiry", value: "5", color: "text-pink-600", bgColor: "bg-pink-50", icon: <lucideReact.HelpCircle size={24} /> },
+    { title: "QR Code", value: "6,783,267", color: "text-slate-700", bgColor: "bg-slate-100", icon: <lucideReact.Barcode size={24} /> },
+    { title: "Redeemed QRCode", value: "23,677", color: "text-cyan-600", bgColor: "bg-cyan-50", icon: <lucideReact.Scan size={24} /> },
   ];
 
   return (
     <div className="p-8 bg-[#F8FAFC] min-h-screen">
       <div className="mb-10">
         <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Dashboard Overview</h1>
-        <p className="text-slate-500 mt-2 font-medium">Welcome back, Admin. Here is what's happening today.</p>
+        <p className="text-slate-500 mt-2 font-medium">Welcome back, Admin. Here is what&apos;s happening today.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
