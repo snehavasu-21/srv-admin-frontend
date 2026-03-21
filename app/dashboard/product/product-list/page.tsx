@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { 
   Search, Plus, FileDown, Edit3, Trash2, Filter, 
   Package, Tag, Eye, MoreVertical, CheckCircle2, 
-  XCircle, ArrowDownWideArrow, LayoutGrid, List
+  XCircle, LayoutGrid, List
 } from "lucide-react";
 
 export default function ProductListPage() {
@@ -20,10 +20,10 @@ export default function ProductListPage() {
   ]);
 
   return (
-    <div className="p-6 lg:p-10 bg-[#F4F7FE] min-h-screen font-sans text-[#1B254B]">
+    <div className="p-3 lg:p-4 bg-[#F4F7FE] min-h-screen font-sans text-[#1B254B]">
       
       {/* HEADER SECTION */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-[#1B254B] flex items-center gap-3">
             <Package className="text-[#4318FF]" size={32} />

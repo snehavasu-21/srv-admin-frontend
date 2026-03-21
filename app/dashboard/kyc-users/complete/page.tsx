@@ -97,7 +97,7 @@ export default function CompletedKYCPage() {
   ];
 
   return (
-    <div className="p-6 lg:p-8 bg-[#F4F7FE] min-h-screen font-sans">
+    <div className="p-3 lg:p-4 bg-[#F4F7FE] min-h-full font-sans">
 
       {/* HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
