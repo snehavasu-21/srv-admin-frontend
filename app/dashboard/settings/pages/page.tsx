@@ -1,10 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { Save } from "lucide-react";
+import { useState, useEffect } from "react";
 
-export default function PagesSettingsPage() {
-  const [form, setForm] = useState({
+export default function PagesSettings() {
+  const [activeTab, setActiveTab] = useState("about");
+  const [editorLoaded, setEditorLoaded] = useState(false);
+
+  const [CKEditor, setCKEditor] = useState<any>(null);
+  const [Editor, setEditor] = useState<any>(null);
+
+  const [content, setContent] = useState({
     about: "",
     contact: "",
     privacy: "",
@@ -13,114 +18,103 @@ export default function PagesSettingsPage() {
     refer: "",
   });
 
+  /* ✅ LOAD CKEDITOR ONLY ON CLIENT */
+  useEffect(() => {
+    Promise.all([
+      import("@ckeditor/ckeditor5-react"),
+      import("@ckeditor/ckeditor5-build-classic"),
+    ]).then(([ckeditor, classic]) => {
+      setCKEditor(() => ckeditor.CKEditor);
+      setEditor(() => classic.default);
+      setEditorLoaded(true);
+    });
+  }, []);
+
+  const handleChange = (data: string) => {
+    setContent((prev) => ({
+      ...prev,
+      [activeTab]: data,
+    }));
+  };
+
   return (
-    <div className="p-6 lg:p-8 bg-[#F4F7FE] min-h-full font-sans">
+    <div className="bg-[#F4F7FE] min-h-full font-sans p-6">
 
       {/* HEADER */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-[#1B254B]">
-          Pages Settings
-        </h1>
-        <p className="text-slate-500 text-sm">
-          Manage all application pages content
-        </p>
+      <h1 className="text-2xl font-bold text-[#1B254B] mb-6">
+        App Settings
+      </h1>
+
+      {/* TABS */}
+      <div className="flex gap-3 mb-6 flex-wrap">
+        {[
+          { key: "about", label: "About us" },
+          { key: "contact", label: "Contact us" },
+          { key: "privacy", label: "App Privacy Policy" },
+          { key: "terms", label: "App Terms Conditions" },
+          { key: "refund", label: "Cancellation / Refund" },
+          { key: "refer", label: "App Refer" },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`px-4 py-2 rounded-xl text-sm font-bold ${
+              activeTab === tab.key
+                ? "bg-[#4318FF] text-white"
+                : "bg-[#F4F7FE] text-slate-600"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      {/* MAIN CARD */}
-      <div className="bg-white rounded-2xl shadow p-6 space-y-6">
+      {/* EDITOR */}
+      <div className="bg-white rounded-2xl p-6 shadow">
 
-        {/* ABOUT US */}
-        <div>
-          <label className="block text-sm font-bold text-slate-600 mb-2">
-            About Us
-          </label>
-          <textarea
-            rows={4}
-            placeholder="Write about your company..."
-            className="w-full border rounded-xl p-3 bg-[#F4F7FE] outline-none focus:ring-2 focus:ring-[#4318FF]"
-            value={form.about}
-            onChange={(e) => setForm({ ...form, about: e.target.value })}
+        <h2 className="text-sm font-bold text-slate-500 mb-3 uppercase">
+          {activeTab}
+        </h2>
+
+        {/* ✅ CKEDITOR LOAD SAFE */}
+        {editorLoaded && CKEditor && Editor ? (
+          <CKEditor
+            editor={Editor}
+            data={content[activeTab as keyof typeof content]}
+            onChange={(event: any, editor: any) => {
+              const data = editor.getData();
+              handleChange(data);
+            }}
+            config={{
+              toolbar: [
+                "heading",
+                "|",
+                "bold",
+                "italic",
+                "underline",
+                "link",
+                "bulletedList",
+                "numberedList",
+                "|",
+                "alignment",
+                "blockQuote",
+                "insertTable",
+                "undo",
+                "redo",
+                "imageUpload",
+              ],
+            }}
           />
-        </div>
+        ) : (
+          <p className="text-gray-400 text-sm">Loading editor...</p>
+        )}
 
-        {/* CONTACT US */}
-        <div>
-          <label className="block text-sm font-bold text-slate-600 mb-2">
-            Contact Us
-          </label>
-          <textarea
-            rows={4}
-            placeholder="Write contact details..."
-            className="w-full border rounded-xl p-3 bg-[#F4F7FE] outline-none focus:ring-2 focus:ring-[#4318FF]"
-            value={form.contact}
-            onChange={(e) => setForm({ ...form, contact: e.target.value })}
-          />
-        </div>
-
-        {/* PRIVACY POLICY */}
-        <div>
-          <label className="block text-sm font-bold text-slate-600 mb-2">
-            App Privacy Policy
-          </label>
-          <textarea
-            rows={4}
-            placeholder="Enter privacy policy..."
-            className="w-full border rounded-xl p-3 bg-[#F4F7FE] outline-none focus:ring-2 focus:ring-[#4318FF]"
-            value={form.privacy}
-            onChange={(e) => setForm({ ...form, privacy: e.target.value })}
-          />
-        </div>
-
-        {/* TERMS & CONDITIONS */}
-        <div>
-          <label className="block text-sm font-bold text-slate-600 mb-2">
-            App Terms & Conditions
-          </label>
-          <textarea
-            rows={4}
-            placeholder="Enter terms & conditions..."
-            className="w-full border rounded-xl p-3 bg-[#F4F7FE] outline-none focus:ring-2 focus:ring-[#4318FF]"
-            value={form.terms}
-            onChange={(e) => setForm({ ...form, terms: e.target.value })}
-          />
-        </div>
-
-        {/* REFUND POLICY */}
-        <div>
-          <label className="block text-sm font-bold text-slate-600 mb-2">
-            Cancellation / Refund Policy
-          </label>
-          <textarea
-            rows={4}
-            placeholder="Enter refund policy..."
-            className="w-full border rounded-xl p-3 bg-[#F4F7FE] outline-none focus:ring-2 focus:ring-[#4318FF]"
-            value={form.refund}
-            onChange={(e) => setForm({ ...form, refund: e.target.value })}
-          />
-        </div>
-
-        {/* REFER CONTENT */}
-        <div>
-          <label className="block text-sm font-bold text-slate-600 mb-2">
-            App Refer Content
-          </label>
-          <textarea
-            rows={4}
-            placeholder="Enter refer description..."
-            className="w-full border rounded-xl p-3 bg-[#F4F7FE] outline-none focus:ring-2 focus:ring-[#4318FF]"
-            value={form.refer}
-            onChange={(e) => setForm({ ...form, refer: e.target.value })}
-          />
-        </div>
-
-        {/* SAVE BUTTON */}
-        <div className="pt-4">
-          <button className="flex items-center gap-2 px-6 py-3 bg-[#4318FF] text-white rounded-xl font-bold hover:bg-[#3311CC] transition-all shadow">
-            <Save size={18} /> Save Changes
-          </button>
-        </div>
+        {/* SAVE */}
+        <button className="mt-4 px-6 py-2 bg-[#4318FF] text-white rounded-xl font-bold">
+          Save
+        </button>
 
       </div>
     </div>
   );
-} 
+}
