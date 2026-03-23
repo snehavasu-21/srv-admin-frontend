@@ -180,27 +180,19 @@ import * as XLSX from 'xlsx';
 import { 
   Search, ChevronDown, ChevronLeft, ChevronRight,
   Trash2, Edit2, Plus, Target, 
-  FileSpreadsheet, Shield, TrendingUp, AlertCircle
+  Shield, TrendingUp, AlertCircle
 } from "lucide-react";
 
 export default function PlanRangePage() {
   const [isActionOpen, setIsActionOpen] = useState(false);
 
-  // Data strictly based on your "Manage plan range" screenshot
+  // Loyalty Tier Data
   const [plans] = useState([
     { id: "4", name: "Platinum", minPoint: "701", maxPoint: "1000", status: "Enable" },
     { id: "3", name: "Gold", minPoint: "501", maxPoint: "700", status: "Enable" },
     { id: "2", name: "Silver", minPoint: "201", maxPoint: "500", status: "Enable" },
     { id: "1", name: "Bronze", minPoint: "0", maxPoint: "200", status: "Enable" },
   ]);
-
-  const exportPlans = () => {
-    const worksheet = XLSX.utils.json_to_sheet(plans);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Plan_Ranges");
-    XLSX.writeFile(workbook, "SRV_Plan_Ranges.xlsx");
-    setIsActionOpen(false);
-  };
 
   return (
     <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans text-slate-900">

@@ -183,29 +183,20 @@ import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import { 
   Search, ChevronDown, ChevronLeft, ChevronRight,
-  Trash2, Edit2, MessageSquare, User, 
-  Clock, CheckCircle, FileSpreadsheet, Filter
+  Trash2, Edit2, MessageSquare, User, Phone,
+  Clock, CheckCircle, Filter, Mail
 } from "lucide-react";
 
 export default function EnquiryPage() {
   const [isActionOpen, setIsActionOpen] = useState(false);
 
-  // Data strictly based on your "Manage Inquiry" screenshot
   const [enquiries] = useState([
-    { id: "9", userName: "Satnam Panchal", subject: "Scan problem", comment: "Scan problem aya raha h", response: "", type: "Pending", status: "Enable" },
-    { id: "8", userName: "-", subject: "Attention", comment: "Hi", response: "", type: "Pending", status: "Enable" },
-    { id: "7", userName: "HarpreetSinghSidhu", subject: "HarpreetSinghSidhu", comment: "Ok", response: "", type: "Pending", status: "Enable" },
-    { id: "6", userName: "NIKHIL SAINI", subject: "Pending my reward points", comment: "Pending my reward points", response: "When did you place your gift order and What was the shipping address", type: "In review", status: "Enable" },
-    { id: "5", userName: "Balvinder singh", subject: "New abadi gurdwara street 3 fazilka", comment: "New abadi gurdwara street 3 fazilka", response: "Sorry, I am unable to understand why you mention the address ?", type: "In review", status: "Enable" },
+    { id: "9", userName: "Satnam Panchal", phone: "+91 98765-43210", subject: "Scan problem", comment: "Scan problem aya raha h", response: "", type: "Pending", status: "Enable" },
+    { id: "8", userName: "Guest User", phone: "Not Available", subject: "Attention", comment: "Hi", response: "", type: "Pending", status: "Enable" },
+    { id: "7", userName: "Harpreet Singh Sidhu", phone: "+91 99887-76655", subject: "HarpreetSinghSidhu", comment: "Ok", response: "", type: "Pending", status: "Enable" },
+    { id: "6", userName: "NIKHIL SAINI", phone: "+91 90123-45678", subject: "Pending my reward points", comment: "Pending my reward points", response: "When did you place your gift order...", type: "In review", status: "Enable" },
+    { id: "5", userName: "Balvinder singh", phone: "+91 91234-56789", subject: "New abadi gurdwara street 3 fazilka", comment: "New abadi gurdwara street 3 fazilka", response: "Sorry, I am unable to understand...", type: "In review", status: "Enable" },
   ]);
-
-  const exportEnquiries = () => {
-    const worksheet = XLSX.utils.json_to_sheet(enquiries);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Enquiries");
-    XLSX.writeFile(workbook, "SRV_Enquiry_Report.xlsx");
-    setIsActionOpen(false);
-  };
 
   return (
     <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans text-slate-900">
@@ -362,8 +353,6 @@ export default function EnquiryPage() {
           </div>
         </div>
       </div>
-
-      {isActionOpen && <div className="fixed inset-0 z-40" onClick={() => setIsActionOpen(false)}></div>}
     </div>
   );
 }

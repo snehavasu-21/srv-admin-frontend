@@ -180,32 +180,22 @@
 "use client";
 
 import React, { useState } from 'react';
-import * as XLSX from 'xlsx';
 import { 
   Search, ChevronDown, ChevronLeft, ChevronRight,
   Trash2, Edit2, Plus, Layout, 
-  FileSpreadsheet, Image as ImageIcon, Eye, AlertCircle
+  ImageIcon, Eye, AlertCircle
 } from "lucide-react";
 
 export default function BannerPage() {
   const [isActionOpen, setIsActionOpen] = useState(false);
 
-  // Data strictly based on your "Manage Banner" screenshot
   const [banners] = useState([
-    { id: "18", name: "Mcb Distribution Boxes", image: "/banner1.jpg", status: "Enable" },
-    { id: "17", name: "Led Flood Lights", image: "/banner2.jpg", status: "Enable" },
-    { id: "15", name: "Automatic Change Over Switch", image: "/banner3.jpg", status: "Enable" },
-    { id: "14", name: "Appliances", image: "/banner4.jpg", status: "Enable" },
-    { id: "13", name: "Change Over Switch", image: "/banner5.jpg", status: "Enable" },
+    { id: "18", name: "Mcb Distribution Boxes", status: "Enable" },
+    { id: "17", name: "Led Flood Lights", status: "Enable" },
+    { id: "15", name: "Automatic Change Over Switch", status: "Enable" },
+    { id: "14", name: "Appliances", status: "Enable" },
+    { id: "13", name: "Change Over Switch", status: "Enable" },
   ]);
-
-  const exportBanners = () => {
-    const worksheet = XLSX.utils.json_to_sheet(banners);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Banners");
-    XLSX.writeFile(workbook, "SRV_Banners_Report.xlsx");
-    setIsActionOpen(false);
-  };
 
   return (
     <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans text-slate-900">
@@ -232,7 +222,7 @@ export default function BannerPage() {
           />
         </div>
 
-        <div className="flex items-center gap-4 w-full md:w-auto">
+        <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 mr-2">
             <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600" />
             <span className="text-xs font-semibold text-slate-500">Select All</span>
@@ -350,8 +340,6 @@ export default function BannerPage() {
            </div>
         </div>
       </div>
-
-      {isActionOpen && <div className="fixed inset-0 z-40" onClick={() => setIsActionOpen(false)}></div>}
     </div>
   );
 }

@@ -193,11 +193,10 @@ import {
 export default function TestimonialPage() {
   const [isActionOpen, setIsActionOpen] = useState(false);
 
-  // Data strictly based on your "Manage Testimonial" screenshot
   const [testimonials] = useState([
-    { id: "8", name: "Sandeep Mishra", image: "/user1.jpg", review: "Great app for dealers and electricians. Easy to check wholesale prices and cashback in one place.", rate: "5", status: "Enable" },
-    { id: "3", name: "Anil Patil", image: "/user2.jpg", review: "Very useful app for dealers. I can view all wholesale prices, ongoing offers, and cashback details in one place. Saves a lot of time!", rate: "4", status: "Enable" },
-    { id: "1", name: "Himal Datta", image: "/user3.jpg", review: "Great app for dealers and electricians. Easy to check wholesale prices and cashback in one place.", rate: "4", status: "Enable" },
+    { id: "8", name: "Sandeep Mishra", review: "Great app for dealers and electricians. Easy to check wholesale prices and cashback in one place.", rate: "5", status: "Enable" },
+    { id: "3", name: "Anil Patil", review: "Very useful app for dealers. I can view all wholesale prices, ongoing offers, and cashback details.", rate: "4", status: "Enable" },
+    { id: "1", name: "Himal Datta", review: "Great app for dealers and electricians. Easy to check wholesale prices and cashback in one place.", rate: "4", status: "Enable" },
   ]);
 
   const exportTestimonials = () => {
@@ -263,7 +262,7 @@ export default function TestimonialPage() {
       {/* 3. TESTIMONIAL DATA TABLE */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-100">
                 <th className="px-5 py-4 w-12 text-center"></th>
@@ -350,8 +349,6 @@ export default function TestimonialPage() {
            </div>
         </div>
       </div>
-
-      {isActionOpen && <div className="fixed inset-0 z-40" onClick={() => setIsActionOpen(false)}></div>}
     </div>
   );
 }

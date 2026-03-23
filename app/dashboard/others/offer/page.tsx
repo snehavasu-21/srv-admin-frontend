@@ -187,9 +187,10 @@ import {
 export default function OfferPage() {
   const [isActionOpen, setIsActionOpen] = useState(false);
 
-  // Data strictly based on your "Manage Offer" screenshot
+  // Data strictly based on SRV Electricals "Manage Offer" screenshot
   const [offers] = useState([
     { id: "5", offerName: "Diwali Offer", offerImage: "/diwali-banner.jpg", status: "Disable" },
+    { id: "4", offerName: "New Year Sale", offerImage: "/new-year.jpg", status: "Enable" },
   ]);
 
   const exportOffers = () => {
