@@ -32,7 +32,7 @@ export default function Sidebar() {
 
     if (menu === "Product") {
       if (sub === "Category") return "/dashboard/product/category";
-      if (sub === "Product") return "/dashboard/product/product-list";
+      if (sub === "Product List") return "/dashboard/product/product-list";
     }
 
     if (menu === "Others") {
@@ -41,6 +41,10 @@ export default function Sidebar() {
       if (sub === "Testimonial") return "/dashboard/others/testimonial";
       if (sub === "Plan Range") return "/dashboard/others/plan-range";
       if (sub === "Banner") return "/dashboard/others/banner";
+    }
+
+    if (menu === "Notification"){
+      if(sub === "Notification") return "/dashboard/notification";
     }
 
     if (menu === "Settings") {
@@ -69,7 +73,7 @@ export default function Sidebar() {
 
     {
       name: "Product",
-      submenu: ["Category", "Product"],
+      submenu: ["Category", "Product List"],
     },
 
     // ✅ NORMAL LINKS (UPDATED)
@@ -88,6 +92,11 @@ export default function Sidebar() {
     {
       name: "All QR Codes",
       link: "/dashboard/all-qr-codes",
+    },
+
+    {
+      name: "Notification",
+      link: "/dashboard/notification",
     },
 
     {
@@ -111,7 +120,7 @@ export default function Sidebar() {
         </div>
         <div>
           <h1 className="text-sm font-bold">SRV</h1>
-          <p className="text-xs text-gray-300">always improving</p>
+          <p className="text-xs text-gray-300">Always Improving</p>
         </div>
       </div>
 

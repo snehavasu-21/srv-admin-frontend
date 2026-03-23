@@ -1,118 +1,133 @@
 "use client";
 
-import { useState } from "react";
+import { Search, Eye, ChevronLeft, ChevronRight, Filter } from "lucide-react";
 
 export default function IncompleteKYCPage() {
-  const [search, setSearch] = useState("");
-
   const users = [
     {
-      id: 3334,
+      id: "3334",
       name: "Sandeep Singh",
       phone: "9417320275",
-      address: "7MJ3+H7X, SH21, Mari Nauabad, Algon, Punjab",
+      address: "Mari Nauabad, Punjab",
       status: "Incomplete",
     },
     {
-      id: 3327,
+      id: "3327",
       name: "-",
       phone: "8571063074",
       address: "-",
       status: "Incomplete",
     },
     {
-      id: 3323,
+      id: "3323",
       name: "Aman Juneja",
       phone: "7889269954",
-      address: "2C6M+P66, Khuban, Punjab",
+      address: "Khuban, Punjab",
       status: "Incomplete",
     },
     {
-      id: 3312,
+      id: "3312",
       name: "Puneet Kumar",
       phone: "9417345313",
-      address: "Mahajan Market Rd, Fazilka",
+      address: "Fazilka, Punjab",
       status: "Incomplete",
     },
     {
-      id: 3303,
+      id: "3303",
       name: "Manjeet Singh",
       phone: "7009976900",
-      address: "Green Valley Colony, Mansa",
+      address: "Mansa, Punjab",
       status: "Incomplete",
     },
   ];
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(search.toLowerCase()) ||
-      user.phone.includes(search)
-  );
-
   return (
-    <div className="space-y-6">
+    <div className="p-3 lg:p-4 bg-[#F4F7FE] min-h-screen font-sans">
 
       {/* HEADER */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">
-          Manage Incomplete KYC
-        </h1>
-
-        {/* SEARCH */}
-        <input
-          type="text"
-          placeholder="Search here..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 outline-none"
-        />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-[#1B254B] tracking-tight">
+            Incomplete KYC Users
+          </h1>
+          <p className="text-slate-500 text-sm font-medium">
+            Manage users with incomplete KYC details
+          </p>
+        </div>
       </div>
 
-      {/* TABLE CARD */}
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      {/* SEARCH + FILTER */}
+      <div className="bg-white p-4 rounded-2xl shadow-sm border border-white mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        
+        <div className="relative w-full md:w-80 lg:w-96">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <input 
+            type="text" 
+            placeholder="Search by name or phone..." 
+            className="w-full pl-11 pr-4 py-2.5 bg-[#F4F7FE] border-none rounded-xl focus:ring-2 focus:ring-[#4318FF] outline-none text-sm font-medium transition-all"
+          />
+        </div>
+
+        <button className="flex items-center gap-2 px-4 py-2.5 bg-[#F4F7FE] text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-100 transition-all">
+          <Filter size={16} /> Filters
+        </button>
+
+      </div>
+
+      {/* TABLE */}
+      <div className="bg-white rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white overflow-hidden">
 
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
+          <table className="w-full text-left border-collapse">
 
-            {/* TABLE HEADER */}
-            <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
-              <tr>
-                <th className="px-6 py-3">User ID</th>
-                <th className="px-6 py-3">User Name</th>
-                <th className="px-6 py-3">Phone</th>
-                <th className="px-6 py-3">Address</th>
-                <th className="px-6 py-3">KYC Status</th>
-                <th className="px-6 py-3 text-center">Action</th>
+            {/* HEADER */}
+            <thead>
+              <tr className="border-b border-slate-50">
+                {["User ID", "Name", "Phone", "Address", "Status", "Action"].map((head) => (
+                  <th key={head} className="p-5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    {head}
+                  </th>
+                ))}
               </tr>
             </thead>
 
-            {/* TABLE BODY */}
-            <tbody>
-              {filteredUsers.map((user) => (
-                <tr
-                  key={user.id}
-                  className="border-b hover:bg-gray-50 transition"
-                >
-                  <td className="px-6 py-4">{user.id}</td>
-                  <td className="px-6 py-4 font-medium">{user.name}</td>
-                  <td className="px-6 py-4">{user.phone}</td>
-                  <td className="px-6 py-4 text-gray-600">
+            {/* BODY */}
+            <tbody className="divide-y divide-slate-50">
+              {users.map((user) => (
+                <tr key={user.id} className="hover:bg-slate-50/50 transition-all duration-200">
+
+                  <td className="p-5 text-sm font-bold text-slate-500">
+                    {user.id}
+                  </td>
+
+                  <td className="p-5">
+                    <div className="font-bold text-[#1B254B] text-sm">
+                      {user.name}
+                    </div>
+                  </td>
+
+                  <td className="p-5 text-sm font-bold text-[#1B254B]">
+                    {user.phone}
+                  </td>
+
+                  <td className="p-5 text-sm text-slate-500 max-w-[200px] truncate">
                     {user.address}
                   </td>
 
-                  {/* STATUS BADGE */}
-                  <td className="px-6 py-4">
-                    <span className="px-3 py-1 text-xs font-semibold bg-yellow-100 text-yellow-700 rounded-full">
+                  {/* STATUS */}
+                  <td className="p-5">
+                    <span className="px-3 py-1 bg-amber-50 text-amber-600 rounded-lg font-bold text-xs border border-amber-100">
                       Incomplete
                     </span>
                   </td>
 
                   {/* ACTION */}
-                  <td className="px-6 py-4 text-center">
-                    <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded-md text-sm transition">
-                      View
+                  <td className="p-5">
+                    <button className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-all" title="View Details">
+                      <Eye size={18} />
                     </button>
                   </td>
+
                 </tr>
               ))}
             </tbody>
@@ -120,26 +135,31 @@ export default function IncompleteKYCPage() {
         </div>
 
         {/* PAGINATION */}
-        <div className="flex justify-between items-center p-4">
-
-          <span className="text-sm text-gray-500">
-            Showing {filteredUsers.length} users
+        <div className="p-5 border-t border-slate-50 flex justify-between items-center">
+          
+          <span className="text-slate-400 font-bold text-xs uppercase tracking-widest">
+            Page 1 of 10
           </span>
 
-          <div className="flex gap-2">
-            <button className="px-3 py-1 border rounded hover:bg-gray-100">
-              Prev
+          <div className="flex items-center gap-2">
+            <button className="p-2 rounded-lg bg-[#F4F7FE] hover:bg-slate-100 text-slate-600">
+              <ChevronLeft size={16}/>
             </button>
-            <button className="px-3 py-1 bg-blue-600 text-white rounded">
+
+            <button className="w-8 h-8 rounded-lg bg-[#4318FF] text-white font-bold text-xs">
               1
             </button>
-            <button className="px-3 py-1 border rounded hover:bg-gray-100">
-              Next
+
+            <button className="w-8 h-8 rounded-lg text-slate-400 font-bold text-xs hover:bg-[#F4F7FE]">
+              2
+            </button>
+
+            <button className="p-2 rounded-lg bg-[#F4F7FE] hover:bg-slate-100 text-slate-600">
+              <ChevronRight size={16}/>
             </button>
           </div>
 
         </div>
-
       </div>
     </div>
   );
