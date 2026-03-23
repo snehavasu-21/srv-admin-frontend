@@ -30,6 +30,12 @@ export default function PagesSettings() {
     });
   }, []);
 
+  declare module '@ckeditor/ckeditor5-build-classic' {
+  const ClassicEditorBuild: any;
+  export = ClassicEditorBuild;
+}
+
+
   const handleChange = (data: string) => {
     setContent((prev) => ({
       ...prev,
