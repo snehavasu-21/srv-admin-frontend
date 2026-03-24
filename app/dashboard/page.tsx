@@ -1,126 +1,10 @@
-
-// // "use client"; // Agar aap icons ya animations use kar rahe hain toh ye zaroori hai
-
-// // import DashboardCard from "../components/DashboardCard";
-// // import * as lucideReact from "lucide-react";
-
-// // // 1. Ensure karein ki 'export default function' likha ho
-// // export default function DashboardPage() {
-// //   const cards = [
-// //     { title: "Total Users", value: "3,244", color: "text-rose-500", bgColor: "bg-rose-50", icon: <lucideReact.Users size={24} /> },
-// //     { title: "Total Dealers", value: "350", color: "text-emerald-600", bgColor: "bg-emerald-50", icon: <lucideReact.Building2 size={24} /> },
-// //     { title: "Total Electricians", value: "2,894", color: "text-amber-500", bgColor: "bg-amber-50", icon: <lucideReact.Zap size={24} /> },
-// //     { title: "Category", value: "29", color: "text-indigo-500", bgColor: "bg-indigo-50", icon: <lucideReact.Layers2 size={24} /> },
-    
-// //     { title: "Product", value: "274", color: "text-orange-500", bgColor: "bg-orange-50", icon: <lucideReact.Package size={24} /> },
-// //     { title: "Incomplete KYC", value: "659", color: "text-blue-600", bgColor: "bg-blue-50", icon: <lucideReact.UserPlus size={24} /> },
-// //     { title: "Pending KYC", value: "2", color: "text-sky-500", bgColor: "bg-sky-50", icon: <lucideReact.Clock size={24} /> },
-// //     { title: "Completed KYC", value: "2,583", color: "text-teal-500", bgColor: "bg-teal-50", icon: <lucideReact.UserCheck size={24} /> },
-    
-// //     { title: "Withdraw Points", value: "₹49,405", color: "text-green-600", bgColor: "bg-green-50", icon: <lucideReact.Wallet size={24} /> },
-// //     { title: "Enquiry", value: "5", color: "text-pink-600", bgColor: "bg-pink-50", icon: <lucideReact.HelpCircle size={24} /> },
-// //     { title: "QR Code", value: "6,783,267", color: "text-slate-700", bgColor: "bg-slate-100", icon: <lucideReact.Barcode size={24} /> },
-// //     { title: "Redeemed QRCode", value: "23,677", color: "text-cyan-600", bgColor: "bg-cyan-50", icon: <lucideReact.Scan size={24} /> },
-// //   ];
-
-// //   return (
-// //     <div className="p-8 bg-[#F8FAFC] min-h-screen">
-// //       {/* <div className="mb-10">
-// //         <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Dashboard Overview</h1>
-// //         <p className="text-slate-500 mt-2 font-medium">Welcome back, Admin. Here is what's happening today.</p>
-// //       </div> */}
-
-// //       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-// //         {cards.map((card, index) => (
-// //           <DashboardCard key={index} {...card} />
-// //         ))}
-// //       </div>
-// //     </div>
-// //   );
-// // }
-
-
-
-
-
-
-
-
-// "use client";
-
-// import React from 'react';
-// import { 
-//   Users, Building2, Zap, Layers2, Package, UserPlus, 
-//   Clock, UserCheck, Wallet, HelpCircle, Barcode, Scan 
-// } from "lucide-react";
-
-// export default function DashboardPage() {
-//   const cards = [
-//     { title: "Total Users", value: "3,265", icon: <Users size={24} />, color: "from-blue-500 to-cyan-400" },
-//     { title: "Total Dealers", value: "350", icon: <Building2 size={24} />, color: "from-indigo-500 to-purple-500" },
-//     { title: "Total Electricians", value: "2,915", icon: <Zap size={24} />, color: "from-amber-400 to-orange-500" },
-//     { title: "Category", value: "29", icon: <Layers2 size={24} />, color: "from-purple-500 to-pink-500" },
-    
-//     { title: "Product", value: "274", icon: <Package size={24} />, color: "from-orange-400 to-red-500" },
-//     { title: "Incomplete KYC", value: "658", icon: <UserPlus size={24} />, color: "from-rose-500 to-pink-600" },
-//     { title: "Pending KYC", value: "0", icon: <Clock size={24} />, color: "from-slate-400 to-slate-600" },
-//     { title: "Completed KYC", value: "2,607", icon: <UserCheck size={24} />, color: "from-emerald-400 to-teal-500" },
-    
-//     { title: "Withdraw Points", value: "₹51,440.7", icon: <Wallet size={24} />, color: "from-green-500 to-emerald-600" },
-//     { title: "Enquiry", value: "5", icon: <HelpCircle size={24} />, color: "from-pink-500 to-rose-500" },
-//     { title: "QR Code", value: "6,794,333", icon: <Barcode size={24} />, color: "from-slate-700 to-slate-900" },
-//     { title: "Redeemed QRcode", value: "24,304", icon: <Scan size={24} />, color: "from-cyan-500 to-blue-600" },
-//   ];
-
-//   return (
-//     <div className="p-6 md:p-10 bg-[#F4F7FE] min-h-screen font-sans">
-      
-//       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-//         {cards.map((card, index) => (
-//           <div 
-//             key={index} 
-//             className="group relative bg-white rounded-[2rem] p-6 shadow-xl shadow-slate-200/50 border border-white hover:scale-[1.03] transition-all duration-300 overflow-hidden flex flex-col justify-between min-h-[170px]"
-//           >
-//             <div className="flex justify-between items-start">
-//               <div className={`p-3 rounded-2xl bg-gradient-to-br ${card.color} text-white shadow-lg`}>
-//                 {card.icon}
-//               </div>
-//               {/* FIXED: whitespace-nowrap for single line & font-black for extra bold */}
-//               <p className="text-[11px] font-black text-slate-950 uppercase tracking-widest text-right whitespace-nowrap ml-2">
-//                 {card.title}
-//               </p>
-//             </div>
-
-//             <div className="mt-4">
-//               {/* FIXED: font-black for extra bold values */}
-//               <h3 className="text-3xl font-black text-slate-950 tracking-tighter group-hover:text-blue-600 transition-colors">
-//                 {card.value}
-//               </h3>
-              
-//               <div className="w-full bg-slate-100 h-1 mt-3 rounded-full overflow-hidden">
-//                 <div className={`h-full bg-gradient-to-r ${card.color} w-2/3 opacity-30`}></div>
-//               </div>
-//             </div>
-
-//             <div className={`absolute -bottom-6 -right-6 w-24 h-24 bg-gradient-to-br ${card.color} opacity-[0.03] rounded-full group-hover:opacity-[0.08] transition-opacity`}></div>
-//           </div>
-//         ))}
-//       </div>
-//     </div>
-//   );
-// }
-
-
-
-
-
-
 "use client";
 
 import {
   Users, Home, Zap, LayoutGrid, FileText, Wallet,
-  HelpCircle, QrCode, Activity, UserCheck, UserX, Clock,
+  HelpCircle, QrCode, Activity, UserCheck, UserX, Clock, Trophy,
 } from "lucide-react";
+import Link from "next/link";
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -181,7 +65,7 @@ const statCards = [
 
 const kycCards = [
   {
-    label: "Incomplete KYC",
+    label: "Rejected KYC",
     value: "658",
     icon: UserX,
     bg: "bg-red-50",
@@ -231,6 +115,7 @@ const activityCards = [
     accent: "border-l-4 border-l-slate-400",
     hoverAccent: "hover:border-l-slate-600",
     hoverIconBg: "hover:bg-slate-200",
+    href: null,
   },
   {
     label: "Withdrawn Points",
@@ -241,6 +126,7 @@ const activityCards = [
     accent: "border-l-4 border-l-emerald-400",
     hoverAccent: "hover:border-l-emerald-600",
     hoverIconBg: "hover:bg-emerald-200",
+    href: null,
   },
   {
     label: "Open Enquiries",
@@ -251,6 +137,18 @@ const activityCards = [
     accent: "border-l-4 border-l-rose-400",
     hoverAccent: "hover:border-l-rose-600",
     hoverIconBg: "hover:bg-rose-200",
+    href: null,
+  },
+  {
+    label: "Top Redeem Points",
+    value: "24,304",
+    icon: Trophy,
+    iconBg: "bg-yellow-100",
+    iconColor: "text-yellow-600",
+    accent: "border-l-4 border-l-yellow-400",
+    hoverAccent: "hover:border-l-yellow-500",
+    hoverIconBg: "hover:bg-yellow-200",
+    href: "/admin/top-redeem-electricians",
   },
 ];
 
@@ -331,13 +229,7 @@ export default function DashboardPage() {
               `}
             >
               <div className="flex items-center justify-between">
-                <div
-                  className={`
-                    w-10 h-10 rounded-xl flex items-center justify-center
-                    ${card.iconBg} ${card.iconColor} ${card.hoverIconBg}
-                    transition-colors duration-200
-                  `}
-                >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${card.iconBg} ${card.iconColor} ${card.hoverIconBg} transition-colors duration-200`}>
                   <Icon size={18} />
                 </div>
                 <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${card.badgeBg} ${card.badgeColor}`}>
@@ -361,13 +253,7 @@ export default function DashboardPage() {
           return (
             <div
               key={i}
-              className={`
-                rounded-xl border p-5
-                ${card.bg} ${card.border}
-                ${card.hoverBg} ${card.hoverBorder}
-                transition-all duration-200 ease-in-out
-                hover:shadow-md hover:-translate-y-0.5 cursor-pointer
-              `}
+              className={`rounded-xl border p-5 ${card.bg} ${card.border} ${card.hoverBg} ${card.hoverBorder} transition-all duration-200 ease-in-out hover:shadow-md hover:-translate-y-0.5 cursor-pointer`}
             >
               <div className="flex items-center gap-3 mb-4">
                 <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${card.iconBg} ${card.iconColor}`}>
@@ -385,34 +271,29 @@ export default function DashboardPage() {
 
       {/* Platform Activity */}
       <SectionLabel>Platform Activity</SectionLabel>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {activityCards.map((card, i) => {
           const Icon = card.icon;
-          return (
-            <div
-              key={i}
-              className={`
-                bg-white rounded-xl border border-slate-200 p-5
-                ${card.accent} ${card.hoverAccent}
-                transition-all duration-200 ease-in-out
-                hover:shadow-md hover:-translate-y-0.5 hover:bg-slate-50 cursor-pointer
-              `}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className={`
-                    w-10 h-10 rounded-xl flex items-center justify-center
-                    ${card.iconBg} ${card.iconColor} ${card.hoverIconBg}
-                    transition-colors duration-200
-                  `}
-                >
-                  <Icon size={18} />
-                </div>
-                <div>
-                  <p className="text-lg font-semibold text-slate-800">{card.value}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{card.label}</p>
-                </div>
+          const cls = `bg-white rounded-xl border border-slate-200 p-5 ${card.accent} ${card.hoverAccent} transition-all duration-200 ease-in-out hover:shadow-md hover:-translate-y-0.5 hover:bg-slate-50 cursor-pointer block`;
+          const inner = (
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${card.iconBg} ${card.iconColor} ${card.hoverIconBg} transition-colors duration-200`}>
+                <Icon size={18} />
               </div>
+              <div>
+                <p className="text-lg font-semibold text-slate-800">{card.value}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{card.label}</p>
+              </div>
+            </div>
+          );
+
+          return card.href ? (
+            <Link key={i} href={card.href} className={cls}>
+              {inner}
+            </Link>
+          ) : (
+            <div key={i} className={cls}>
+              {inner}
             </div>
           );
         })}
@@ -426,21 +307,9 @@ export default function DashboardPage() {
           return (
             <div
               key={i}
-              className={`
-                rounded-xl border p-5 flex items-center gap-4
-                ${card.bg} ${card.ring}
-                ${card.hoverBg} ${card.hoverRing}
-                transition-all duration-200 ease-in-out
-                hover:shadow-md hover:-translate-y-0.5 cursor-pointer
-              `}
+              className={`rounded-xl border p-5 flex items-center gap-4 ${card.bg} ${card.ring} ${card.hoverBg} ${card.hoverRing} transition-all duration-200 ease-in-out hover:shadow-md hover:-translate-y-0.5 cursor-pointer`}
             >
-              <div
-                className={`
-                  w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0
-                  ${card.iconBg} ${card.iconColor} ${card.hoverIconBg}
-                  transition-colors duration-200
-                `}
-              >
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${card.iconBg} ${card.iconColor} ${card.hoverIconBg} transition-colors duration-200`}>
                 <Icon size={20} />
               </div>
               <div>
