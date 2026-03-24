@@ -1,147 +1,3 @@
-// "use client";
-
-// import React, { useState } from 'react';
-// import { 
-//   Search, Plus, FileDown, 
-//   ChevronLeft, ChevronRight, 
-//   Filter, ArrowUpRight 
-// } from "lucide-react";
-
-// export default function WalletHistoryPage() {
-//   const [searchTerm, setSearchTerm] = useState("");
-  
-//   const [history] = useState([
-//     { id: "24457", userName: "Amarjeet singh", description: "You have earned 0.5 from Junction Box 1 QRcode.", date: "2026-03-20 10:07:53", point: "0.5", type: "Credit" },
-//     { id: "24456", userName: "Varinder", description: "You have earned 1 from FDB 4\" 19/40 PC QRcode.", date: "2026-03-20 10:07:18", point: "1", type: "Credit" },
-//     { id: "24455", userName: "Amarjeet singh", description: "You have earned 0.5 from Junction Box 1 QRcode.", date: "2026-03-20 10:06:18", point: "0.5", type: "Credit" },
-//     { id: "24454", userName: "Amarjeet singh", description: "You have earned 0.5 from Junction Box 1 QRcode.", date: "2026-03-20 10:05:31", point: "0.5", type: "Credit" },
-//     { id: "24453", userName: "Amarjeet singh", description: "You have earned 0.5 from Junction Box 1 QRcode.", date: "2026-03-20 10:03:59", point: "0.5", type: "Credit" },
-//     { id: "24452", userName: "Jagjeevan sharma", description: "You have earned 5 from 9x3 6L HZ Draw QRcode.", date: "2026-03-20 10:03:42", point: "5", type: "Credit" },
-//     { id: "24451", userName: "Amarjeet singh", description: "You have earned 0.5 from Junction Box 1 QRcode.", date: "2026-03-20 10:03:01", point: "0.5", type: "Credit" },
-//     { id: "24450", userName: "Jagjeevan sharma", description: "You have earned 5 from 9x3 6L HZ Draw QRcode.", date: "2026-03-20 10:02:52", point: "5", type: "Credit" },
-//   ]);
-
-//   const filteredHistory = history.filter(item => 
-//     item.userName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-//     item.description.toLowerCase().includes(searchTerm.toLowerCase())
-//   );
-
-//   return (
-//     <div className="p-6 lg:p-8 bg-[#F4F7FE] min-h-screen font-sans text-[#1B254B]">
-//       {/* HEADER SECTION */}
-//       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-//         <div>
-//           <h1 className="text-2xl font-bold tracking-tight">Wallet History</h1>
-//           <p className="text-slate-500 text-sm font-medium">Track all points and transactions</p>
-//         </div>
-
-//         <div className="flex items-center gap-3">
-//           <button className="flex items-center gap-2 px-4 py-2.5 bg-white text-slate-700 rounded-xl hover:bg-slate-50 transition-all font-bold shadow-sm border border-slate-200 text-sm">
-//             <FileDown size={18} /> Export
-//           </button>
-//           <button className="flex items-center gap-2 px-5 py-2.5 bg-[#4318FF] text-white rounded-xl hover:bg-[#3311CC] transition-all font-bold shadow-[0_4px_14px_0_rgba(67,24,255,0.39)] text-sm">
-//             <Plus size={18} /> Add wallet history
-//           </button>
-//         </div>
-//       </div>
-
-//       {/* FILTERS & SEARCH */}
-//       <div className="bg-white p-4 rounded-2xl shadow-sm border border-white mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
-//         <div className="flex items-center gap-4 w-full md:w-auto">
-//             <select className="border-none rounded-xl px-4 py-2.5 text-sm font-bold outline-none bg-[#F4F7FE] text-slate-600 min-w-[150px]">
-//                 <option>All User</option>
-//                 <option>Electrician</option>
-//                 <option>Dealer</option>
-//             </select>
-//             <div className="relative flex-1 md:w-80 lg:w-96">
-//                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-//                 <input 
-//                     type="text" 
-//                     placeholder="Search here..." 
-//                     value={searchTerm}
-//                     onChange={(e) => setSearchTerm(e.target.value)}
-//                     className="w-full pl-11 pr-4 py-2.5 bg-[#F4F7FE] border-none rounded-xl focus:ring-2 focus:ring-[#4318FF] outline-none text-sm font-medium transition-all"
-//                 />
-//             </div>
-//         </div>
-        
-//         <button className="flex items-center gap-2 px-4 py-2.5 bg-[#F4F7FE] text-slate-600 rounded-xl text-sm font-bold border-none hover:bg-slate-100 transition-all">
-//             <Filter size={16} /> Filters
-//         </button>
-//       </div>
-
-//       {/* MAIN TABLE SECTION */}
-//       <div className="bg-white rounded-[1.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white overflow-hidden">
-//         <div className="overflow-x-auto">
-//           <table className="w-full text-left border-collapse">
-//             <thead>
-//               <tr className="border-b border-slate-50 bg-slate-50/30">
-//                 <th className="p-5 w-12 text-center">
-//                   <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-[#4318FF]" />
-//                 </th>
-//                 {/* UPDATED: Header titles are now font-black and darker */}
-//                 {["Id", "User Name", "Wallet Description", "Transaction Date", "Point", "Payment Type"].map((head) => (
-//                   <th key={head} className="p-5 text-[11px] font-black uppercase tracking-wider text-slate-900">
-//                     {head}
-//                   </th>
-//                 ))}
-//               </tr>
-//             </thead>
-//             <tbody className="divide-y divide-slate-50">
-//               {filteredHistory.map((item) => (
-//                 <tr key={item.id} className="hover:bg-slate-50/50 transition-all duration-200">
-//                   <td className="p-5 text-center">
-//                     <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-[#4318FF]" />
-//                   </td>
-//                   <td className="p-5 text-sm font-bold text-slate-500">{item.id}</td>
-//                   <td className="p-5">
-//                     {/* UPDATED: Name font is now font-medium (Not Bold) */}
-//                     <div className="font-medium text-[#1B254B] text-sm whitespace-nowrap">
-//                         {item.userName}
-//                     </div>
-//                   </td>
-//                   <td className="p-5">
-//                     <div className="text-xs text-slate-600 font-medium max-w-[320px] leading-relaxed">
-//                         {item.description}
-//                     </div>
-//                   </td>
-//                   <td className="p-5 text-xs font-bold text-slate-500 whitespace-nowrap">
-//                     {item.date}
-//                   </td>
-//                   <td className="p-5">
-//                     <div className="flex items-center gap-1.5 text-[#05CD99] font-bold">
-//                         <ArrowUpRight size={14} />
-//                         <span className="text-sm">{item.point}</span>
-//                     </div>
-//                   </td>
-//                   <td className="p-5">
-//                     <span className="px-3 py-1 rounded-lg font-bold text-[10px] uppercase tracking-wider border bg-emerald-50 text-emerald-600 border-emerald-100">
-//                       {item.type}
-//                     </span>
-//                   </td>
-//                 </tr>
-//               ))}
-//             </tbody>
-//           </table>
-//         </div>
-
-//         {/* PAGINATION */}
-//         <div className="p-5 border-t border-slate-50 flex justify-between items-center bg-[#fcfcfc]">
-//            <span className="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Showing {filteredHistory.length} Entries</span>
-//            <div className="flex items-center gap-2">
-//              <button className="p-2 rounded-lg bg-[#F4F7FE] hover:bg-slate-100 transition-all text-slate-600"><ChevronLeft size={16}/></button>
-//              <button className="w-8 h-8 rounded-lg bg-[#4318FF] text-white font-bold text-xs shadow-md">1</button>
-//              <button className="w-8 h-8 rounded-lg bg-transparent text-slate-400 font-bold text-xs hover:bg-[#F4F7FE]">2</button>
-//              <button className="p-2 rounded-lg bg-[#F4F7FE] hover:bg-slate-100 transition-all text-slate-600"><ChevronRight size={16}/></button>
-//            </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-
-
 "use client";
 
 import React, { useState } from "react";
@@ -150,24 +6,53 @@ import {
   ChevronLeft, ChevronRight,
   Filter, ArrowUpRight, ArrowDownLeft,
   Wallet, TrendingUp, Users, Receipt,
+  LucideIcon
 } from "lucide-react";
+
+// ─── TypeScript Interfaces ──────────────────────────────────────────────────
+
+interface Transaction {
+  id: string;
+  userName: string;
+  description: string;
+  date: string;
+  point: string;
+  type: "Credit" | "Debit";
+}
+
+interface SectionLabelProps {
+  children: React.ReactNode;
+}
+
+interface StatCardProps {
+  icon: LucideIcon;
+  label: string;
+  value: string | number;
+  iconBg: string;
+  iconColor: string;
+  borderAccent: string;
+}
+
+interface TypeBadgeProps {
+  type: "Credit" | "Debit";
+}
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
-const historyData = [
-  { id: "24457", userName: "Amarjeet Singh",   description: "You have earned 0.5 from Junction Box 1 QRcode.",    date: "2026-03-20 10:07:53", point: "0.5", type: "Credit" },
+const historyData: Transaction[] = [
+  { id: "24457", userName: "Amarjeet Singh",   description: "You have earned 0.5 from Junction Box 1 QRcode.",     date: "2026-03-20 10:07:53", point: "0.5", type: "Credit" },
   { id: "24456", userName: "Varinder",         description: "You have earned 1 from FDB 4\" 19/40 PC QRcode.",   date: "2026-03-20 10:07:18", point: "1",   type: "Credit" },
-  { id: "24455", userName: "Amarjeet Singh",   description: "You have earned 0.5 from Junction Box 1 QRcode.",    date: "2026-03-20 10:06:18", point: "0.5", type: "Credit" },
-  { id: "24454", userName: "Amarjeet Singh",   description: "You have earned 0.5 from Junction Box 1 QRcode.",    date: "2026-03-20 10:05:31", point: "0.5", type: "Credit" },
-  { id: "24453", userName: "Amarjeet Singh",   description: "You have earned 0.5 from Junction Box 1 QRcode.",    date: "2026-03-20 10:03:59", point: "0.5", type: "Credit" },
+  { id: "24455", userName: "Amarjeet Singh",   description: "You have earned 0.5 from Junction Box 1 QRcode.",     date: "2026-03-20 10:06:18", point: "0.5", type: "Credit" },
+  { id: "24454", userName: "Amarjeet Singh",   description: "You have earned 0.5 from Junction Box 1 QRcode.",     date: "2026-03-20 10:05:31", point: "0.5", type: "Credit" },
+  { id: "24453", userName: "Amarjeet Singh",   description: "You have earned 0.5 from Junction Box 1 QRcode.",     date: "2026-03-20 10:03:59", point: "0.5", type: "Credit" },
   { id: "24452", userName: "Jagjeevan Sharma", description: "You have earned 5 from 9x3 6L HZ Draw QRcode.",      date: "2026-03-20 10:03:42", point: "5",   type: "Credit" },
-  { id: "24451", userName: "Amarjeet Singh",   description: "You have earned 0.5 from Junction Box 1 QRcode.",    date: "2026-03-20 10:03:01", point: "0.5", type: "Credit" },
+  { id: "24451", userName: "Amarjeet Singh",   description: "You have earned 0.5 from Junction Box 1 QRcode.",     date: "2026-03-20 10:03:01", point: "0.5", type: "Credit" },
   { id: "24450", userName: "Jagjeevan Sharma", description: "You have earned 5 from 9x3 6L HZ Draw QRcode.",      date: "2026-03-20 10:02:52", point: "5",   type: "Credit" },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function SectionLabel({ children }) {
+function SectionLabel({ children }: SectionLabelProps) {
   return (
     <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mt-6 mb-3">
       {children}
@@ -175,7 +60,7 @@ function SectionLabel({ children }) {
   );
 }
 
-function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent }) {
+function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent }: StatCardProps) {
   return (
     <div
       className={`bg-white rounded-xl border border-slate-200 border-t-4 ${borderAccent} p-5 flex flex-col gap-3
@@ -192,7 +77,7 @@ function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent })
   );
 }
 
-function TypeBadge({ type }) {
+function TypeBadge({ type }: TypeBadgeProps) {
   if (type === "Credit") {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-green-50 text-green-700 border border-green-200">
@@ -212,12 +97,12 @@ function TypeBadge({ type }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function WalletHistoryPage() {
-  const [searchTerm, setSearchTerm]   = useState("");
-  const [userFilter, setUserFilter]   = useState("All User");
+  const [searchTerm, setSearchTerm]   = useState<string>("");
+  const [userFilter, setUserFilter]   = useState<string>("All User");
 
   const totalPoints   = historyData.reduce((acc, i) => acc + parseFloat(i.point), 0);
   const creditCount   = historyData.filter((i) => i.type === "Credit").length;
-  const uniqueUsers   = [...new Set(historyData.map((i) => i.userName))].length;
+  const uniqueUsers   = new Set(historyData.map((i) => i.userName)).size;
 
   const filteredHistory = historyData.filter((item) => {
     const matchSearch =
@@ -250,10 +135,10 @@ export default function WalletHistoryPage() {
       {/* ── Summary Stats ── */}
       <SectionLabel>Overview</SectionLabel>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <StatCard icon={Receipt}   label="Total Transactions" value={historyData.length}        iconBg="bg-blue-100"   iconColor="text-blue-600"   borderAccent="border-t-blue-500"   />
+        <StatCard icon={Receipt}   label="Total Transactions" value={historyData.length}         iconBg="bg-blue-100"   iconColor="text-blue-600"   borderAccent="border-t-blue-500"   />
         <StatCard icon={TrendingUp} label="Total Points Earned" value={totalPoints.toFixed(1)} iconBg="bg-green-100"  iconColor="text-green-600"  borderAccent="border-t-green-500"  />
-        <StatCard icon={Wallet}    label="Total Money Withdrawal"      value={creditCount}              iconBg="bg-emerald-100" iconColor="text-emerald-600" borderAccent="border-t-emerald-500" />
-        <StatCard icon={Users}     label="Total Gift Withdrawal"        value={uniqueUsers}              iconBg="bg-purple-100" iconColor="text-purple-600" borderAccent="border-t-purple-500" />
+        <StatCard icon={Wallet}    label="Total Money Withdrawal"      value={creditCount}               iconBg="bg-emerald-100" iconColor="text-emerald-600" borderAccent="border-t-emerald-500" />
+        <StatCard icon={Users}     label="Total Gift Withdrawal"        value={uniqueUsers}               iconBg="bg-purple-100" iconColor="text-purple-600" borderAccent="border-t-purple-500" />
       </div>
 
       {/* ── Table Section ── */}
@@ -265,7 +150,7 @@ export default function WalletHistoryPage() {
           <select
             value={userFilter}
             onChange={(e) => setUserFilter(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
           >
             <option>All User</option>
             <option>Electrician</option>
@@ -289,13 +174,13 @@ export default function WalletHistoryPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
                 <th className="px-5 py-3.5 w-10">
-                  <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600" />
+                  <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" />
                 </th>
                 {["ID", "User Name", "Description", "Date & Time", "Points", "Type"].map((h) => (
                   <th key={h} className="px-5 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap">
@@ -306,10 +191,10 @@ export default function WalletHistoryPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredHistory.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-50 transition-colors duration-150">
+                <tr key={item.id} className="hover:bg-slate-50/80 transition-colors duration-150 group">
 
                   <td className="px-5 py-4">
-                    <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600" />
+                    <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" />
                   </td>
 
                   {/* ID */}
@@ -340,8 +225,8 @@ export default function WalletHistoryPage() {
 
                   {/* Points */}
                   <td className="px-5 py-4">
-                    <div className="flex items-center gap-1 text-green-600 font-semibold">
-                      <ArrowUpRight size={13} />
+                    <div className={`flex items-center gap-1 font-semibold ${item.type === 'Credit' ? 'text-green-600' : 'text-rose-600'}`}>
+                      {item.type === 'Credit' ? <ArrowUpRight size={13} /> : <ArrowDownLeft size={13} />}
                       <span className="text-sm">{item.point}</span>
                     </div>
                   </td>
@@ -367,7 +252,7 @@ export default function WalletHistoryPage() {
         </div>
 
         {/* Pagination */}
-        <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
+        <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between bg-white">
           <p className="text-xs text-slate-400 font-medium">
             Showing{" "}
             <span className="text-slate-600 font-semibold">{filteredHistory.length}</span>{" "}
@@ -396,7 +281,6 @@ export default function WalletHistoryPage() {
           </div>
         </div>
       </div>
-
     </div>
   );
 }

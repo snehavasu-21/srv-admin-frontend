@@ -5,12 +5,36 @@ import * as XLSX from 'xlsx';
 import {
   Search, Plus, FileDown, Eye, Edit2, Trash2,
   QrCode, ChevronLeft, ChevronRight, Filter,
-  Layers, Hash, Calendar, Download, FileSpreadsheet
+  Layers, Hash, Calendar, Download, LucideIcon
 } from "lucide-react";
 
-// ─── Sub-components (Matching Electricians UI) ────────────────────────────────
+// ─── TypeScript Interfaces ──────────────────────────────────────────────────
 
-function SectionLabel({ children }) {
+interface QRCodeBatch {
+  id: string;
+  productName: string;
+  batchNo: string;
+  date: string;
+  point: string;
+  qty: string;
+}
+
+interface StatCardProps {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  iconBg: string;
+  iconColor: string;
+  borderAccent: string;
+}
+
+interface SectionLabelProps {
+  children: React.ReactNode;
+}
+
+// ─── Sub-components ─────────────────────────────────────────────────────────
+
+function SectionLabel({ children }: SectionLabelProps) {
   return (
     <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mt-6 mb-3">
       {children}
@@ -18,7 +42,7 @@ function SectionLabel({ children }) {
   );
 }
 
-function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent }) {
+function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent }: StatCardProps) {
   return (
     <div
       className={`bg-white rounded-xl border border-slate-200 border-t-4 ${borderAccent} p-5 flex flex-col gap-3
@@ -37,9 +61,11 @@ function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent })
   );
 }
 
+// ─── Page Component ──────────────────────────────────────────────────────────
+
 export default function ManageQRCodePage() {
-  // Data
-  const [qrCodes] = useState([
+  // Data State
+  const [qrCodes] = useState<QRCodeBatch[]>([
     { id: "1195", productName: "CC RG 4\" 18/60 PC", batchNo: "1535", date: "2026-03-20", point: "2", qty: "4000" },
     { id: "1193", productName: "CC PL 4.5\" 24/60 PC", batchNo: "1534", date: "2026-03-20", point: "2", qty: "1000" },
     { id: "1192", productName: "CC NP 3.5\" 14/56 PC", batchNo: "1533", date: "2026-03-20", point: "1", qty: "3500" },
@@ -49,12 +75,19 @@ export default function ManageQRCodePage() {
     { id: "1188", productName: "MAIN SWCH 100A TP", batchNo: "1529", date: "2026-03-20", point: "50", qty: "5" },
   ]);
 
+  const [searchTerm, setSearchTerm] = useState<string>("");
+
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(qrCodes);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "QR_Codes");
     XLSX.writeFile(workbook, "SRV_QR_Codes_List.xlsx");
   };
+
+  const filteredCodes = qrCodes.filter(qr => 
+    qr.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    qr.batchNo.includes(searchTerm)
+  );
 
   return (
     <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans text-slate-900">
@@ -80,9 +113,9 @@ export default function ManageQRCodePage() {
         </div>
       </div>
 
-      {/* ── Summary Stats (Consistent with Electricians Page) ── */}
+      {/* ── Summary Stats ── */}
       <SectionLabel>Overview</SectionLabel>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <StatCard icon={QrCode} label="Total Batches" value="1,195" iconBg="bg-blue-100" iconColor="text-blue-600" borderAccent="border-t-blue-500" />
         <StatCard icon={Layers} label="Total Qty Generated" value="12,345" iconBg="bg-purple-100" iconColor="text-purple-600" borderAccent="border-t-purple-500" />
         <StatCard icon={Calendar} label="Updated Today" value="7 Batches" iconBg="bg-emerald-100" iconColor="text-emerald-600" borderAccent="border-t-emerald-500" />
@@ -92,11 +125,13 @@ export default function ManageQRCodePage() {
       <SectionLabel>Batch List</SectionLabel>
 
       {/* Search + Filter bar */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
           <input
             type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search product or batch..."
             className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
@@ -106,7 +141,7 @@ export default function ManageQRCodePage() {
             <Filter size={14} />
             Filter
           </button>
-          <select className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+          <select className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer">
             <option>Bulk Actions</option>
             <option>Delete Selected</option>
             <option>Download Selected</option>
@@ -115,13 +150,13 @@ export default function ManageQRCodePage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
                 <th className="px-5 py-3.5 w-10">
-                  <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600" />
+                  <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" />
                 </th>
                 {["ID", "Product Details", "Batch Info", "Points", "Quantity", "Actions"].map((h) => (
                   <th key={h} className="px-5 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap">
@@ -131,10 +166,10 @@ export default function ManageQRCodePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {qrCodes.map((qr) => (
-                <tr key={qr.id} className="hover:bg-slate-50 transition-colors duration-150 group">
+              {filteredCodes.map((qr) => (
+                <tr key={qr.id} className="hover:bg-slate-50/80 transition-colors duration-150 group">
                   <td className="px-5 py-4">
-                    <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600" />
+                    <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" />
                   </td>
 
                   {/* ID */}
@@ -176,7 +211,7 @@ export default function ManageQRCodePage() {
                     {qr.qty}
                   </td>
 
-                  {/* Actions (Consistent with Electricians page icons) */}
+                  {/* Actions */}
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-1">
                       <button className="w-8 h-8 flex items-center justify-center rounded-lg text-blue-500 hover:bg-blue-50 transition-all" title="View">
@@ -199,10 +234,10 @@ export default function ManageQRCodePage() {
           </table>
         </div>
 
-        {/* Pagination (Matching Footer) */}
-        <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
+        {/* Pagination */}
+        <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between bg-white">
           <p className="text-xs text-slate-400 font-medium">
-            Showing <span className="text-slate-600 font-semibold">1–7</span> of <span className="text-slate-600 font-semibold">1,195</span> batches
+            Showing <span className="text-slate-600 font-semibold">1–{filteredCodes.length}</span> of <span className="text-slate-600 font-semibold">1,195</span> batches
           </p>
           <div className="flex items-center gap-1.5">
             <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100 transition-all">
