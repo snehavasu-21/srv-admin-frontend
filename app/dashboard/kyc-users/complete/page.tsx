@@ -1,11 +1,30 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Eye, ChevronLeft, ChevronRight, Filter, UserCheck, ShieldCheck, Users } from "lucide-react";
+import React, { useState, ChangeEvent } from "react";
+import { 
+  Search, Eye, ChevronLeft, ChevronRight, 
+  Filter, UserCheck, Users 
+} from "lucide-react";
+
+// ─── Types & Interfaces ──────────────────────────────────────────────────────
+
+interface UserKYC {
+  id: string;
+  name: string;
+  phone: string;
+  aadhaarFront: string;
+  aadhaarBack: string;
+  pan: string;
+  status: "Completed" | "Pending" | "Rejected";
+}
+
+interface SectionLabelProps {
+  children: React.ReactNode;
+}
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
-const usersData = [
+const usersData: UserKYC[] = [
   { id: "3351", name: "Gurlal Singh",    phone: "9781406883", aadhaarFront: "-", aadhaarBack: "-", pan: "-", status: "Completed" },
   { id: "3350", name: "Jagseer Singh",   phone: "9417437685", aadhaarFront: "-", aadhaarBack: "-", pan: "-", status: "Completed" },
   { id: "3349", name: "Jagdeep Kumar",   phone: "9781879905", aadhaarFront: "-", aadhaarBack: "-", pan: "-", status: "Completed" },
@@ -18,26 +37,30 @@ const usersData = [
   { id: "3342", name: "Ram Lubhaya",     phone: "9779745208", aadhaarFront: "-", aadhaarBack: "-", pan: "-", status: "Completed" },
 ];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Reusable Components ──────────────────────────────────────────────────────
 
-function SectionLabel({ children }) {
+const SectionLabel: React.FC<SectionLabelProps> = ({ children }) => {
   return (
     <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mt-6 mb-3">
       {children}
     </p>
   );
-}
+};
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ─── Page Component ───────────────────────────────────────────────────────────
 
 export default function CompletedKYCPage() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
-  const filtered = usersData.filter(
+  const filteredUsers = usersData.filter(
     (u) =>
       u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       u.phone.includes(searchTerm)
   );
+
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
 
   return (
     <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans">
@@ -57,7 +80,7 @@ export default function CompletedKYCPage() {
 
       {/* ── Stats ── */}
       <SectionLabel>Overview</SectionLabel>
-      <div className="grid grid-cols-2 gap-18">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-10">
         <div className="bg-white rounded-xl border border-slate-200 border-t-4 border-t-blue-500 p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer">
           <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
             <Users size={20} className="text-blue-600" />
@@ -67,6 +90,7 @@ export default function CompletedKYCPage() {
             <p className="text-xs text-slate-500 mt-1">Total Users</p>
           </div>
         </div>
+        
         <div className="bg-white rounded-xl border border-slate-200 border-t-4 border-t-green-500 p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer">
           <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
             <UserCheck size={20} className="text-green-600" />
@@ -76,7 +100,6 @@ export default function CompletedKYCPage() {
             <p className="text-xs text-slate-500 mt-1">Completed KYC</p>
           </div>
         </div>
-        
       </div>
 
       {/* ── Search + Filter ── */}
@@ -88,7 +111,7 @@ export default function CompletedKYCPage() {
             type="text"
             placeholder="Search by name or phone..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearchChange}
             className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
         </div>
@@ -112,54 +135,48 @@ export default function CompletedKYCPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filtered.map((user) => (
+              {filteredUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-slate-50 transition-colors duration-150">
-
                   <td className="px-5 py-4 text-sm font-medium text-slate-500">
                     {user.id}
                   </td>
-
                   <td className="px-5 py-4 text-sm font-medium text-slate-800">
                     {user.name}
                   </td>
-
                   <td className="px-5 py-4 text-sm font-medium text-slate-700">
                     {user.phone}
                   </td>
-
                   <td className="px-5 py-4 text-sm text-slate-400">
                     {user.aadhaarFront}
                   </td>
-
                   <td className="px-5 py-4 text-sm text-slate-400">
                     {user.aadhaarBack}
                   </td>
-
                   <td className="px-5 py-4 text-sm text-slate-400">
                     {user.pan}
                   </td>
-
                   <td className="px-5 py-4">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-green-50 text-green-700 border border-green-200">
                       <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
                       {user.status}
                     </span>
                   </td>
-
                   <td className="px-5 py-4">
-                    <button className="w-8 h-8 flex items-center justify-center rounded-lg text-blue-500 hover:bg-blue-50 transition-all duration-200" title="View Details">
+                    <button 
+                      className="w-8 h-8 flex items-center justify-center rounded-lg text-blue-500 hover:bg-blue-50 transition-all duration-200" 
+                      title="View Details"
+                    >
                       <Eye size={15} />
                     </button>
                   </td>
-
                 </tr>
               ))}
 
-              {filtered.length === 0 && (
+              {filteredUsers.length === 0 && (
                 <tr>
                   <td colSpan={8} className="px-5 py-12 text-center text-sm text-slate-400">
                     No users found matching{" "}
-                    <span className="font-semibold text-slate-600">"{searchTerm}"</span>
+                    <span className="font-semibold text-slate-600">&quot;{searchTerm}&quot;</span>
                   </td>
                 </tr>
               )}
@@ -195,7 +212,6 @@ export default function CompletedKYCPage() {
           </div>
         </div>
       </div>
-
     </div>
   );
 }
