@@ -1,5 +1,5 @@
 "use client";
-
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import {
   Search, Plus, Edit2, Trash2,
@@ -94,7 +94,7 @@ export default function GiftStorePage() {
         </div>
         <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md">
           <Plus size={15} />
-          Add New Gift
+          Add Redeem Product
         </button>
       </div>
 
