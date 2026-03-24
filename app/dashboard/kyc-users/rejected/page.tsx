@@ -1,21 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Eye, ChevronLeft, ChevronRight, Filter, UserCheck, ShieldCheck, Users } from "lucide-react";
+import { Search, Eye, ChevronLeft, ChevronRight, Filter, UserX, Users, AlertCircle } from "lucide-react";
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
 const usersData = [
-  { id: "3351", name: "Gurlal Singh",    phone: "9781406883", aadhaarFront: "-", aadhaarBack: "-", pan: "-", status: "Completed" },
-  { id: "3350", name: "Jagseer Singh",   phone: "9417437685", aadhaarFront: "-", aadhaarBack: "-", pan: "-", status: "Completed" },
-  { id: "3349", name: "Jagdeep Kumar",   phone: "9781879905", aadhaarFront: "-", aadhaarBack: "-", pan: "-", status: "Completed" },
-  { id: "3348", name: "-",               phone: "9001464212", aadhaarFront: "-", aadhaarBack: "-", pan: "-", status: "Completed" },
-  { id: "3347", name: "-",               phone: "8955205040", aadhaarFront: "-", aadhaarBack: "-", pan: "-", status: "Completed" },
-  { id: "3346", name: "-",               phone: "7087040764", aadhaarFront: "-", aadhaarBack: "-", pan: "-", status: "Completed" },
-  { id: "3345", name: "Arshdeep Singh",  phone: "9988533182", aadhaarFront: "-", aadhaarBack: "-", pan: "-", status: "Completed" },
-  { id: "3344", name: "Arshpreet Singh", phone: "9646127661", aadhaarFront: "-", aadhaarBack: "-", pan: "-", status: "Completed" },
-  { id: "3343", name: "Sarabjit Singh",  phone: "7009172474", aadhaarFront: "-", aadhaarBack: "-", pan: "-", status: "Completed" },
-  { id: "3342", name: "Ram Lubhaya",     phone: "9779745208", aadhaarFront: "-", aadhaarBack: "-", pan: "-", status: "Completed" },
+  { id: "3334", name: "Sandeep Singh", phone: "9417320275", address: "Mari Nauabad, Punjab", status: "Incomplete" },
+  { id: "3327", name: "-",             phone: "8571063074", address: "-",                    status: "Incomplete" },
+  { id: "3323", name: "Aman Juneja",   phone: "7889269954", address: "Khuban, Punjab",       status: "Incomplete" },
+  { id: "3312", name: "Puneet Kumar",  phone: "9417345313", address: "Fazilka, Punjab",      status: "Incomplete" },
+  { id: "3303", name: "Manjeet Singh", phone: "7009976900", address: "Mansa, Punjab",        status: "Incomplete" },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -30,7 +25,7 @@ function SectionLabel({ children }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function CompletedKYCPage() {
+export default function RejectedKYCPage() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const filtered = usersData.filter(
@@ -45,19 +40,19 @@ export default function CompletedKYCPage() {
       {/* ── Header ── */}
       <div className="flex flex-wrap items-end justify-between gap-3 mb-2">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
-            <UserCheck className="text-green-600" size={20} />
+          <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
+            <UserX className="text-red-500" size={20} />
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-slate-800">Completed KYC Users</h1>
-            <p className="text-sm text-slate-500 mt-0.5">Manage users with completed KYC</p>
+            <h1 className="text-xl font-semibold text-slate-800">Rejected KYC Users</h1>
+            <p className="text-sm text-slate-500 mt-0.5">Manage users with Rejected KYC details</p>
           </div>
         </div>
       </div>
 
       {/* ── Stats ── */}
       <SectionLabel>Overview</SectionLabel>
-      <div className="grid grid-cols-2 gap-18">
+      <div className="grid grid-cols-2 gap-16">
         <div className="bg-white rounded-xl border border-slate-200 border-t-4 border-t-blue-500 p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer">
           <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
             <Users size={20} className="text-blue-600" />
@@ -67,16 +62,15 @@ export default function CompletedKYCPage() {
             <p className="text-xs text-slate-500 mt-1">Total Users</p>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 border-t-4 border-t-green-500 p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer">
-          <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
-            <UserCheck size={20} className="text-green-600" />
+        <div className="bg-white rounded-xl border border-slate-200 border-t-4 border-t-red-400 p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer">
+          <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
+            <UserX size={20} className="text-red-500" />
           </div>
           <div>
             <p className="text-2xl font-semibold text-slate-800">{usersData.length}</p>
-            <p className="text-xs text-slate-500 mt-1">Completed KYC</p>
+            <p className="text-xs text-slate-500 mt-1">Rejected KYC</p>
           </div>
         </div>
-        
       </div>
 
       {/* ── Search + Filter ── */}
@@ -104,7 +98,7 @@ export default function CompletedKYCPage() {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
-                {["User ID", "Name", "Phone", "Aadhaar Front", "Aadhaar Back", "PAN Card", "Status", "Action"].map((h) => (
+                {["User ID", "Name", "Phone", "Address", "Status", "Action"].map((h) => (
                   <th key={h} className="px-5 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap">
                     {h}
                   </th>
@@ -127,21 +121,13 @@ export default function CompletedKYCPage() {
                     {user.phone}
                   </td>
 
-                  <td className="px-5 py-4 text-sm text-slate-400">
-                    {user.aadhaarFront}
-                  </td>
-
-                  <td className="px-5 py-4 text-sm text-slate-400">
-                    {user.aadhaarBack}
-                  </td>
-
-                  <td className="px-5 py-4 text-sm text-slate-400">
-                    {user.pan}
+                  <td className="px-5 py-4 text-sm text-slate-500 max-w-[200px] truncate">
+                    {user.address}
                   </td>
 
                   <td className="px-5 py-4">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-green-50 text-green-700 border border-green-200">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
                       {user.status}
                     </span>
                   </td>
@@ -157,7 +143,7 @@ export default function CompletedKYCPage() {
 
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-5 py-12 text-center text-sm text-slate-400">
+                  <td colSpan={6} className="px-5 py-12 text-center text-sm text-slate-400">
                     No users found matching{" "}
                     <span className="font-semibold text-slate-600">"{searchTerm}"</span>
                   </td>
@@ -171,7 +157,7 @@ export default function CompletedKYCPage() {
         <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
           <p className="text-xs text-slate-400 font-medium">
             Page <span className="text-slate-600 font-semibold">1</span> of{" "}
-            <span className="text-slate-600 font-semibold">25</span>
+            <span className="text-slate-600 font-semibold">10</span>
           </p>
           <div className="flex items-center gap-1.5">
             <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100 transition-all">

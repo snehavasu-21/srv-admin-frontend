@@ -2,8 +2,9 @@
 
 import {
   Users, Home, Zap, LayoutGrid, FileText, Wallet,
-  HelpCircle, QrCode, Activity, UserCheck, UserX, Clock,
+  HelpCircle, QrCode, Activity, UserCheck, UserX, Clock, Trophy,
 } from "lucide-react";
+import Link from "next/link";
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
@@ -64,7 +65,7 @@ const statCards = [
 
 const kycCards = [
   {
-    label: "Incomplete KYC",
+    label: "Rejected KYC",
     value: "658",
     icon: UserX,
     bg: "bg-red-50",
@@ -114,6 +115,7 @@ const activityCards = [
     accent: "border-l-4 border-l-slate-400",
     hoverAccent: "hover:border-l-slate-600",
     hoverIconBg: "hover:bg-slate-200",
+    href: null,
   },
   {
     label: "Withdrawn Points",
@@ -124,6 +126,7 @@ const activityCards = [
     accent: "border-l-4 border-l-emerald-400",
     hoverAccent: "hover:border-l-emerald-600",
     hoverIconBg: "hover:bg-emerald-200",
+    href: null,
   },
   {
     label: "Open Enquiries",
@@ -134,6 +137,18 @@ const activityCards = [
     accent: "border-l-4 border-l-rose-400",
     hoverAccent: "hover:border-l-rose-600",
     hoverIconBg: "hover:bg-rose-200",
+    href: null,
+  },
+  {
+    label: "Top Redeem Points",
+    value: "24,304",
+    icon: Trophy,
+    iconBg: "bg-yellow-100",
+    iconColor: "text-yellow-600",
+    accent: "border-l-4 border-l-yellow-400",
+    hoverAccent: "hover:border-l-yellow-500",
+    hoverIconBg: "hover:bg-yellow-200",
+    href: "/admin/top-redeem-electricians",
   },
 ];
 
@@ -214,13 +229,7 @@ export default function DashboardPage() {
               `}
             >
               <div className="flex items-center justify-between">
-                <div
-                  className={`
-                    w-10 h-10 rounded-xl flex items-center justify-center
-                    ${card.iconBg} ${card.iconColor} ${card.hoverIconBg}
-                    transition-colors duration-200
-                  `}
-                >
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${card.iconBg} ${card.iconColor} ${card.hoverIconBg} transition-colors duration-200`}>
                   <Icon size={18} />
                 </div>
                 <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${card.badgeBg} ${card.badgeColor}`}>
@@ -244,13 +253,7 @@ export default function DashboardPage() {
           return (
             <div
               key={i}
-              className={`
-                rounded-xl border p-5
-                ${card.bg} ${card.border}
-                ${card.hoverBg} ${card.hoverBorder}
-                transition-all duration-200 ease-in-out
-                hover:shadow-md hover:-translate-y-0.5 cursor-pointer
-              `}
+              className={`rounded-xl border p-5 ${card.bg} ${card.border} ${card.hoverBg} ${card.hoverBorder} transition-all duration-200 ease-in-out hover:shadow-md hover:-translate-y-0.5 cursor-pointer`}
             >
               <div className="flex items-center gap-3 mb-4">
                 <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${card.iconBg} ${card.iconColor}`}>
@@ -268,34 +271,29 @@ export default function DashboardPage() {
 
       {/* Platform Activity */}
       <SectionLabel>Platform Activity</SectionLabel>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {activityCards.map((card, i) => {
           const Icon = card.icon;
-          return (
-            <div
-              key={i}
-              className={`
-                bg-white rounded-xl border border-slate-200 p-5
-                ${card.accent} ${card.hoverAccent}
-                transition-all duration-200 ease-in-out
-                hover:shadow-md hover:-translate-y-0.5 hover:bg-slate-50 cursor-pointer
-              `}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className={`
-                    w-10 h-10 rounded-xl flex items-center justify-center
-                    ${card.iconBg} ${card.iconColor} ${card.hoverIconBg}
-                    transition-colors duration-200
-                  `}
-                >
-                  <Icon size={18} />
-                </div>
-                <div>
-                  <p className="text-lg font-semibold text-slate-800">{card.value}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{card.label}</p>
-                </div>
+          const cls = `bg-white rounded-xl border border-slate-200 p-5 ${card.accent} ${card.hoverAccent} transition-all duration-200 ease-in-out hover:shadow-md hover:-translate-y-0.5 hover:bg-slate-50 cursor-pointer block`;
+          const inner = (
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${card.iconBg} ${card.iconColor} ${card.hoverIconBg} transition-colors duration-200`}>
+                <Icon size={18} />
               </div>
+              <div>
+                <p className="text-lg font-semibold text-slate-800">{card.value}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{card.label}</p>
+              </div>
+            </div>
+          );
+
+          return card.href ? (
+            <Link key={i} href={card.href} className={cls}>
+              {inner}
+            </Link>
+          ) : (
+            <div key={i} className={cls}>
+              {inner}
             </div>
           );
         })}
@@ -309,21 +307,9 @@ export default function DashboardPage() {
           return (
             <div
               key={i}
-              className={`
-                rounded-xl border p-5 flex items-center gap-4
-                ${card.bg} ${card.ring}
-                ${card.hoverBg} ${card.hoverRing}
-                transition-all duration-200 ease-in-out
-                hover:shadow-md hover:-translate-y-0.5 cursor-pointer
-              `}
+              className={`rounded-xl border p-5 flex items-center gap-4 ${card.bg} ${card.ring} ${card.hoverBg} ${card.hoverRing} transition-all duration-200 ease-in-out hover:shadow-md hover:-translate-y-0.5 cursor-pointer`}
             >
-              <div
-                className={`
-                  w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0
-                  ${card.iconBg} ${card.iconColor} ${card.hoverIconBg}
-                  transition-colors duration-200
-                `}
-              >
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${card.iconBg} ${card.iconColor} ${card.hoverIconBg} transition-colors duration-200`}>
                 <Icon size={20} />
               </div>
               <div>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -12,6 +13,7 @@ import {
   History, ArrowDownCircle, Trophy,
   Tag, List, BarChart2, FileText,
   ImageIcon, MessageSquare, Sliders,
+  PanelLeftClose, PanelLeftOpen,
 } from "lucide-react";
 
 const getRoute = (menu, sub) => {
@@ -20,7 +22,7 @@ const getRoute = (menu, sub) => {
     if (sub === "Dealers")     return "/dashboard/users/dealers";
   }
   if (menu === "KYC Users") {
-    if (sub === "Incomplete KYC") return "/dashboard/kyc-users/incomplete";
+    if (sub === "Rejected KYC") return "/dashboard/kyc-users/rejected";
     if (sub === "Pending KYC")    return "/dashboard/kyc-users/pending";
     if (sub === "Completed KYC") return "/dashboard/kyc-users/complete";
   }
@@ -60,7 +62,7 @@ const menus = [
   {
     name: "KYC Users", icon: ShieldCheck,
     submenu: [
-      { label: "Incomplete KYC", icon: UserX },
+      { label: "Rejected KYC", icon: UserX },
       { label: "Pending KYC",    icon: Clock },
       { label: "Completed KYC", icon: UserCheck },
     ],
@@ -120,8 +122,10 @@ export default function Sidebar() {
  // const [openMenu, setOpenMenu] = useState(null);
   const pathname = usePathname();
 
-  const toggleMenu = (name) =>
+  const toggleMenu = (name) => {
+    if (collapsed) return;
     setOpenMenu((prev) => (prev === name ? null : name));
+  };
 
   const isActive       = (link) => pathname === link;
   const isParentActive = (menu) =>
@@ -129,8 +133,12 @@ export default function Sidebar() {
 
   return (
     <div
-      className="w-[232px] flex-shrink-0 flex flex-col h-screen"
-      style={{ background: "#0a1930" }}
+      className="flex-shrink-0 flex flex-col h-screen transition-all duration-300 ease-in-out"
+      style={{
+        background: "#0a1930",
+        width: collapsed ? "64px" : "232px",
+        overflow: "hidden",
+      }}
     >
       {/* ── Logo ── */}
       <div className="px-5 py-[18px] flex items-center gap-3 flex-shrink-0"
@@ -149,8 +157,15 @@ export default function Sidebar() {
 
       {/* ── Navigation ── */}
       <nav
-        className="flex-1 px-3 py-3 space-y-0.5"
-        style={{ overflowY: "auto", scrollbarWidth: "none", msOverflowStyle: "none" }}
+        className="flex-1 py-3 space-y-0.5"
+        style={{
+          overflowY: "auto",
+          overflowX: "hidden",
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+          paddingLeft: collapsed ? "8px" : "12px",
+          paddingRight: collapsed ? "8px" : "12px",
+        }}
       >
         <style>{`nav::-webkit-scrollbar{display:none}`}</style>
 
@@ -163,12 +178,18 @@ export default function Sidebar() {
           return (
             <div key={index}>
 
-              {/* Section label — brighter */}
-              {label && (
-                <p className="text-[9px] font-semibold uppercase tracking-[0.12em] px-3 pt-4 pb-1.5 select-none"
-                  style={{ color: "#3B6EA5" }}>
+              {/* Section label — hide when collapsed */}
+              {label && !collapsed && (
+                <p
+                  className="text-[9px] font-semibold uppercase tracking-[0.12em] px-3 pt-4 pb-1.5 select-none whitespace-nowrap"
+                  style={{ color: "#3B6EA5" }}
+                >
                   {label}
                 </p>
+              )}
+              {/* Divider line when collapsed */}
+              {label && collapsed && (
+                <div className="my-2 mx-1" style={{ height: "1px", background: "rgba(255,255,255,0.06)" }} />
               )}
 
               {/* Dropdown */}
@@ -176,10 +197,13 @@ export default function Sidebar() {
                 <div>
                   <button
                     onClick={() => toggleMenu(menu.name)}
-                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-150 group"
+                    title={collapsed ? menu.name : undefined}
+                    className="w-full flex items-center rounded-lg text-[13px] font-medium transition-all duration-150"
                     style={{
                       background: parentActive || isOpen ? "rgba(59,130,246,0.15)" : "transparent",
                       color: parentActive || isOpen ? "#93C5FD" : "#CBD5E1",
+                      justifyContent: collapsed ? "center" : "space-between",
+                      padding: collapsed ? "10px 0" : "10px 12px",
                     }}
                     onMouseEnter={e => {
                       if (!parentActive && !isOpen) {
@@ -194,22 +218,27 @@ export default function Sidebar() {
                       }
                     }}
                   >
-                    <span className="flex items-center gap-2.5">
-                      <Icon size={15} className="flex-shrink-0"
+                    <span className="flex items-center" style={{ gap: collapsed ? 0 : "10px" }}>
+                      <Icon size={collapsed ? 18 : 15} className="flex-shrink-0"
                         style={{ color: parentActive || isOpen ? "#93C5FD" : "#7BA7C4" }} />
-                      {menu.name}
+                      {!collapsed && menu.name}
                     </span>
-                    <ChevronDown size={13} className="flex-shrink-0 transition-transform duration-200"
-                      style={{
-                        transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
-                        color: isOpen ? "#93C5FD" : "#3B6EA5",
-                      }} />
+                    {!collapsed && (
+                      <ChevronDown size={13} className="flex-shrink-0 transition-transform duration-200"
+                        style={{
+                          transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+                          color: isOpen ? "#93C5FD" : "#3B6EA5",
+                        }}
+                      />
+                    )}
                   </button>
 
-                  {/* Submenu */}
-                  {isOpen && (
-                    <div className="mt-0.5 ml-[18px] pl-3 space-y-0.5 pb-1"
-                      style={{ borderLeft: "2px solid rgba(59,130,246,0.2)" }}>
+                  {/* Submenu — only when expanded */}
+                  {isOpen && !collapsed && (
+                    <div
+                      className="mt-0.5 ml-[18px] pl-3 space-y-0.5 pb-1"
+                      style={{ borderLeft: "2px solid rgba(59,130,246,0.2)" }}
+                    >
                       {menu.submenu.map((sub, i) => {
                         const SubIcon = sub.icon;
                         const route   = getRoute(menu.name, sub.label);
@@ -246,12 +275,17 @@ export default function Sidebar() {
                 </div>
 
               ) : (
+                /* Direct link */
                 <Link
                   href={menu.link}
-                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-150 group"
+                  title={collapsed ? menu.name : undefined}
+                  className="flex items-center rounded-lg text-[13px] font-medium transition-all duration-150"
                   style={{
                     background: isActive(menu.link) ? "#2563EB" : "transparent",
                     color: isActive(menu.link) ? "#fff" : "#CBD5E1",
+                    justifyContent: collapsed ? "center" : "flex-start",
+                    gap: collapsed ? 0 : "10px",
+                    padding: collapsed ? "10px 0" : "10px 12px",
                   }}
                   onMouseEnter={e => {
                     if (!isActive(menu.link)) {
@@ -266,9 +300,9 @@ export default function Sidebar() {
                     }
                   }}
                 >
-                  <Icon size={15} className="flex-shrink-0"
+                  <Icon size={collapsed ? 18 : 15} className="flex-shrink-0"
                     style={{ color: isActive(menu.link) ? "#fff" : "#7BA7C4" }} />
-                  {menu.name}
+                  {!collapsed && menu.name}
                 </Link>
               )}
 
@@ -278,23 +312,44 @@ export default function Sidebar() {
       </nav>
 
       {/* ── Admin footer ── */}
-      <div className="px-4 py-3.5 flex-shrink-0"
-        style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ background: "rgba(37,99,235,0.25)", border: "1px solid rgba(37,99,235,0.4)" }}>
+      <div
+        className="flex-shrink-0 px-3 py-3.5"
+        style={{
+          borderTop: "1px solid rgba(255,255,255,0.08)",
+          justifyContent: collapsed ? "center" : "flex-start",
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        {collapsed ? (
+          <div
+            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: "rgba(37,99,235,0.25)", border: "1px solid rgba(37,99,235,0.4)" }}
+            title="Admin"
+          >
             <span className="text-xs font-semibold" style={{ color: "#93C5FD" }}>A</span>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[12px] font-medium text-white truncate">Admin</p>
-            <p className="text-[10px] truncate" style={{ color: "#60A5FA" }}>admin@srv.com</p>
+        ) : (
+          <div className="flex items-center gap-2.5 w-full">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ background: "rgba(37,99,235,0.25)", border: "1px solid rgba(37,99,235,0.4)" }}
+            >
+              <span className="text-xs font-semibold" style={{ color: "#93C5FD" }}>A</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[12px] font-medium text-white truncate">Admin</p>
+              <p className="text-[10px] truncate" style={{ color: "#60A5FA" }}>admin@srv.com</p>
+            </div>
+            <Settings
+              size={13}
+              className="flex-shrink-0 cursor-pointer transition-colors"
+              style={{ color: "#3B6EA5" }}
+              onMouseEnter={e => e.currentTarget.style.color = "#93C5FD"}
+              onMouseLeave={e => e.currentTarget.style.color = "#3B6EA5"}
+            />
           </div>
-          <Settings size={13} className="flex-shrink-0 cursor-pointer transition-colors"
-            style={{ color: "#3B6EA5" }}
-            onMouseEnter={e => e.currentTarget.style.color = "#93C5FD"}
-            onMouseLeave={e => e.currentTarget.style.color = "#3B6EA5"}
-          />
-        </div>
+        )}
       </div>
     </div>
   );
