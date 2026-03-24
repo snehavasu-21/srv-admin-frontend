@@ -117,8 +117,9 @@ const sectionBefore = {
   "Others":             "More",
 };
 
-export default function Sidebar({ collapsed, onToggle }) {
-  const [openMenu, setOpenMenu] = useState(null);
+export default function Sidebar() {
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
+ // const [openMenu, setOpenMenu] = useState(null);
   const pathname = usePathname();
 
   const toggleMenu = (name) => {
@@ -139,44 +140,19 @@ export default function Sidebar({ collapsed, onToggle }) {
         overflow: "hidden",
       }}
     >
-      {/* ── Logo + Toggle ── */}
-      <div
-        className="flex items-center flex-shrink-0 px-3"
-        style={{
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
-          height: "57px",
-          justifyContent: collapsed ? "center" : "space-between",
-        }}
-      >
-        {/* Logo — hide when collapsed */}
-        {!collapsed && (
-          <div className="flex items-center gap-3 min-w-0">
-            <div
-              className="w-9 h-9 relative rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center"
-              style={{ background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)" }}
-            >
-              <Image src="../srv.svg" alt="SRV Logo" fill className="object-contain p-1" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[13px] font-semibold text-white leading-tight tracking-tight truncate">
-                SRV Electricals
-              </p>
-              <p className="text-[10px]" style={{ color: "#60A5FA" }}>Admin Panel</p>
-            </div>
-          </div>
-        )}
-
-        {/* Toggle button */}
-        <button
-          onClick={onToggle}
-          className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-150 flex-shrink-0"
-          style={{ color: "#7BA7C4" }}
-          onMouseEnter={e => e.currentTarget.style.color = "#E2E8F0"}
-          onMouseLeave={e => e.currentTarget.style.color = "#7BA7C4"}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
-        </button>
+      {/* ── Logo ── */}
+      <div className="px-5 py-[18px] flex items-center gap-3 flex-shrink-0"
+        style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+        <div className="w-9 h-9 relative rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0"
+          style={{ background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)" }}>
+          <Image src="/srv.svg" alt="SRV Logo" fill className="object-contain p-1" />
+        </div>
+        <div>
+          <p className="text-[13px] font-semibold text-white leading-tight tracking-tight">
+            SRV Electricals
+          </p>
+          <p className="text-[10px]" style={{ color: "#60A5FA" }}>Admin Panel</p>
+        </div>
       </div>
 
       {/* ── Navigation ── */}

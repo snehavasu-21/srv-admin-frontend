@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -9,9 +8,35 @@ import {
   FileArchive, ShieldCheck, Clock, Filter, FileDown
 } from "lucide-react";
 
-// ─── Sub-components (Matching Electricians UI) ────────────────────────────────
+// ─── TypeScript Interfaces ──────────────────────────────────────────────────
 
-function SectionLabel({ children }) {
+interface QRCode {
+  id: string;
+  codeNumber: string;
+  points: string;
+  batch: string;
+  genDate: string;
+  userName: string;
+  redeemDate: string;
+  status: string;
+}
+
+interface SectionLabelProps {
+  children: React.ReactNode;
+}
+
+interface StatCardProps {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  iconBg: string;
+  iconColor: string;
+  borderAccent: string;
+}
+
+// ─── Sub-components ─────────────────────────────────────────────────────────
+
+function SectionLabel({ children }: SectionLabelProps) {
   return (
     <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mt-6 mb-3">
       {children}
@@ -19,7 +44,7 @@ function SectionLabel({ children }) {
   );
 }
 
-function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent }) {
+function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent }: StatCardProps) {
   return (
     <div
       className={`bg-white rounded-xl border border-slate-200 border-t-4 ${borderAccent} p-5 flex flex-col gap-3
@@ -41,7 +66,8 @@ function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent })
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AllQRCodesPage() {
-  const [qrList] = useState([
+  // Added <QRCode[]> to tell TypeScript this is an array of our QR objects
+  const [qrList] = useState<QRCode[]>([
     { id: "7332367", codeNumber: "53989E0ECE445F602DA2", points: "2", batch: "1535", genDate: "2026-03-20", userName: "", redeemDate: "2026-03-20", status: "Pending" },
     { id: "7332370", codeNumber: "4C2CAA73057FBF8446C5", points: "2", batch: "1535", genDate: "2026-03-20", userName: "", redeemDate: "2026-03-20", status: "Pending" },
     { id: "7332374", codeNumber: "4D71FB18B8A7765F9A71", points: "2", batch: "1535", genDate: "2026-03-20", userName: "", redeemDate: "2026-03-20", status: "Pending" },

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from "react";
@@ -6,16 +5,48 @@ import {
   Search, FileDown,
   ChevronLeft, ChevronRight,
   Filter, Edit2, CheckCircle2,
-  ArrowDownCircle, Wallet, Users,
-  Clock, IndianRupee,
+  ArrowDownCircle, Wallet,
+  Clock, IndianRupee, LucideIcon
 } from "lucide-react";
+
+// ─── TypeScript Interfaces ──────────────────────────────────────────────────
+
+type WithdrawalStatus = "Approved" | "Pending";
+
+interface WithdrawalRequest {
+  id: string;
+  userId: string;
+  userName: string;
+  phone: string;
+  date: string;
+  upiId: string;
+  points: string;
+  status: WithdrawalStatus;
+}
+
+interface SectionLabelProps {
+  children: React.ReactNode;
+}
+
+interface StatCardProps {
+  icon: LucideIcon;
+  label: string;
+  value: string | number;
+  iconBg: string;
+  iconColor: string;
+  borderAccent: string;
+}
+
+interface StatusBadgeProps {
+  status: WithdrawalStatus;
+}
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
-const withdrawalsData = [
-  { id: "187", userId: "1640", userName: "Pradeep Kumar",  phone: "9829555400", date: "2026-03-19", upiId: "9829555400@ybl",              points: "350",   status: "Approved" },
+const withdrawalsData: WithdrawalRequest[] = [
+  { id: "187", userId: "1640", userName: "Pradeep Kumar",  phone: "9829555400", date: "2026-03-19", upiId: "9829555400@ybl",               points: "350",   status: "Approved" },
   { id: "186", userId: "1203", userName: "Sanjeev Kumar",  phone: "7087734521", date: "2026-03-18", upiId: "sk21700146602@okaxis",         points: "115",   status: "Approved" },
-  { id: "185", userId: "794",  userName: "Gurpreet Singh", phone: "9781332040", date: "2026-03-18", upiId: "gff9656@okicici",              points: "100",   status: "Approved" },
+  { id: "185", userId: "794",  userName: "Gurpreet Singh", phone: "9781332040", date: "2026-03-18", upiId: "gff9656@okicici",               points: "100",   status: "Approved" },
   { id: "184", userId: "1515", userName: "Manoj Sharma",   phone: "9467698393", date: "2026-03-18", upiId: "manojsharmahr1998@oksbi",      points: "197.7", status: "Approved" },
   { id: "183", userId: "3072", userName: "Angrej Singh",   phone: "7710369844", date: "2026-03-18", upiId: "angrejrajpooto7-1@okaxis",     points: "100",   status: "Approved" },
   { id: "182", userId: "1641", userName: "Amit Sihag",     phone: "8107844354", date: "2026-03-18", upiId: "8107844354@ybl",               points: "220",   status: "Pending"  },
@@ -25,7 +56,7 @@ const withdrawalsData = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function SectionLabel({ children }) {
+function SectionLabel({ children }: SectionLabelProps) {
   return (
     <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mt-6 mb-3">
       {children}
@@ -33,7 +64,7 @@ function SectionLabel({ children }) {
   );
 }
 
-function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent }) {
+function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent }: StatCardProps) {
   return (
     <div
       className={`bg-white rounded-xl border border-slate-200 border-t-4 ${borderAccent} p-5 flex flex-col gap-3
@@ -50,7 +81,7 @@ function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent })
   );
 }
 
-function StatusBadge({ status }) {
+function StatusBadge({ status }: StatusBadgeProps) {
   if (status === "Approved") {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-green-50 text-green-700 border border-green-200">
@@ -70,8 +101,8 @@ function StatusBadge({ status }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function WithdrawalPage() {
-  const [searchTerm,  setSearchTerm]  = useState("");
-  const [statusFilter, setStatusFilter] = useState("All Status");
+  const [searchTerm,   setSearchTerm]   = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("All Status");
 
   const totalPoints   = withdrawalsData.reduce((acc, i) => acc + parseFloat(i.points), 0);
   const approvedCount = withdrawalsData.filter((i) => i.status === "Approved").length;
@@ -106,20 +137,20 @@ export default function WithdrawalPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatCard icon={Wallet}       label="Total Requests"    value={withdrawalsData.length} iconBg="bg-blue-100"   iconColor="text-blue-600"   borderAccent="border-t-blue-500"   />
         <StatCard icon={IndianRupee}  label="Total Points Paid" value={totalPoints.toFixed(1)} iconBg="bg-green-100"  iconColor="text-green-600"  borderAccent="border-t-green-500"  />
-        <StatCard icon={CheckCircle2} label="Approved"          value={approvedCount}          iconBg="bg-emerald-100" iconColor="text-emerald-600" borderAccent="border-t-emerald-500" />
-        <StatCard icon={Clock}        label="Pending"           value={pendingCount}           iconBg="bg-amber-100"  iconColor="text-amber-600"  borderAccent="border-t-amber-500"  />
+        <StatCard icon={CheckCircle2} label="Approved"           value={approvedCount}          iconBg="bg-emerald-100" iconColor="text-emerald-600" borderAccent="border-t-emerald-500" />
+        <StatCard icon={Clock}        label="Pending"            value={pendingCount}           iconBg="bg-amber-100"  iconColor="text-amber-600"  borderAccent="border-t-amber-500"  />
       </div>
 
       {/* ── Table Section ── */}
       <SectionLabel>All Withdrawal Requests</SectionLabel>
 
       {/* Search + Filter bar */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
           >
             <option>All Status</option>
             <option>Pending</option>
@@ -143,13 +174,13 @@ export default function WithdrawalPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
                 <th className="px-5 py-3.5 w-10">
-                  <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600" />
+                  <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" />
                 </th>
                 {["ID", "User Details", "Contact", "Points & Date", "UPI ID", "Status", "Action"].map((h) => (
                   <th key={h} className="px-5 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap">
@@ -160,10 +191,10 @@ export default function WithdrawalPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredData.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-50 transition-colors duration-150">
+                <tr key={item.id} className="hover:bg-slate-50/80 transition-colors duration-150">
 
                   <td className="px-5 py-4">
-                    <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600" />
+                    <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" />
                   </td>
 
                   {/* ID */}
@@ -227,7 +258,7 @@ export default function WithdrawalPage() {
                 <tr>
                   <td colSpan={8} className="px-5 py-12 text-center text-sm text-slate-400">
                     No withdrawals found matching{" "}
-                    <span className="font-semibold text-slate-600">"{searchTerm}"</span>
+                    <span className="font-semibold text-slate-600">&quot;{searchTerm}&quot;</span>
                   </td>
                 </tr>
               )}
@@ -236,7 +267,7 @@ export default function WithdrawalPage() {
         </div>
 
         {/* Pagination */}
-        <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
+        <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between bg-white">
           <p className="text-xs text-slate-400 font-medium">
             Showing{" "}
             <span className="text-slate-600 font-semibold">{filteredData.length}</span>{" "}

@@ -1,17 +1,41 @@
-
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { FileText, Save, Info, ShieldCheck, HelpCircle, Share2, Phone } from "lucide-react";
+import { 
+  FileText, Save, Info, ShieldCheck, 
+  HelpCircle, Share2, Phone, LucideIcon 
+} from "lucide-react";
+
+// ─── TypeScript Interfaces ──────────────────────────────────────────────────
+
+type PageKey = "about" | "contact" | "privacy" | "terms" | "refund" | "refer";
+
+interface PageContent {
+  about: string;
+  contact: string;
+  privacy: string;
+  terms: string;
+  refund: string;
+  refer: string;
+}
+
+interface TabConfig {
+  key: PageKey;
+  label: string;
+  icon: LucideIcon;
+}
+
+// ─── Page Component ──────────────────────────────────────────────────────────
 
 export default function PagesSettings() {
-  const [activeTab, setActiveTab] = useState("about");
+  const [activeTab, setActiveTab] = useState<PageKey>("about");
   const [editorLoaded, setEditorLoaded] = useState(false);
 
-  const [CKEditor, setCKEditor] = useState(null);
-  const [Editor, setEditor] = useState(null);
+  // Editor states with any-typing for dynamic library imports
+  const [CKEditorComp, setCKEditorComp] = useState<any>(null);
+  const [ClassicEditor, setClassicEditor] = useState<any>(null);
 
-  const [content, setContent] = useState({
+  const [content, setContent] = useState<PageContent>({
     about: "<h2>About SRV Electricals</h2><p>Providing quality electrical solutions since...</p>",
     contact: "<p>Contact us at support@srvelectricals.com</p>",
     privacy: "<h2>Privacy Policy</h2><p>Your data is safe with us.</p>",
@@ -23,25 +47,29 @@ export default function PagesSettings() {
   /* ✅ LOAD CKEDITOR ONLY ON CLIENT */
   useEffect(() => {
     const loadEditor = async () => {
-      const [ckeditor, classic] = await Promise.all([
-        import("@ckeditor/ckeditor5-react"),
-        import("@ckeditor/ckeditor5-build-classic"),
-      ]);
-      setCKEditor(() => ckeditor.CKEditor);
-      setEditor(() => classic.default);
-      setEditorLoaded(true);
+      try {
+        const [ckeditor, classic] = await Promise.all([
+          import("@ckeditor/ckeditor5-react"),
+          import("@ckeditor/ckeditor5-build-classic"),
+        ]);
+        setCKEditorComp(() => ckeditor.CKEditor);
+        setClassicEditor(() => classic.default);
+        setEditorLoaded(true);
+      } catch (error) {
+        console.error("Failed to load CKEditor:", error);
+      }
     };
     loadEditor();
   }, []);
 
-  const handleChange = (data) => {
+  const handleEditorChange = (data: string) => {
     setContent((prev) => ({
       ...prev,
       [activeTab]: data,
     }));
   };
 
-  const tabs = [
+  const tabs: TabConfig[] = [
     { key: "about", label: "About Us", icon: Info },
     { key: "contact", label: "Contact Us", icon: Phone },
     { key: "privacy", label: "Privacy Policy", icon: ShieldCheck },
@@ -49,6 +77,8 @@ export default function PagesSettings() {
     { key: "refund", label: "Refund Policy", icon: HelpCircle },
     { key: "refer", label: "Refer Program", icon: Share2 },
   ];
+
+  const currentTabLabel = tabs.find(t => t.key === activeTab)?.label;
 
   return (
     <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans text-slate-900">
@@ -61,7 +91,10 @@ export default function PagesSettings() {
           </h1>
           <p className="text-sm text-slate-500 mt-0.5">Edit legal and informational pages for the mobile app</p>
         </div>
-        <button className="flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-sm font-medium shadow-md shadow-blue-100">
+        <button 
+          onClick={() => alert("Settings Saved Successfully!")}
+          className="flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:scale-95 transition-all text-sm font-medium shadow-md shadow-blue-100"
+        >
           <Save size={16} /> Save Changes
         </button>
       </div>
@@ -72,17 +105,18 @@ export default function PagesSettings() {
         <div className="w-full lg:w-72 space-y-2 shrink-0">
           {tabs.map((tab) => {
             const Icon = tab.icon;
+            const isActive = activeTab === tab.key;
             return (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                  activeTab === tab.key
+                  isActive
                     ? "bg-white text-blue-600 shadow-sm border-l-4 border-blue-600"
                     : "text-slate-500 hover:bg-white/50 hover:text-slate-700"
                 }`}
               >
-                <Icon size={18} className={activeTab === tab.key ? "text-blue-600" : "text-slate-400"} />
+                <Icon size={18} className={isActive ? "text-blue-600" : "text-slate-400"} />
                 {tab.label}
               </button>
             );
@@ -90,27 +124,32 @@ export default function PagesSettings() {
         </div>
 
         {/* EDITOR AREA */}
-        <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+        <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col min-h-[600px]">
           <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-              Editing: {tabs.find(t => t.key === activeTab)?.label}
-            </span>
-            <span className="text-[10px] font-medium px-2 py-1 bg-blue-50 text-blue-600 rounded-md">
-              HTML Editor Active
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                Editing Section
+              </span>
+              <span className="text-sm font-bold text-slate-700">
+                {currentTabLabel}
+              </span>
+            </div>
+            <span className="text-[10px] font-medium px-2 py-1 bg-emerald-50 text-emerald-600 rounded-md border border-emerald-100">
+              Auto-saving to draft
             </span>
           </div>
 
           <div className="p-6 flex-1 editor-container">
-            {editorLoaded && CKEditor && Editor ? (
-              <CKEditor
-                editor={Editor}
+            {editorLoaded && CKEditorComp && ClassicEditor ? (
+              <CKEditorComp
+                editor={ClassicEditor}
                 data={content[activeTab]}
-                onChange={(event, editor) => {
+                onChange={(_event: any, editor: any) => {
                   const data = editor.getData();
-                  handleChange(data);
+                  handleEditorChange(data);
                 }}
                 config={{
-                  placeholder: `Write the ${activeTab} content here...`,
+                  placeholder: `Write the ${currentTabLabel} content here...`,
                   toolbar: [
                     "heading", "|", "bold", "italic", "underline", "link", "|",
                     "bulletedList", "numberedList", "blockQuote", "|",
@@ -119,9 +158,9 @@ export default function PagesSettings() {
                 }}
               />
             ) : (
-              <div className="h-64 flex flex-col items-center justify-center gap-3 border-2 border-dashed border-slate-100 rounded-xl">
+              <div className="h-96 flex flex-col items-center justify-center gap-3 border-2 border-dashed border-slate-100 rounded-xl bg-slate-50/30">
                 <div className="w-8 h-8 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></div>
-                <p className="text-slate-400 text-sm font-medium">Initializing Editor...</p>
+                <p className="text-slate-400 text-sm font-medium">Initializing WYSIWYG Editor...</p>
               </div>
             )}
           </div>
@@ -142,16 +181,18 @@ export default function PagesSettings() {
           border-radius: 12px 12px 0 0 !important;
         }
         .ck-content {
-          min-height: 400px !important;
+          min-height: 450px !important;
           border: 1px solid #e2e8f0 !important;
           border-top: none !important;
           border-radius: 0 0 12px 12px !important;
-          font-size: 14px !important;
+          padding: 1.5rem !important;
+          font-size: 15px !important;
+          line-height: 1.6 !important;
           color: #334155 !important;
         }
         .ck-content:focus {
           border-color: #3b82f6 !important;
-          box-shadow: none !important;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
         }
       `}</style>
     </div>

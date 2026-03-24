@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, ChangeEvent } from "react";
 import {
   Search,
   Plus,
@@ -14,8 +13,23 @@ import {
   ArrowUpDown
 } from "lucide-react";
 
+// ─── TypeScript Interfaces ──────────────────────────────────────────────────
+
+type FAQStatus = "Active" | "Inactive";
+
+interface FAQ {
+  id: string;
+  question: string;
+  answer: string;
+  status: FAQStatus;
+}
+
+type ActionType = "enable" | "disable" | "delete";
+
+// ─── Page Component ──────────────────────────────────────────────────────────
+
 export default function FAQPage() {
-  const [faqs, setFaqs] = useState([
+  const [faqs, setFaqs] = useState<FAQ[]>([
     {
       id: "1",
       question: "How to use the SRV Electricals app?",
@@ -30,8 +44,11 @@ export default function FAQPage() {
     },
   ]);
 
-  const [selected, setSelected] = useState([]);
-  const [openDropdown, setOpenDropdown] = useState(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [selected, setSelected] = useState<string[]>([]);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+
+  // ─── Handlers ──────────────────────────────────────────────────────────────
 
   const handleSelectAll = () => {
     if (selected.length === faqs.length) {
@@ -41,7 +58,7 @@ export default function FAQPage() {
     }
   };
 
-  const handleSelect = (id) => {
+  const handleSelect = (id: string) => {
     if (selected.includes(id)) {
       setSelected(selected.filter((i) => i !== id));
     } else {
@@ -49,13 +66,18 @@ export default function FAQPage() {
     }
   };
 
-  const handleBulkAction = (action) => {
+  const handleBulkAction = (action: string) => {
+    if (!action) return;
+
     if (action === "delete") {
       setFaqs(faqs.filter((faq) => !selected.includes(faq.id)));
     } else {
       const updated = faqs.map((faq) => {
         if (selected.includes(faq.id)) {
-          return { ...faq, status: action === "enable" ? "Active" : "Inactive" };
+          return { 
+            ...faq, 
+            status: (action === "enable" ? "Active" : "Inactive") as FAQStatus 
+          };
         }
         return faq;
       });
@@ -64,20 +86,24 @@ export default function FAQPage() {
     setSelected([]);
   };
 
-  const handleAction = (id, action) => {
+  const handleAction = (id: string, action: ActionType) => {
     if (action === "delete") {
       setFaqs(faqs.filter((f) => f.id !== id));
     } else {
       setFaqs(
         faqs.map((f) =>
           f.id === id
-            ? { ...f, status: action === "enable" ? "Active" : "Inactive" }
+            ? { ...f, status: (action === "enable" ? "Active" : "Inactive") as FAQStatus }
             : f
         )
       );
     }
     setOpenDropdown(null);
   };
+
+  const filteredFaqs = faqs.filter(faq => 
+    faq.question.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans text-slate-900">
@@ -104,6 +130,8 @@ export default function FAQPage() {
           <input
             type="text"
             placeholder="Search questions..."
+            value={searchTerm}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20"
           />
         </div>
@@ -113,10 +141,11 @@ export default function FAQPage() {
           <div className="relative flex-1 md:flex-none">
             <select
               onChange={(e) => handleBulkAction(e.target.value)}
+              value=""
               disabled={selected.length === 0}
               className="w-full md:w-48 appearance-none bg-slate-50 border border-slate-200 px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
-              <option value="">Choose action...</option>
+              <option value="" disabled>Choose action...</option>
               <option value="enable">Enable Selected</option>
               <option value="disable">Disable Selected</option>
               <option value="delete">Delete Selected</option>
@@ -153,7 +182,7 @@ export default function FAQPage() {
             </thead>
 
             <tbody className="divide-y divide-slate-50">
-              {faqs.length === 0 ? (
+              {filteredFaqs.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center py-16">
                     <div className="flex flex-col items-center text-slate-400">
@@ -163,7 +192,7 @@ export default function FAQPage() {
                   </td>
                 </tr>
               ) : (
-                faqs.map((faq) => (
+                filteredFaqs.map((faq) => (
                   <tr key={faq.id} className="group hover:bg-slate-50/80 transition-all duration-200">
                     <td className="px-6 py-4 text-center">
                       <input

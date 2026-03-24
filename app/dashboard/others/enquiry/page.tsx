@@ -1,24 +1,48 @@
-
 "use client";
 
 import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
 import { 
   Search, ChevronDown, ChevronLeft, ChevronRight,
-  Trash2, Edit2, MessageSquare, User, Phone,
-  Clock, CheckCircle, Filter, Mail
+  Trash2, Edit2, MessageSquare, User, 
+  Clock, CheckCircle, Filter, FileSpreadsheet
 } from "lucide-react";
+
+// ─── TypeScript Interfaces ──────────────────────────────────────────────────
+
+interface Enquiry {
+  id: string;
+  userName: string;
+  phone: string;
+  subject: string;
+  comment: string;
+  response: string;
+  type: "Pending" | "In review" | string;
+  status: "Enable" | "Disable" | string;
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function EnquiryPage() {
   const [isActionOpen, setIsActionOpen] = useState(false);
 
-  const [enquiries] = useState([
+  const [enquiries] = useState<Enquiry[]>([
     { id: "9", userName: "Satnam Panchal", phone: "+91 98765-43210", subject: "Scan problem", comment: "Scan problem aya raha h", response: "", type: "Pending", status: "Enable" },
     { id: "8", userName: "Guest User", phone: "Not Available", subject: "Attention", comment: "Hi", response: "", type: "Pending", status: "Enable" },
     { id: "7", userName: "Harpreet Singh Sidhu", phone: "+91 99887-76655", subject: "HarpreetSinghSidhu", comment: "Ok", response: "", type: "Pending", status: "Enable" },
     { id: "6", userName: "NIKHIL SAINI", phone: "+91 90123-45678", subject: "Pending my reward points", comment: "Pending my reward points", response: "When did you place your gift order...", type: "In review", status: "Enable" },
     { id: "5", userName: "Balvinder singh", phone: "+91 91234-56789", subject: "New abadi gurdwara street 3 fazilka", comment: "New abadi gurdwara street 3 fazilka", response: "Sorry, I am unable to understand...", type: "In review", status: "Enable" },
   ]);
+
+  // ─── Handlers ──────────────────────────────────────────────────────────────
+
+  const exportEnquiries = () => {
+    const worksheet = XLSX.utils.json_to_sheet(enquiries);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Enquiries");
+    XLSX.writeFile(workbook, "Enquiries_Export.xlsx");
+    setIsActionOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans text-slate-900">
@@ -65,17 +89,20 @@ export default function EnquiryPage() {
               onClick={() => setIsActionOpen(!isActionOpen)}
               className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-all shadow-sm"
             >
-              Action <ChevronDown size={14} />
+              Action <ChevronDown size={14} className={`transition-transform ${isActionOpen ? 'rotate-180' : ''}`} />
             </button>
             {isActionOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 z-50 py-2">
-                <button onClick={exportEnquiries} className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
-                  <FileSpreadsheet size={14} /> Export to Excel
-                </button>
-                <button className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors">
-                  <Trash2 size={14} /> Delete Selected
-                </button>
-              </div>
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setIsActionOpen(false)}></div>
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 z-50 py-2">
+                  <button onClick={exportEnquiries} className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+                    <FileSpreadsheet size={14} /> Export to Excel
+                  </button>
+                  <button className="w-full flex items-center gap-3 px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors">
+                    <Trash2 size={14} /> Delete Selected
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -102,7 +129,7 @@ export default function EnquiryPage() {
               {enquiries.map((item) => (
                 <tr key={item.id} className="group hover:bg-slate-50/80 transition-all duration-200">
                   <td className="px-5 py-4 text-center">
-                    <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600" />
+                    <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" />
                   </td>
                   <td className="px-5 py-4 text-xs font-medium text-slate-400">#{item.id}</td>
                   <td className="px-5 py-4">

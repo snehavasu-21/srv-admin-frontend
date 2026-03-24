@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -6,19 +5,41 @@ import * as XLSX from 'xlsx';
 import { 
   Search, ChevronDown, ChevronLeft, ChevronRight,
   Trash2, Edit2, Plus, Target, 
-  Shield, TrendingUp, AlertCircle
+  Shield, TrendingUp, AlertCircle, FileSpreadsheet
 } from "lucide-react";
+
+// ─── TypeScript Interfaces ──────────────────────────────────────────────────
+
+interface PlanRange {
+  id: string;
+  name: string;
+  minPoint: string;
+  maxPoint: string;
+  status: "Enable" | "Disable" | string;
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PlanRangePage() {
   const [isActionOpen, setIsActionOpen] = useState(false);
 
-  // Loyalty Tier Data
-  const [plans] = useState([
+  // Loyalty Tier Data with explicit typing
+  const [plans] = useState<PlanRange[]>([
     { id: "4", name: "Platinum", minPoint: "701", maxPoint: "1000", status: "Enable" },
     { id: "3", name: "Gold", minPoint: "501", maxPoint: "700", status: "Enable" },
     { id: "2", name: "Silver", minPoint: "201", maxPoint: "500", status: "Enable" },
     { id: "1", name: "Bronze", minPoint: "0", maxPoint: "200", status: "Enable" },
   ]);
+
+  // ─── Handlers ──────────────────────────────────────────────────────────────
+
+  const exportPlans = () => {
+    const worksheet = XLSX.utils.json_to_sheet(plans);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "PlanRanges");
+    XLSX.writeFile(workbook, "Loyalty_Plans_Export.xlsx");
+    setIsActionOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans text-slate-900">
@@ -56,7 +77,7 @@ export default function PlanRangePage() {
               onClick={() => setIsActionOpen(!isActionOpen)}
               className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-100 transition-all"
             >
-              Action <ChevronDown size={14} />
+              Action <ChevronDown size={14} className={`transition-transform ${isActionOpen ? 'rotate-180' : ''}`} />
             </button>
             {isActionOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 z-50 py-2">
@@ -92,7 +113,7 @@ export default function PlanRangePage() {
               {plans.map((plan) => (
                 <tr key={plan.id} className="group hover:bg-slate-50/80 transition-all duration-200">
                   <td className="px-5 py-4 text-center">
-                    <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600" />
+                    <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" />
                   </td>
                   
                   <td className="px-5 py-4">
@@ -163,6 +184,7 @@ export default function PlanRangePage() {
         </div>
       </div>
 
+      {/* Backdrop for closing dropdown */}
       {isActionOpen && <div className="fixed inset-0 z-40" onClick={() => setIsActionOpen(false)}></div>}
     </div>
   );

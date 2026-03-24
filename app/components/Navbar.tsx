@@ -14,6 +14,7 @@ export default function Navbar() {
 
   // 👉 Close dropdown when clicking outside
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleClickOutside = (event: any) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setOpen(false);
@@ -50,7 +51,7 @@ export default function Navbar() {
           className="w-10 h-10 rounded-full overflow-hidden cursor-pointer border-2 border-white"
         >
           <Image
-            src="/srv.png"
+            src="/icon.svg"
             alt="Admin"
             width={40}
             height={40}

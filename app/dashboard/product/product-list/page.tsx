@@ -1,26 +1,42 @@
-
-
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, ChangeEvent } from "react";
 import {
   Search, Plus, Package, Edit2, Trash2,
   ChevronLeft, ChevronRight, Filter, FileDown,
 } from "lucide-react";
 
+// ─── TypeScript Interfaces ──────────────────────────────────────────────────
+
+type ToggleStatus = "Enable" | "Disable";
+
+interface Product {
+  id: string;
+  category: string;
+  name: string;
+  oriPrice: string;
+  offerPrice: string;
+  status: ToggleStatus;
+  featured: ToggleStatus;
+}
+
+interface SectionLabelProps {
+  children: React.ReactNode;
+}
+
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
-const productsData = [
-  { id: "302", category: "PVC Casing Batten",  name: "PVC Casing Batten",          oriPrice: "76",  offerPrice: "45.6",  status: "Enable",  featured: "Disable" },
-  { id: "301", category: "PVC Casing Batten",  name: "PVC Casing Batten",          oriPrice: "70",  offerPrice: "42",    status: "Enable",  featured: "Disable" },
-  { id: "300", category: "PVC Casing Batten",  name: "PVC Casing Batten",          oriPrice: "51",  offerPrice: "30.6",  status: "Enable",  featured: "Disable" },
+const productsData: Product[] = [
+  { id: "302", category: "PVC Casing Batten",  name: "PVC Casing Batten",           oriPrice: "76",  offerPrice: "45.6",  status: "Enable",  featured: "Disable" },
+  { id: "301", category: "PVC Casing Batten",  name: "PVC Casing Batten",           oriPrice: "70",  offerPrice: "42",    status: "Enable",  featured: "Disable" },
+  { id: "300", category: "PVC Casing Batten",  name: "PVC Casing Batten",           oriPrice: "51",  offerPrice: "30.6",  status: "Enable",  featured: "Disable" },
   { id: "299", category: "PVC Conduit Bend",   name: "Conduit Bend Medium 2.5\"",  oriPrice: "91",  offerPrice: "54.6",  status: "Enable",  featured: "Disable" },
   { id: "298", category: "PVC Conduit Pipe",   name: "Conduit Pipe Medium 1.50\"", oriPrice: "356", offerPrice: "213.6", status: "Disable", featured: "Disable" },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function SectionLabel({ children }) {
+function SectionLabel({ children }: SectionLabelProps) {
   return (
     <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mt-6 mb-3">
       {children}
@@ -31,13 +47,17 @@ function SectionLabel({ children }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ProductListPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [products, setProducts]     = useState(productsData);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [products, setProducts]     = useState<Product[]>(productsData);
 
-  const toggleStatus = (id, newStatus) => {
+  const toggleStatus = (id: string, newStatus: ToggleStatus) => {
     setProducts((prev) =>
       prev.map((p) => (p.id === id ? { ...p, status: newStatus } : p))
     );
+  };
+
+  const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
   };
 
   const filtered = products.filter((p) =>
@@ -54,7 +74,7 @@ export default function ProductListPage() {
       {/* ── Header ── */}
       <div className="flex flex-wrap items-end justify-between gap-3 mb-2">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center shadow-sm">
             <Package className="text-orange-600" size={20} />
           </div>
           <div>
@@ -76,8 +96,8 @@ export default function ProductListPage() {
 
       {/* ── Stats ── */}
       <SectionLabel>Overview</SectionLabel>
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl border border-slate-200 border-t-4 border-t-orange-500 p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-white rounded-xl border border-slate-200 border-t-4 border-t-orange-500 p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-default">
           <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
             <Package size={18} className="text-orange-600" />
           </div>
@@ -86,7 +106,7 @@ export default function ProductListPage() {
             <p className="text-xs text-slate-500 mt-1">Total Products</p>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 border-t-4 border-t-green-500 p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer">
+        <div className="bg-white rounded-xl border border-slate-200 border-t-4 border-t-green-500 p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-default">
           <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
             <Package size={18} className="text-green-600" />
           </div>
@@ -95,7 +115,7 @@ export default function ProductListPage() {
             <p className="text-xs text-slate-500 mt-1">Enabled</p>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 border-t-4 border-t-rose-400 p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer">
+        <div className="bg-white rounded-xl border border-slate-200 border-t-4 border-t-rose-400 p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-default">
           <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center">
             <Package size={18} className="text-rose-500" />
           </div>
@@ -108,14 +128,14 @@ export default function ProductListPage() {
 
       {/* ── Search + Filter ── */}
       <SectionLabel>All Products</SectionLabel>
-      <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
           <input
             type="text"
             placeholder="Search products..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearch}
             className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
         </div>
@@ -124,7 +144,7 @@ export default function ProductListPage() {
             <Filter size={14} />
             Filter
           </button>
-          <select className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+          <select className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer">
             <option>All Categories</option>
             <option>PVC Casing Batten</option>
             <option>PVC Conduit Bend</option>
@@ -134,13 +154,13 @@ export default function ProductListPage() {
       </div>
 
       {/* ── Table ── */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
                 <th className="px-5 py-3.5 w-10">
-                  <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600" />
+                  <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" />
                 </th>
                 {["ID", "Product", "Category", "Status", "Price", "Actions"].map((h) => (
                   <th key={h} className="px-5 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap">
@@ -151,11 +171,11 @@ export default function ProductListPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filtered.map((prod) => (
-                <tr key={prod.id} className="hover:bg-slate-50 transition-colors duration-150 group">
+                <tr key={prod.id} className="hover:bg-slate-50/80 transition-colors duration-150 group">
 
                   {/* Checkbox */}
                   <td className="px-5 py-4">
-                    <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600" />
+                    <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" />
                   </td>
 
                   {/* ID */}
@@ -231,7 +251,7 @@ export default function ProductListPage() {
                 <tr>
                   <td colSpan={7} className="px-5 py-12 text-center text-sm text-slate-400">
                     No products found matching{" "}
-                    <span className="font-semibold text-slate-600">"{searchTerm}"</span>
+                    <span className="font-semibold text-slate-600">&quot;{searchTerm}&quot;</span>
                   </td>
                 </tr>
               )}
@@ -240,7 +260,7 @@ export default function ProductListPage() {
         </div>
 
         {/* Pagination */}
-        <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
+        <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between bg-white">
           <p className="text-xs text-slate-400 font-medium">
             Showing{" "}
             <span className="text-slate-600 font-semibold">{filtered.length}</span>{" "}

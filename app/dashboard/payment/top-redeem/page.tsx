@@ -1,12 +1,30 @@
-
 "use client";
 
 import React, { useState } from "react";
 import { FileDown, ShoppingBag, ArrowRight, Trophy } from "lucide-react";
 
+// ─── TypeScript Interfaces ──────────────────────────────────────────────────
+
+interface RedeemReportItem {
+  rank: number;
+  userId: string;
+  name: string;
+  phone: string;
+  electricianCode: string;
+  dealerCode: string;
+  wallet: string;
+  totalOrders: string;
+  totalPoints: string;
+  lastRedeem: string;
+}
+
+interface SectionLabelProps {
+  children: React.ReactNode;
+}
+
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
-const reportData = [
+const reportData: RedeemReportItem[] = [
   { rank: 1, userId: "1640", name: "Pradeep Kumar",  phone: "9829555400", electricianCode: "424591", dealerCode: "N/A",    wallet: "200.9", totalOrders: "1", totalPoints: "3,000.00", lastRedeem: "2026-01-21" },
   { rank: 2, userId: "1641", name: "Amit Sihag",     phone: "8107844354", electricianCode: "816504", dealerCode: "N/A",    wallet: "0",     totalOrders: "3", totalPoints: "2,325.00", lastRedeem: "2026-02-28" },
   { rank: 3, userId: "2225", name: "Anil",            phone: "6375055052", electricianCode: "744548", dealerCode: "N/A",    wallet: "342.1", totalOrders: "1", totalPoints: "750.00",   lastRedeem: "2026-02-13" },
@@ -18,7 +36,7 @@ const reportData = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function SectionLabel({ children }) {
+function SectionLabel({ children }: SectionLabelProps) {
   return (
     <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mt-6 mb-3">
       {children}
@@ -26,7 +44,7 @@ function SectionLabel({ children }) {
   );
 }
 
-function getRankStyle(rank) {
+function getRankStyle(rank: number): string {
   if (rank === 1) return "bg-amber-100 text-amber-700 border border-amber-300";
   if (rank === 2) return "bg-slate-200 text-slate-700 border border-slate-300";
   if (rank === 3) return "bg-orange-100 text-orange-700 border border-orange-200";
@@ -36,9 +54,9 @@ function getRankStyle(rank) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function TopRedeemPage() {
-  const [filterType, setFilterType] = useState("All Time");
-  const [fromDate,   setFromDate]   = useState("");
-  const [toDate,     setToDate]     = useState("");
+  const [filterType, setFilterType] = useState<string>("All Time");
+  const [fromDate,   setFromDate]   = useState<string>("");
+  const [toDate,     setToDate]     = useState<string>("");
 
   return (
     <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans">

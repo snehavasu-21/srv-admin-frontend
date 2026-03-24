@@ -1,16 +1,39 @@
-
 "use client";
 
 import React, { useState } from 'react';
 import { 
   Search, ChevronLeft, ChevronRight, Filter,
   Trash2, Bell, Send, User, Users,
-  Calendar, MessageSquare, Megaphone, Plus
+  Calendar, MessageSquare, Megaphone
 } from "lucide-react";
 
-// ─── Sub-components (Matching Electricians UI) ────────────────────────────────
+// ─── TypeScript Interfaces ──────────────────────────────────────────────────
 
-function SectionLabel({ children }) {
+interface NotificationEntry {
+  id: string;
+  type: "Individual User" | "All Users" | string;
+  name: string;
+  title: string;
+  date: string;
+  msg: string;
+}
+
+interface SectionLabelProps {
+  children: React.ReactNode;
+}
+
+interface StatCardProps {
+  icon: React.ElementType;
+  label: string;
+  value: string | number;
+  iconBg: string;
+  iconColor: string;
+  borderAccent: string;
+}
+
+// ─── Sub-components ─────────────────────────────────────────────────────────
+
+function SectionLabel({ children }: SectionLabelProps) {
   return (
     <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mt-6 mb-3">
       {children}
@@ -18,7 +41,7 @@ function SectionLabel({ children }) {
   );
 }
 
-function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent }) {
+function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent }: StatCardProps) {
   return (
     <div
       className={`bg-white rounded-xl border border-slate-200 border-t-4 ${borderAccent} p-5 flex flex-col gap-3
@@ -40,7 +63,7 @@ function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent })
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function NotificationPage() {
-  const [notifications] = useState([
+  const [notifications] = useState<NotificationEntry[]>([
     { id: "1", type: "Individual User", name: "Anmol Goyal", title: "Testing the push notification", date: "Dec-26-2025 07:03:55", msg: "This notification must be pushed in the notification panel of android mobile" },
     { id: "2", type: "Individual User", name: "Anmol desire", title: "Anmol Goyal", date: "Nov-19-2025 11:01:37", msg: "testing push notification message" },
     { id: "7", type: "All Users", name: "0", title: "Price Update", date: "Oct-24-2025 04:58:04", msg: "The price of 4 way DD has been updated to Rs.306" },

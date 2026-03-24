@@ -1,17 +1,39 @@
-
 "use client";
 
 import React, { useState } from "react";
 import {
   Search, Plus, Edit2, Trash2,
   ChevronLeft, ChevronRight, Filter,
-  Image as ImageIcon, Award, Gift,
+  Image as ImageIcon, Award, Gift as GiftIcon,
   CheckCircle2, XCircle, ChevronDown,
 } from "lucide-react";
 
+// ─── TypeScript Interfaces ──────────────────────────────────────────────────
+
+interface Gift {
+  id: string;
+  type: string;
+  name: string;
+  points: string;
+  status: string;
+}
+
+interface SectionLabelProps {
+  children: React.ReactNode;
+}
+
+interface StatCardProps {
+  icon: React.ElementType;
+  label: string;
+  value: string | number;
+  iconBg: string;
+  iconColor: string;
+  borderAccent: string;
+}
+
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
-const giftsData = [
+const giftsData: Gift[] = [
   { id: "17", type: "Electrician", name: "Electrician Bag",          points: "500",  status: "Enable" },
   { id: "16", type: "Electrician", name: "Drill Machine",            points: "1200", status: "Enable" },
   { id: "15", type: "Electrician", name: "Electric Water Geyser",    points: "3500", status: "Enable" },
@@ -22,7 +44,7 @@ const giftsData = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function SectionLabel({ children }) {
+function SectionLabel({ children }: SectionLabelProps) {
   return (
     <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mt-6 mb-3">
       {children}
@@ -30,7 +52,7 @@ function SectionLabel({ children }) {
   );
 }
 
-function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent }) {
+function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent }: StatCardProps) {
   return (
     <div className={`bg-white rounded-xl border border-slate-200 border-t-4 ${borderAccent} p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer`}>
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBg} ${iconColor}`}>
@@ -47,24 +69,23 @@ function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent })
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function GiftStorePage() {
-  const [searchTerm,   setSearchTerm]   = useState("");
-  const [actionOpen,   setActionOpen]   = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [actionOpen, setActionOpen] = useState(false);
 
   const filtered = giftsData.filter((g) =>
     g.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const enabledCount  = giftsData.filter((g) => g.status === "Enable").length;
-  const totalPoints   = giftsData.reduce((acc, g) => acc + parseInt(g.points), 0);
+  const enabledCount = giftsData.filter((g) => g.status === "Enable").length;
 
   return (
-    <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans">
+    <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans text-slate-900">
 
       {/* ── Header ── */}
       <div className="flex flex-wrap items-end justify-between gap-3 mb-2">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
-            <Gift className="text-amber-600" size={20} />
+            <GiftIcon className="text-amber-600" size={20} />
           </div>
           <div>
             <h1 className="text-xl font-semibold text-slate-800">Gift Store Inventory</h1>
@@ -79,8 +100,8 @@ export default function GiftStorePage() {
 
       {/* ── Stats ── */}
       <SectionLabel>Overview</SectionLabel>
-      <div className="grid grid-cols-3 gap-4">
-        <StatCard icon={Gift}         label="Total Gifts"    value={giftsData.length} iconBg="bg-amber-100"  iconColor="text-amber-600"  borderAccent="border-t-amber-500"  />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard icon={GiftIcon}    label="Total Gifts"    value={giftsData.length} iconBg="bg-amber-100"  iconColor="text-amber-600"  borderAccent="border-t-amber-500"  />
         <StatCard icon={CheckCircle2} label="Active Gifts"   value={enabledCount}     iconBg="bg-green-100"  iconColor="text-green-600"  borderAccent="border-t-green-500"  />
         <StatCard icon={Award}        label="Max Points"     value="4,500"            iconBg="bg-purple-100" iconColor="text-purple-600" borderAccent="border-t-purple-500" />
       </div>
@@ -154,17 +175,14 @@ export default function GiftStorePage() {
               {filtered.map((gift) => (
                 <tr key={gift.id} className="hover:bg-slate-50 transition-colors duration-150 group">
 
-                  {/* Checkbox */}
                   <td className="px-5 py-4">
                     <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600" />
                   </td>
 
-                  {/* ID */}
                   <td className="px-5 py-4 text-xs font-medium text-slate-400">
                     #{gift.id}
                   </td>
 
-                  {/* Gift Detail */}
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-11 h-11 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center flex-shrink-0 group-hover:bg-amber-100 transition-colors">
@@ -180,14 +198,12 @@ export default function GiftStorePage() {
                     </div>
                   </td>
 
-                  {/* Category */}
                   <td className="px-5 py-4">
                     <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
                       {gift.type}
                     </span>
                   </td>
 
-                  {/* Status */}
                   <td className="px-5 py-4">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
                       gift.status === "Enable"
@@ -199,7 +215,6 @@ export default function GiftStorePage() {
                     </span>
                   </td>
 
-                  {/* Actions */}
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-1">
                       <button className="w-8 h-8 flex items-center justify-center rounded-lg text-amber-500 hover:bg-amber-50 transition-all duration-200" title="Edit">
@@ -227,7 +242,7 @@ export default function GiftStorePage() {
         </div>
 
         {/* Pagination */}
-        <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
+        <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between bg-white">
           <p className="text-xs text-slate-400 font-medium">
             Showing{" "}
             <span className="text-slate-600 font-semibold">{filtered.length}</span>{" "}

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from "react";
@@ -9,19 +8,50 @@ import {
   Calendar, Package, Clock,
 } from "lucide-react";
 
+// ─── Interfaces (Fixes the Red Lines) ─────────────────────────────────────────
+
+interface Order {
+  id: string;
+  userName: string;
+  productName: string;
+  receiverName: string;
+  receiverPhone: string;
+  address: string;
+  points: string;
+  date: string;
+  status: string;
+}
+
+interface SectionLabelProps {
+  children: React.ReactNode;
+}
+
+interface StatCardProps {
+  icon: React.ElementType;
+  label: string;
+  value: string | number;
+  iconBg: string;
+  iconColor: string;
+  borderAccent: string;
+}
+
+interface StatusBadgeProps {
+  status: string;
+}
+
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
-const ordersData = [
+const ordersData: Order[] = [
   { id: "62", userName: "Manjeet Singh",  productName: "Electrician Bag",           receiverName: "Nsjwja",           receiverPhone: "7009524322", address: "X9HR+78 Green Valley Colony, Mansa, Punjab, India",                    points: "75",   date: "2026-03-14", status: "Rejected"  },
   { id: "61", userName: "Amit Sihag",     productName: "Electrician Bag",           receiverName: "Sumit Choudhary",  receiverPhone: "8107844354", address: "Priya Electrical Gadakhera",                                           points: "75",   date: "2026-02-28", status: "Rejected"  },
   { id: "60", userName: "Amit Sihag",     productName: "BLDS Ceiling Fan (4 Blade)",receiverName: "Sumit Choudhary",  receiverPhone: "8107844354", address: "Priya Electrical Gadakhera",                                           points: "1500", date: "2026-02-26", status: "Rejected"  },
   { id: "59", userName: "Anil",           productName: "Drill Machine",             receiverName: "Anil Kumar",       receiverPhone: "6375055052", address: "6MR2+7RM, Shiv Colony, Chirawa, Rajasthan 333026, India",              points: "750",  date: "2026-02-13", status: "Delivered" },
-  { id: "58", userName: "Sanjeev Kumar",  productName: "Electrician Bag",           receiverName: "Suraj",            receiverPhone: "7087734521", address: "Guru Har Sahai, Punjab 152022, India",                                  points: "75",   date: "2026-02-12", status: "Delivered" },
+  { id: "58", userName: "Sanjeev Kumar",  productName: "Electrician Bag",           receiverName: "Suraj",            receiverPhone: "7087734521", address: "Guru Har Sahai, Punjab 152022, India",                                   points: "75",   date: "2026-02-12", status: "Delivered" },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function SectionLabel({ children }) {
+function SectionLabel({ children }: SectionLabelProps) {
   return (
     <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mt-6 mb-3">
       {children}
@@ -29,7 +59,7 @@ function SectionLabel({ children }) {
   );
 }
 
-function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent }) {
+function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent }: StatCardProps) {
   return (
     <div className={`bg-white rounded-xl border border-slate-200 border-t-4 ${borderAccent} p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer`}>
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBg} ${iconColor}`}>
@@ -43,7 +73,7 @@ function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent })
   );
 }
 
-function StatusBadge({ status }) {
+function StatusBadge({ status }: StatusBadgeProps) {
   if (status === "Delivered") {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-green-50 text-green-700 border border-green-200">
@@ -71,11 +101,11 @@ function StatusBadge({ status }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function GiftStoreOrderPage() {
-  const [actionOpen,    setActionOpen]    = useState(false);
-  const [searchTerm,    setSearchTerm]    = useState("");
-  const [statusFilter,  setStatusFilter]  = useState("All Status");
-  const [fromDate,      setFromDate]      = useState("");
-  const [toDate,        setToDate]        = useState("");
+  const [actionOpen, setActionOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All Status");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
 
   const deliveredCount = ordersData.filter((o) => o.status === "Delivered").length;
   const rejectedCount  = ordersData.filter((o) => o.status === "Rejected").length;
@@ -128,7 +158,6 @@ export default function GiftStoreOrderPage() {
         <SectionLabel>Filters</SectionLabel>
         <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4">
           <div className="flex flex-wrap items-end gap-3">
-            {/* Search */}
             <div className="flex-1 min-w-[180px]">
               <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Search</label>
               <div className="relative">
@@ -143,7 +172,6 @@ export default function GiftStoreOrderPage() {
               </div>
             </div>
 
-            {/* Status */}
             <div className="min-w-[140px]">
               <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Status</label>
               <select
@@ -158,7 +186,6 @@ export default function GiftStoreOrderPage() {
               </select>
             </div>
 
-            {/* From */}
             <div className="min-w-[150px]">
               <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Start Date</label>
               <input
@@ -169,7 +196,6 @@ export default function GiftStoreOrderPage() {
               />
             </div>
 
-            {/* To */}
             <div className="min-w-[150px]">
               <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">End Date</label>
               <input
@@ -180,7 +206,6 @@ export default function GiftStoreOrderPage() {
               />
             </div>
 
-            {/* Buttons */}
             <div className="flex gap-2">
               <button className="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-all shadow-sm">
                 Apply
@@ -199,8 +224,6 @@ export default function GiftStoreOrderPage() {
       {/* ── Table ── */}
       <SectionLabel>All Orders</SectionLabel>
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-
-        {/* Table toolbar */}
         <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between print:hidden">
           <div className="flex items-center gap-2">
             <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600" />
@@ -257,18 +280,12 @@ export default function GiftStoreOrderPage() {
             <tbody className="divide-y divide-slate-100">
               {filtered.map((order) => (
                 <tr key={order.id} className="hover:bg-slate-50 transition-colors duration-150">
-
-                  {/* Checkbox */}
                   <td className="px-5 py-4 print:hidden">
                     <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600" />
                   </td>
-
-                  {/* ID */}
                   <td className="px-5 py-4 text-xs font-medium text-slate-400">
                     #{order.id}
                   </td>
-
-                  {/* User / Product */}
                   <td className="px-5 py-4">
                     <p className="text-sm font-medium text-slate-800 whitespace-nowrap">{order.userName}</p>
                     <button className="flex items-center gap-1 text-[11px] text-blue-600 font-medium mt-0.5 hover:underline">
@@ -276,21 +293,15 @@ export default function GiftStoreOrderPage() {
                       {order.productName}
                     </button>
                   </td>
-
-                  {/* Receiver Info */}
                   <td className="px-5 py-4">
                     <p className="text-sm font-medium text-slate-800 whitespace-nowrap">{order.receiverName}</p>
                     <p className="text-xs text-slate-400 mt-0.5">{order.receiverPhone}</p>
                   </td>
-
-                  {/* Address */}
                   <td className="px-5 py-4">
                     <p className="text-xs text-slate-500 max-w-[200px] leading-relaxed line-clamp-2">
                       {order.address}
                     </p>
                   </td>
-
-                  {/* Points & Date */}
                   <td className="px-5 py-4">
                     <p className="text-sm font-semibold text-green-600">{order.points} pts</p>
                     <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-0.5">
@@ -298,13 +309,9 @@ export default function GiftStoreOrderPage() {
                       {order.date}
                     </div>
                   </td>
-
-                  {/* Status */}
                   <td className="px-5 py-4">
                     <StatusBadge status={order.status} />
                   </td>
-
-                  {/* Actions */}
                   <td className="px-5 py-4 print:hidden">
                     <div className="flex items-center gap-1">
                       <button className="w-8 h-8 flex items-center justify-center rounded-lg text-amber-500 hover:bg-amber-50 transition-all duration-200" title="Edit">
@@ -315,10 +322,8 @@ export default function GiftStoreOrderPage() {
                       </button>
                     </div>
                   </td>
-
                 </tr>
               ))}
-
               {filtered.length === 0 && (
                 <tr>
                   <td colSpan={8} className="px-5 py-12 text-center text-sm text-slate-400">
@@ -330,7 +335,6 @@ export default function GiftStoreOrderPage() {
           </table>
         </div>
 
-        {/* Pagination */}
         <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between print:hidden">
           <p className="text-xs text-slate-400 font-medium">
             Showing{" "}
@@ -364,7 +368,6 @@ export default function GiftStoreOrderPage() {
       {actionOpen && (
         <div className="fixed inset-0 z-40" onClick={() => setActionOpen(false)} />
       )}
-
     </div>
   );
 }
