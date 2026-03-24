@@ -172,7 +172,7 @@ export default function NotificationPage() {
 
                   <td className="px-5 py-4">
                     <p className="text-xs text-slate-500 font-medium line-clamp-1 max-w-[250px] italic">
-                      "{note.msg}"
+                      &quot;{note.msg}&quot;
                     </p>
                   </td>
 

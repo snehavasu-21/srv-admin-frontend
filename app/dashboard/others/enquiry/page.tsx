@@ -142,7 +142,7 @@ export default function EnquiryPage() {
                   </td>
                   <td className="px-5 py-4">
                     <div className="text-sm font-bold text-slate-800 mb-0.5">{item.subject}</div>
-                    <div className="text-xs text-slate-500 max-w-[220px] line-clamp-2 italic">"{item.comment}"</div>
+                    <div className="text-xs text-slate-500 max-w-[220px] line-clamp-2 italic">&quot;{item.comment}&quot;</div>
                   </td>
                   <td className="px-5 py-4">
                     {item.response ? (

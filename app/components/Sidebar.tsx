@@ -16,6 +16,13 @@ import {
 } from "lucide-react";
 
 // --- Types & Interfaces ---
+
+// 1. Sidebar ke liye Props interface add kiya
+interface SidebarProps {
+  collapsed: boolean;
+  onToggle: () => void;
+}
+
 interface SubMenuItem {
   label: string;
   icon: LucideIcon;
@@ -65,16 +72,10 @@ const menus: MenuItem[] = [
   { name: "Settings", icon: Settings, submenu: [{ label: "General Settings", icon: Sliders }, { label: "Pages Settings", icon: FileText }, { label: "FAQ", icon: HelpCircle }] },
 ];
 
-export default function Sidebar() {
+// 2. Component ko Props accept karne ke liye update kiya
+export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const [collapsed, setCollapsed] = useState<boolean>(false);
   const pathname = usePathname();
-
-  // Minimize toggle function
-  const toggleSidebar = () => {
-    setCollapsed(!collapsed);
-    setOpenMenu(null); // Minimize hone par submenu close kar dete hain
-  };
 
   const toggleMenu = (name: string) => {
     if (collapsed) return;
@@ -94,13 +95,15 @@ export default function Sidebar() {
         borderRight: "1px solid rgba(255,255,255,0.08)"
       }}
     >
-      {/* ── Header & Toggle Button ── */}
+      {/* Header */}
       <div className="px-4 py-5 flex items-center justify-between flex-shrink-0"
         style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
         
         <div className="flex items-center gap-3 overflow-hidden">
           <div className="w-9 h-9 relative rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0"
             style={{ background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)" }}>
+            {/* Logo placeholder - replace src with your actual srv.svg path */}
+            <div className="w-full h-full bg-blue-500/20 flex items-center justify-center text-[10px] font-bold text-blue-400">SRV</div>
             <Image src="/srv.svg" alt="SRV Logo" fill className="object-contain p-1" />
           </div>
           {!collapsed && (
@@ -111,9 +114,9 @@ export default function Sidebar() {
           )}
         </div>
 
-        {/* Minimize Toggle Button */}
+        {/* Toggle Button - Now calls onToggle from props */}
         <button 
-          onClick={toggleSidebar}
+          onClick={onToggle}
           className="p-1.5 rounded-lg hover:bg-white/5 transition-colors"
           style={{ color: "#3B6EA5" }}
         >
@@ -121,7 +124,7 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* ── Navigation ── */}
+      {/* Navigation */}
       <nav className="flex-1 py-4 overflow-y-auto overflow-x-hidden space-y-1 px-3 custom-scrollbar">
         <style>{`.custom-scrollbar::-webkit-scrollbar { width: 0px; }`}</style>
 
@@ -202,7 +205,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* ── Footer ── */}
+      {/* Footer */}
       <div className="p-4 border-t border-white/5 bg-[#081426]">
         <div className={`flex items-center ${collapsed ? "justify-center" : "gap-3"}`}>
           <div className="w-8 h-8 rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0">

@@ -1,11 +1,28 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Eye, ChevronLeft, ChevronRight, Filter, UserX, Users, AlertCircle } from "lucide-react";
+import React, { useState, ChangeEvent } from "react";
+import { 
+  Search, Eye, ChevronLeft, ChevronRight, 
+  Filter, UserX, Users 
+} from "lucide-react";
+
+// ─── Types & Interfaces ──────────────────────────────────────────────────────
+
+interface RejectedUser {
+  id: string;
+  name: string;
+  phone: string;
+  address: string;
+  status: "Incomplete" | "Rejected" | "Action Required";
+}
+
+interface SectionLabelProps {
+  children: React.ReactNode;
+}
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
-const usersData = [
+const usersData: RejectedUser[] = [
   { id: "3334", name: "Sandeep Singh", phone: "9417320275", address: "Mari Nauabad, Punjab", status: "Incomplete" },
   { id: "3327", name: "-",             phone: "8571063074", address: "-",                    status: "Incomplete" },
   { id: "3323", name: "Aman Juneja",   phone: "7889269954", address: "Khuban, Punjab",       status: "Incomplete" },
@@ -15,24 +32,30 @@ const usersData = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function SectionLabel({ children }) {
+const SectionLabel: React.FC<SectionLabelProps> = ({ children }) => {
   return (
     <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mt-6 mb-3">
       {children}
     </p>
   );
-}
+};
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ─── Page Component ───────────────────────────────────────────────────────────
 
 export default function RejectedKYCPage() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   const filtered = usersData.filter(
     (u) =>
       u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       u.phone.includes(searchTerm)
   );
+
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page on search
+  };
 
   return (
     <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans">
@@ -52,7 +75,7 @@ export default function RejectedKYCPage() {
 
       {/* ── Stats ── */}
       <SectionLabel>Overview</SectionLabel>
-      <div className="grid grid-cols-2 gap-16">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-10">
         <div className="bg-white rounded-xl border border-slate-200 border-t-4 border-t-blue-500 p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer">
           <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
             <Users size={20} className="text-blue-600" />
@@ -62,6 +85,7 @@ export default function RejectedKYCPage() {
             <p className="text-xs text-slate-500 mt-1">Total Users</p>
           </div>
         </div>
+
         <div className="bg-white rounded-xl border border-slate-200 border-t-4 border-t-red-400 p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer">
           <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
             <UserX size={20} className="text-red-500" />
@@ -82,7 +106,7 @@ export default function RejectedKYCPage() {
             type="text"
             placeholder="Search by name or phone..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearchChange}
             className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
         </div>
@@ -108,36 +132,21 @@ export default function RejectedKYCPage() {
             <tbody className="divide-y divide-slate-100">
               {filtered.map((user) => (
                 <tr key={user.id} className="hover:bg-slate-50 transition-colors duration-150">
-
-                  <td className="px-5 py-4 text-sm font-medium text-slate-500">
-                    {user.id}
-                  </td>
-
-                  <td className="px-5 py-4 text-sm font-medium text-slate-800">
-                    {user.name}
-                  </td>
-
-                  <td className="px-5 py-4 text-sm font-medium text-slate-700">
-                    {user.phone}
-                  </td>
-
-                  <td className="px-5 py-4 text-sm text-slate-500 max-w-[200px] truncate">
-                    {user.address}
-                  </td>
-
+                  <td className="px-5 py-4 text-sm font-medium text-slate-500">{user.id}</td>
+                  <td className="px-5 py-4 text-sm font-medium text-slate-800">{user.name}</td>
+                  <td className="px-5 py-4 text-sm font-medium text-slate-700">{user.phone}</td>
+                  <td className="px-5 py-4 text-sm text-slate-500 max-w-[200px] truncate">{user.address}</td>
                   <td className="px-5 py-4">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
                       {user.status}
                     </span>
                   </td>
-
                   <td className="px-5 py-4">
                     <button className="w-8 h-8 flex items-center justify-center rounded-lg text-blue-500 hover:bg-blue-50 transition-all duration-200" title="View Details">
                       <Eye size={15} />
                     </button>
                   </td>
-
                 </tr>
               ))}
 
@@ -145,7 +154,7 @@ export default function RejectedKYCPage() {
                 <tr>
                   <td colSpan={6} className="px-5 py-12 text-center text-sm text-slate-400">
                     No users found matching{" "}
-                    <span className="font-semibold text-slate-600">"{searchTerm}"</span>
+                    <span className="font-semibold text-slate-600">&quot;{searchTerm}&quot;</span>
                   </td>
                 </tr>
               )}
@@ -156,18 +165,22 @@ export default function RejectedKYCPage() {
         {/* Pagination */}
         <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
           <p className="text-xs text-slate-400 font-medium">
-            Page <span className="text-slate-600 font-semibold">1</span> of{" "}
+            Page <span className="text-slate-600 font-semibold">{currentPage}</span> of{" "}
             <span className="text-slate-600 font-semibold">10</span>
           </p>
           <div className="flex items-center gap-1.5">
-            <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100 transition-all">
+            <button 
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100 transition-all"
+            >
               <ChevronLeft size={14} />
             </button>
             {[1, 2].map((n) => (
               <button
                 key={n}
+                onClick={() => setCurrentPage(n)}
                 className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all ${
-                  n === 1
+                  n === currentPage
                     ? "bg-blue-600 text-white shadow-sm"
                     : "bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100"
                 }`}
@@ -175,7 +188,10 @@ export default function RejectedKYCPage() {
                 {n}
               </button>
             ))}
-            <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100 transition-all">
+            <button 
+              onClick={() => setCurrentPage(p => Math.min(10, p + 1))}
+              className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100 transition-all"
+            >
               <ChevronRight size={14} />
             </button>
           </div>

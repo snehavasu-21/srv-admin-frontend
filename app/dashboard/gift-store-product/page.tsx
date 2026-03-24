@@ -233,7 +233,7 @@ export default function GiftStorePage() {
                 <tr>
                   <td colSpan={6} className="px-5 py-12 text-center text-sm text-slate-400">
                     No gifts found matching{" "}
-                    <span className="font-semibold text-slate-600">"{searchTerm}"</span>
+                    <span className="font-semibold text-slate-600">&quot;{searchTerm}&quot;</span>
                   </td>
                 </tr>
               )}
