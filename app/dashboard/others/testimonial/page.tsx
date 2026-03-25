@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import * as XLSX from 'xlsx';
 import { 
   Search, ChevronDown, ChevronLeft, ChevronRight,
   Trash2, Edit2, Plus, Star, Quote,
   FileSpreadsheet, UserCircle, MessageSquare, 
-  X, Save, CheckCircle2, AlertTriangle
+  X, Save, CheckCircle2, Upload, Image as ImageIcon
 } from "lucide-react";
 
 // --- Types ---
@@ -16,6 +16,7 @@ interface Testimonial {
   review: string;
   rate: string;
   status: "Enable" | "Disable";
+  image?: string; // Added image property
 }
 
 export default function TestimonialPage() {
@@ -33,12 +34,14 @@ export default function TestimonialPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; visible: boolean }>({ msg: "", visible: false });
 
-  // Form State
+  // Form State & Ref
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: "",
     review: "",
     rate: "5",
-    status: "Enable" as "Enable" | "Disable"
+    status: "Enable" as "Enable" | "Disable",
+    image: ""
   });
 
   // 2. LOGIC
@@ -54,15 +57,26 @@ export default function TestimonialPage() {
     );
   }, [testimonials, searchTerm]);
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, image: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleOpenAdd = () => {
     setEditingId(null);
-    setFormData({ name: "", review: "", rate: "5", status: "Enable" });
+    setFormData({ name: "", review: "", rate: "5", status: "Enable", image: "" });
     setIsPanelOpen(true);
   };
 
   const handleOpenEdit = (item: Testimonial) => {
     setEditingId(item.id);
-    setFormData({ name: item.name, review: item.review, rate: item.rate, status: item.status });
+    setFormData({ name: item.name, review: item.review, rate: item.rate, status: item.status, image: item.image || "" });
     setIsPanelOpen(true);
   };
 
@@ -115,7 +129,7 @@ export default function TestimonialPage() {
         </div>
       )}
 
-      {/* --- SIDE PANEL (ADD/EDIT) --- */}
+      {/* --- SIDE PANEL --- */}
       <div className={`fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-[100] transform transition-transform duration-300 ease-in-out ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="h-full flex flex-col">
           <div className="px-6 py-6 border-b flex justify-between items-center bg-slate-50">
@@ -127,29 +141,43 @@ export default function TestimonialPage() {
           </div>
           
           <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-6 space-y-5">
+            {/* IMAGE UPLOAD SECTION */}
+            <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer group" onClick={() => fileInputRef.current?.click()}>
+              {formData.image ? (
+                <img src={formData.image} alt="Preview" className="w-20 h-20 object-cover rounded-xl shadow-md" />
+              ) : (
+                <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center text-slate-400 shadow-sm group-hover:scale-110 transition-transform">
+                  <Upload size={24} />
+                </div>
+              )}
+              <p className="mt-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                {formData.image ? "Change User Photo" : "Upload User Photo"}
+              </p>
+              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
+            </div>
+
             <div>
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">User Name</label>
               <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full mt-1.5 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none" placeholder="Enter name" />
             </div>
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Rating (1-5)</label>
-              <select value={formData.rate} onChange={e => setFormData({...formData, rate: e.target.value})} className="w-full mt-1.5 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none">
-                {[5, 4, 3, 2, 1].map(num => <option key={num} value={num}>{num} Stars</option>)}
-              </select>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Rating (1-5)</label>
+                <select value={formData.rate} onChange={e => setFormData({...formData, rate: e.target.value})} className="w-full mt-1.5 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                  {[5, 4, 3, 2, 1].map(num => <option key={num} value={num}>{num} Stars</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Display Status</label>
+                <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value as any})} className="w-full mt-1.5 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                  <option value="Enable">Enable</option>
+                  <option value="Disable">Disable</option>
+                </select>
+              </div>
             </div>
             <div>
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Review Message</label>
               <textarea required rows={4} value={formData.review} onChange={e => setFormData({...formData, review: e.target.value})} className="w-full mt-1.5 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none resize-none" placeholder="Write the customer review here..." />
-            </div>
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Display Status</label>
-              <div className="flex gap-3 mt-1.5">
-                {["Enable", "Disable"].map((s) => (
-                  <button key={s} type="button" onClick={() => setFormData({...formData, status: s as any})} className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all ${formData.status === s ? 'bg-blue-600 border-blue-600 text-white shadow-md' : 'bg-white border-slate-200 text-slate-500'}`}>
-                    {s}
-                  </button>
-                ))}
-              </div>
             </div>
           </form>
 
@@ -228,8 +256,12 @@ export default function TestimonialPage() {
                   <td className="px-5 py-4 text-xs font-medium text-slate-400">#{item.id}</td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200 group-hover:border-blue-200 transition-all">
-                        <UserCircle size={20} />
+                      <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200 group-hover:border-blue-200 transition-all overflow-hidden">
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <UserCircle size={20} />
+                        )}
                       </div>
                       <span className="font-semibold text-sm text-slate-800">{item.name}</span>
                     </div>
@@ -286,7 +318,6 @@ export default function TestimonialPage() {
         </div>
       </div>
 
-      {/* Background Overlay for Panel */}
       {isPanelOpen && <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[90]" onClick={() => setIsPanelOpen(false)}></div>}
     </div>
   );

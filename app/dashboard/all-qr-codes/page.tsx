@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -8,7 +9,7 @@ import {
   FileArchive, ShieldCheck, Clock, Filter
 } from "lucide-react";
 
-// ─── TypeScript Interfaces ──────────────────────────────────────────────────
+// ─── Interfaces ──────────────────────────────────────────────────
 
 interface QRCode {
   id: string;
@@ -57,7 +58,6 @@ function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent }:
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AllQRCodesPage() {
-  // Mock Data
   const [qrList] = useState<QRCode[]>([
     { id: "7332367", codeNumber: "53989E0ECE445F602DA2", points: "2", batch: "1535", genDate: "2026-03-20", userName: "", redeemDate: "2026-03-20", status: "Pending" },
     { id: "7332370", codeNumber: "4C2CAA73057FBF8446C5", points: "5", batch: "1535", genDate: "2026-03-20", userName: "", redeemDate: "2026-03-20", status: "Redeemed" },
@@ -67,7 +67,6 @@ export default function AllQRCodesPage() {
     { id: "7332371", codeNumber: "7EEED61AE16CAC02F941", points: "2", batch: "1535", genDate: "2026-03-20", userName: "", redeemDate: "2026-03-20", status: "Pending" },
   ]);
 
-  // UI States
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
@@ -90,6 +89,7 @@ export default function AllQRCodesPage() {
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
+  // LOGIC: Export Excel
   const exportAllData = () => {
     const worksheet = XLSX.utils.json_to_sheet(filteredData);
     const workbook = XLSX.utils.book_new();
@@ -97,9 +97,34 @@ export default function AllQRCodesPage() {
     XLSX.writeFile(workbook, `QR_Inventory_${new Date().toLocaleDateString()}.xlsx`);
   };
 
+  // FIXED LOGIC: Download Single QR Image using a Public API (No 'qrcode' library needed)
+  const handleDownloadSingle = async (qr: QRCode) => {
+    // We use GoQR.me API to generate the image on the fly
+    const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${qr.codeNumber}`;
+    
+    try {
+      const response = await fetch(apiUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `QR_Code_${qr.id}.png`;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Download failed", err);
+      alert("Failed to download QR code. Please check your internet connection.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans text-slate-900">
-
+      
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-4 mb-2">
         <div>
@@ -125,7 +150,6 @@ export default function AllQRCodesPage() {
       {/* Table Section */}
       <SectionLabel>QR Code List</SectionLabel>
 
-      {/* Search + Filter bar */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
@@ -153,7 +177,6 @@ export default function AllQRCodesPage() {
         </div>
       </div>
 
-      {/* Table */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -179,7 +202,7 @@ export default function AllQRCodesPage() {
                     </span>
                   </td>
                   <td className="px-5 py-4 text-center">
-                    <div className="inline-block p-1 bg-white border border-slate-200 rounded-lg group-hover:border-blue-200 transition-colors">
+                    <div className="inline-block p-1 bg-white border border-slate-200 rounded-lg">
                       <QrCode size={28} className="text-slate-800" strokeWidth={1.5} />
                     </div>
                   </td>
@@ -210,7 +233,10 @@ export default function AllQRCodesPage() {
                     </span>
                   </td>
                   <td className="px-5 py-4 text-right">
-                    <button className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg text-[11px] font-bold transition-all">
+                    <button 
+                      onClick={() => handleDownloadSingle(qr)}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg text-[11px] font-bold transition-all active:scale-95"
+                    >
                       <Download size={12} /> Download
                     </button>
                   </td>
@@ -218,9 +244,6 @@ export default function AllQRCodesPage() {
               ))}
             </tbody>
           </table>
-          {filteredData.length === 0 && (
-            <div className="p-12 text-center text-slate-400 text-sm">No QR codes found matching your criteria.</div>
-          )}
         </div>
 
         {/* Pagination Footer */}

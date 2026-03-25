@@ -1,11 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
-  Search, ChevronDown, ChevronLeft, ChevronRight,
-  CheckCircle2, XCircle, Trash2, Edit2, Eye,
+  Search, ChevronLeft, ChevronRight,
+  CheckCircle2, XCircle, Trash2, 
   Printer, FileSpreadsheet, ShoppingBag,
-  Calendar, Package, Clock, X, Save
+  Calendar, Package, X, AlertCircle, Check, Info
 } from "lucide-react";
 
 // ─── Interfaces ─────────────────────────────────────────────────────────────
@@ -22,20 +23,15 @@ interface Order {
   status: "Delivered" | "Rejected" | "Pending";
 }
 
-interface SectionLabelProps { children: React.ReactNode; }
-
-interface StatCardProps {
-  icon: React.ElementType;
-  label: string;
-  value: string | number;
-  iconBg: string;
-  iconColor: string;
-  borderAccent: string;
+interface Toast {
+  id: number;
+  message: string;
+  type: "success" | "error" | "info";
 }
 
 // ─── Components ──────────────────────────────────────────────────────────────
 
-function SectionLabel({ children }: SectionLabelProps) {
+function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mt-8 mb-3 flex items-center gap-2">
       <span className="w-8 h-[1px] bg-slate-200"></span>
@@ -44,7 +40,7 @@ function SectionLabel({ children }: SectionLabelProps) {
   );
 }
 
-function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent }: StatCardProps) {
+function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent }: any) {
   return (
     <div className={`bg-white rounded-2xl border border-slate-200 border-t-4 ${borderAccent} p-5 flex flex-col gap-3 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group`}>
       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${iconBg} ${iconColor}`}>
@@ -81,7 +77,6 @@ function StatusBadge({ status }: { status: string }) {
 // ─── Main Page ──────────────────────────────────────────────────────────────
 
 export default function GiftStoreOrderPage() {
-  // 1. STATE
   const [orders, setOrders] = useState<Order[]>([
     { id: "62", userName: "Manjeet Singh", productName: "Electrician Bag", receiverName: "Nsjwja", receiverPhone: "7009524322", address: "X9HR+78 Green Valley Colony, Mansa, Punjab, India", points: "75", date: "2026-03-14", status: "Rejected" },
     { id: "61", userName: "Amit Sihag", productName: "Electrician Bag", receiverName: "Sumit Choudhary", receiverPhone: "8107844354", address: "Priya Electrical Gadakhera", points: "75", date: "2026-02-28", status: "Rejected" },
@@ -94,44 +89,67 @@ export default function GiftStoreOrderPage() {
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-  const [actionOpen, setActionOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [bulkDeleteActive, setBulkDeleteActive] = useState(false);
+  const [toasts, setToasts] = useState<Toast[]>([]);
 
-  // 2. FILTERING LOGIC
+  // Toast Helper
+  const showMessage = (message: string, type: Toast["type"] = "success") => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
+  };
+
+  // Filtering Logic
   const filteredOrders = useMemo(() => {
     return orders.filter((o) => {
       const matchesSearch = 
         o.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         o.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         o.receiverPhone.includes(searchTerm);
-      
       const matchesStatus = statusFilter === "All Status" || o.status === statusFilter;
-      
       const orderDate = new Date(o.date);
       const start = fromDate ? new Date(fromDate) : null;
       const end = toDate ? new Date(toDate) : null;
       const matchesDate = (!start || orderDate >= start) && (!end || orderDate <= end);
-
       return matchesSearch && matchesStatus && matchesDate;
     });
   }, [orders, searchTerm, statusFilter, fromDate, toDate]);
 
-  // 3. HANDLERS
-  const updateStatus = (id: string, newStatus: Order["status"]) => {
-    setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
-    setActionOpen(false);
-  };
-
-  const deleteOrder = (id: string) => {
-    if(confirm("Are you sure you want to remove this redemption record?")) {
-      setOrders(prev => prev.filter(o => o.id !== id));
-    }
-  };
-
+  // Bulk Actions
   const handleBulkStatus = (newStatus: Order["status"]) => {
     setOrders(prev => prev.map(o => selectedIds.includes(o.id) ? { ...o, status: newStatus } : o));
+    showMessage(`${selectedIds.length} orders updated to ${newStatus}`);
     setSelectedIds([]);
-    setActionOpen(false);
+  };
+
+  const executeBulkDelete = () => {
+    setOrders(prev => prev.filter(o => !selectedIds.includes(o.id)));
+    showMessage(`${selectedIds.length} orders deleted successfully`, "error");
+    setSelectedIds([]);
+    setBulkDeleteActive(false);
+  };
+
+  const handleExport = () => {
+    const dataToExport = selectedIds.length > 0 
+      ? orders.filter(o => selectedIds.includes(o.id))
+      : filteredOrders;
+
+    if (dataToExport.length === 0) return showMessage("No data to export", "info");
+
+    const headers = ["ID", "User", "Product", "Receiver", "Phone", "Points", "Date", "Status"];
+    const csvContent = [
+      headers.join(","),
+      ...dataToExport.map(o => [o.id, o.userName, o.productName, o.receiverName, o.receiverPhone, o.points, o.date, o.status].join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "redemptions.csv";
+    link.click();
+    showMessage("Export started...");
   };
 
   const toggleSelectAll = () => {
@@ -139,7 +157,6 @@ export default function GiftStoreOrderPage() {
     else setSelectedIds(filteredOrders.map(o => o.id));
   };
 
-  // Stats
   const stats = {
     total: orders.length,
     delivered: orders.filter(o => o.status === "Delivered").length,
@@ -150,149 +167,117 @@ export default function GiftStoreOrderPage() {
   return (
     <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans print:bg-white print:p-0">
       
+      {/* ── MESSAGE CENTER (TOASTS) ── */}
+      <div className="fixed bottom-6 right-6 z-[100] flex flex-col gap-3">
+        {toasts.map(toast => (
+          <div key={toast.id} className={`flex items-center gap-3 px-5 py-4 rounded-2xl shadow-2xl border text-sm font-bold animate-in slide-in-from-right-10 duration-300
+            ${toast.type === "success" ? "bg-white text-emerald-600 border-emerald-100" : ""}
+            ${toast.type === "error" ? "bg-white text-rose-600 border-rose-100" : ""}
+            ${toast.type === "info" ? "bg-white text-blue-600 border-blue-100" : ""}
+          `}>
+            {toast.type === "success" && <CheckCircle2 size={18} />}
+            {toast.type === "error" && <AlertCircle size={18} />}
+            {toast.type === "info" && <Info size={18} />}
+            {toast.message}
+            <button onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))} className="ml-4 opacity-30 hover:opacity-100"><X size={14}/></button>
+          </div>
+        ))}
+      </div>
+
       {/* ── HEADER ── */}
       <div className="flex flex-wrap items-end justify-between gap-4 mb-2 print:hidden">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center shadow-inner">
-            <ShoppingBag className="text-blue-600" size={24} />
+          <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
+            <ShoppingBag className="text-white" size={24} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Manage User Redeem</h1>
-            <p className="text-sm text-slate-500 mt-0.5">Order fulfillment for SRV Electricals</p>
+            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Redeem Management</h1>
+            <p className="text-sm text-slate-500 mt-0.5">SRV Electricals Portal</p>
           </div>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => window.print()} className="flex items-center gap-2 px-5 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all text-sm font-bold">
-            <Printer size={18} /> Print
+          <button onClick={handleExport} className="flex items-center gap-2 px-5 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all text-sm font-bold shadow-lg shadow-emerald-100">
+            <FileSpreadsheet size={18} /> Export List
           </button>
         </div>
       </div>
 
       {/* ── STATS ── */}
       <div className="print:hidden">
-        <SectionLabel>Quick Insights</SectionLabel>
+        <SectionLabel>Inventory Summary</SectionLabel>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard icon={Package} label="Total Redeem" value={stats.total} iconBg="bg-blue-50" iconColor="text-blue-600" borderAccent="border-t-blue-500" />
+          <StatCard icon={Package} label="Total Orders" value={stats.total} iconBg="bg-blue-50" iconColor="text-blue-600" borderAccent="border-t-blue-500" />
           <StatCard icon={CheckCircle2} label="Delivered" value={stats.delivered} iconBg="bg-emerald-50" iconColor="text-emerald-600" borderAccent="border-t-emerald-500" />
           <StatCard icon={XCircle} label="Rejected" value={stats.rejected} iconBg="bg-rose-50" iconColor="text-rose-500" borderAccent="border-t-rose-400" />
-          <StatCard icon={Clock} label="Pending" value={stats.pending} iconBg="bg-amber-50" iconColor="text-amber-600" borderAccent="border-t-amber-500" />
+          <StatCard icon={AlertCircle} label="Pending" value={stats.pending} iconBg="bg-amber-50" iconColor="text-amber-600" borderAccent="border-t-amber-500" />
         </div>
       </div>
 
       {/* ── SEARCH & FILTERS ── */}
       <div className="print:hidden">
-        <SectionLabel>Filters & Search</SectionLabel>
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 mb-6 shadow-sm">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
-            <div className="lg:col-span-2">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Search Orders</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                <input 
-                  type="text" 
-                  placeholder="User, Product, or Phone..." 
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Status</label>
-              <select 
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 outline-none"
-              >
-                <option>All Status</option>
-                <option>Delivered</option>
-                <option>Pending</option>
-                <option>Rejected</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">From Date</label>
-              <input 
-                type="date" 
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-600 outline-none"
-              />
-            </div>
-
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">To Date</label>
-                <input 
-                  type="date" 
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-600 outline-none"
-                />
-              </div>
-              <button 
-                onClick={() => {setSearchTerm(""); setStatusFilter("All Status"); setFromDate(""); setToDate("");}}
-                className="px-4 py-2.5 bg-slate-100 text-slate-500 rounded-xl hover:bg-slate-200 transition-colors"
-                title="Reset Filters"
-              >
-                <X size={18}/>
-              </button>
-            </div>
+        <SectionLabel>Filter Results</SectionLabel>
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 mb-6 shadow-sm grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+          <div className="lg:col-span-2 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <input type="text" placeholder="Search orders..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm" />
+          </div>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold">
+            <option>All Status</option>
+            <option>Delivered</option>
+            <option>Pending</option>
+            <option>Rejected</option>
+          </select>
+          <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm" />
+          <div className="flex gap-2">
+            <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="flex-1 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm" />
+            <button onClick={() => {setSearchTerm(""); setStatusFilter("All Status"); setFromDate(""); setToDate("");}} className="p-2.5 bg-slate-100 text-slate-500 rounded-xl hover:bg-slate-200"><X size={18}/></button>
           </div>
         </div>
       </div>
 
-      {/* ── DATA TABLE ── */}
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-        {/* Table Toolbar */}
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 print:hidden">
-          <div className="flex items-center gap-3">
-            <input 
-              type="checkbox" 
-              checked={selectedIds.length === filteredOrders.length && filteredOrders.length > 0}
-              onChange={toggleSelectAll}
-              className="w-4 h-4 rounded border-slate-300 accent-blue-600" 
-            />
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-              {selectedIds.length > 0 ? `${selectedIds.length} Selected` : "Select All"}
-            </span>
+      {/* ── STATIC BULK ACTION BAR ── */}
+      {selectedIds.length > 0 && (
+        <div className="mb-4 p-3 bg-slate-900 rounded-2xl flex items-center justify-between shadow-2xl animate-in slide-in-from-top-4 duration-300">
+          <div className="flex items-center gap-4 ml-3">
+            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">{selectedIds.length}</div>
+            <span className="text-white text-sm font-bold">Orders Selected</span>
           </div>
-
-          <div className="relative">
-            <button 
-              disabled={selectedIds.length === 0}
-              onClick={() => setActionOpen(!actionOpen)}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-white transition-all disabled:opacity-50"
-            >
-              Bulk Status <ChevronDown size={14} className={actionOpen ? "rotate-180" : ""} />
-            </button>
-            
-            {actionOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl border border-slate-100 shadow-2xl z-50 py-2 animate-in fade-in zoom-in-95">
-                <button onClick={() => handleBulkStatus("Delivered")} className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-emerald-50 hover:text-emerald-700">
-                  <CheckCircle2 size={14} /> Mark Delivered
+          
+          <div className="flex items-center gap-2">
+            {bulkDeleteActive ? (
+               <div className="flex items-center gap-2 bg-rose-500/10 rounded-xl p-1 border border-rose-500/20">
+                  <span className="text-[10px] text-rose-100 font-bold px-3 uppercase">Confirm Delete?</span>
+                  <button onClick={executeBulkDelete} className="bg-rose-500 text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-rose-400">Yes, Remove</button>
+                  <button onClick={() => setBulkDeleteActive(false)} className="bg-white/10 text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-white/20">Cancel</button>
+               </div>
+            ) : (
+              <>
+                <button onClick={() => handleBulkStatus("Delivered")} className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-xl text-xs font-bold hover:bg-emerald-400">
+                  <CheckCircle2 size={14} /> Deliver
                 </button>
-                <button onClick={() => handleBulkStatus("Rejected")} className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-rose-50 hover:text-rose-700">
-                  <XCircle size={14} /> Mark Rejected
+                <button onClick={() => handleBulkStatus("Rejected")} className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-xl text-xs font-bold hover:bg-amber-400">
+                  <XCircle size={14} /> Reject
                 </button>
-                <div className="h-px bg-slate-100 mx-2 my-2" />
-                <button className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-blue-600 hover:bg-blue-50">
-                  <FileSpreadsheet size={14} /> Export Selected
+                <button onClick={() => setBulkDeleteActive(true)} className="flex items-center gap-2 px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-500">
+                  <Trash2 size={14} /> Delete
                 </button>
-              </div>
+              </>
             )}
           </div>
         </div>
+      )}
 
+      {/* ── DATA TABLE ── */}
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50">
-                <th className="px-6 py-4 w-12 print:hidden"></th>
-                {["ID", "Redeemer", "Receiver", "Shipping Address", "Value & Date", "Status", "Actions"].map((h) => (
-                  <th key={h} className={`px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 ${h === "Actions" ? "print:hidden text-right" : ""}`}>
+                <th className="px-6 py-4 w-12 print:hidden">
+                  <input type="checkbox" checked={selectedIds.length === filteredOrders.length && filteredOrders.length > 0} onChange={toggleSelectAll} className="w-4 h-4 rounded border-slate-300 accent-blue-600" />
+                </th>
+                {["Order ID", "User & Product", "Shipping Contact", "Address", "Value/Date", "Status", "Action"].map((h) => (
+                  <th key={h} className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-400">
                     {h}
                   </th>
                 ))}
@@ -302,41 +287,37 @@ export default function GiftStoreOrderPage() {
               {filteredOrders.map((order) => (
                 <tr key={order.id} className={`hover:bg-slate-50/80 transition-colors group ${selectedIds.includes(order.id) ? 'bg-blue-50/30' : ''}`}>
                   <td className="px-6 py-5 print:hidden">
-                    <input 
-                      type="checkbox" 
-                      checked={selectedIds.includes(order.id)}
-                      onChange={() => setSelectedIds(prev => prev.includes(order.id) ? prev.filter(i => i !== order.id) : [...prev, order.id])}
-                      className="w-4 h-4 rounded border-slate-300 accent-blue-600" 
-                    />
+                    <input type="checkbox" checked={selectedIds.includes(order.id)} onChange={() => setSelectedIds(prev => prev.includes(order.id) ? prev.filter(i => i !== order.id) : [...prev, order.id])} className="w-4 h-4 rounded border-slate-300 accent-blue-600" />
                   </td>
                   <td className="px-6 py-5 text-xs font-bold text-slate-400">#{order.id}</td>
                   <td className="px-6 py-5">
                     <p className="text-sm font-bold text-slate-800">{order.userName}</p>
-                    <p className="text-[11px] font-semibold text-blue-600 mt-0.5 flex items-center gap-1">
-                      <Package size={12}/> {order.productName}
-                    </p>
+                    <p className="text-[11px] font-semibold text-blue-600 mt-1 flex items-center gap-1 uppercase tracking-tight"><Package size={12}/> {order.productName}</p>
                   </td>
                   <td className="px-6 py-5">
                     <p className="text-sm font-bold text-slate-800">{order.receiverName}</p>
                     <p className="text-xs font-medium text-slate-400 mt-1">{order.receiverPhone}</p>
                   </td>
-                  <td className="px-6 py-5">
-                    <p className="text-[11px] leading-relaxed text-slate-500 max-w-[180px] line-clamp-2">{order.address}</p>
-                  </td>
+                  <td className="px-6 py-5"><p className="text-[11px] text-slate-500 max-w-[180px] line-clamp-2 italic">{order.address}</p></td>
                   <td className="px-6 py-5">
                     <p className="text-sm font-bold text-emerald-600">{order.points} pts</p>
-                    <p className="text-[10px] font-bold text-slate-400 mt-1 flex items-center gap-1 uppercase">
-                      <Calendar size={12}/> {order.date}
-                    </p>
+                    <p className="text-[10px] font-bold text-slate-400 mt-1 flex items-center gap-1 uppercase"><Calendar size={12}/> {order.date}</p>
                   </td>
-                  <td className="px-6 py-5">
-                    <StatusBadge status={order.status} />
-                  </td>
+                  <td className="px-6 py-5"><StatusBadge status={order.status} /></td>
                   <td className="px-6 py-5 print:hidden text-right">
-                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => updateStatus(order.id, "Delivered")} className="w-8 h-8 flex items-center justify-center rounded-lg text-emerald-500 hover:bg-emerald-50" title="Mark Delivered"><CheckCircle2 size={16}/></button>
-                      <button onClick={() => updateStatus(order.id, "Rejected")} className="w-8 h-8 flex items-center justify-center rounded-lg text-rose-500 hover:bg-rose-50" title="Reject"><XCircle size={16}/></button>
-                      <button onClick={() => deleteOrder(order.id)} className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100" title="Delete"><Trash2 size={16}/></button>
+                    <div className="flex items-center justify-end gap-1">
+                      {deleteConfirmId === order.id ? (
+                        <div className="flex items-center bg-rose-50 rounded-lg border border-rose-100 overflow-hidden animate-in fade-in slide-in-from-right-2">
+                           <button onClick={() => {setOrders(prev => prev.filter(o => o.id !== order.id)); setDeleteConfirmId(null); showMessage("Record Deleted", "error");}} className="px-3 py-1.5 text-[10px] font-bold text-rose-600 hover:bg-rose-100 border-r border-rose-100">Delete</button>
+                           <button onClick={() => setDeleteConfirmId(null)} className="px-3 py-1.5 text-[10px] font-bold text-slate-400 hover:bg-white">No</button>
+                        </div>
+                      ) : (
+                        <>
+                          <button onClick={() => {setOrders(prev => prev.map(o => o.id === order.id ? {...o, status: "Delivered"} : o)); showMessage("Order Delivered");}} className="w-8 h-8 flex items-center justify-center rounded-lg text-emerald-500 hover:bg-emerald-50"><CheckCircle2 size={16}/></button>
+                          <button onClick={() => {setOrders(prev => prev.map(o => o.id === order.id ? {...o, status: "Rejected"} : o)); showMessage("Order Rejected", "error");}} className="w-8 h-8 flex items-center justify-center rounded-lg text-rose-500 hover:bg-rose-50"><XCircle size={16}/></button>
+                          <button onClick={() => setDeleteConfirmId(order.id)} className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-300 hover:text-slate-600 hover:bg-slate-100"><Trash2 size={16}/></button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -344,32 +325,7 @@ export default function GiftStoreOrderPage() {
             </tbody>
           </table>
         </div>
-
-        {/* Empty State */}
-        {filteredOrders.length === 0 && (
-          <div className="py-20 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 mb-4">
-              <Search className="text-slate-300" size={32} />
-            </div>
-            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">No matching redemptions found</p>
-          </div>
-        )}
-
-        {/* Footer */}
-        <div className="px-6 py-5 border-t border-slate-100 flex items-center justify-between bg-slate-50/30 print:hidden">
-          <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">
-            Showing <span className="text-slate-700">{filteredOrders.length}</span> results
-          </p>
-          <div className="flex items-center gap-1.5">
-            <button className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400"><ChevronLeft size={16} /></button>
-            <button className="w-9 h-9 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-lg shadow-blue-200">1</button>
-            <button className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400"><ChevronRight size={16} /></button>
-          </div>
-        </div>
       </div>
-      
-      {/* Backdrop for Bulk Menu */}
-      {actionOpen && <div className="fixed inset-0 z-40" onClick={() => setActionOpen(false)} />}
     </div>
   );
 }

@@ -1,11 +1,11 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   Settings, Globe, Smartphone, Landmark, 
   Bell, Save, Upload, Mail, Info, LucideIcon,
-  CheckCircle2, XCircle, Loader2
+  CheckCircle2, XCircle, Loader2, Trash2
 } from "lucide-react";
 
 // ─── TypeScript Interfaces ──────────────────────────────────────────────────
@@ -42,6 +42,10 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<TabId>("general");
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+  
+  // Refs & Upload State
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [qrPreview, setQrPreview] = useState<string | null>(null);
 
   // Form State
   const [generalData, setGeneralData] = useState({
@@ -69,6 +73,39 @@ export default function SettingsPage() {
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
     setToast({ msg, type });
   };
+
+  // ─── Upload Handlers ───────────────────────────────────────────────────────
+  
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate size (2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        showToast("Image size must be less than 2MB", "error");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setQrPreview(reader.result as string);
+        showToast("QR Preview updated!");
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setQrPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    showToast("Image removed", "error");
+  };
+
+  // ─── Save Logic ────────────────────────────────────────────────────────────
 
   const handleSave = () => {
     setIsSaving(true);
@@ -252,15 +289,45 @@ export default function SettingsPage() {
             
             <div className="pt-8 border-t border-slate-100">
                <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">Company UPI QR Code</label>
+               
+               {/* HIDDEN FILE INPUT */}
+               <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleFileChange} 
+                  accept="image/*" 
+                  className="hidden" 
+               />
+
                <div 
-                  onClick={() => showToast("File selector opened", "success")}
-                  className="group border-2 border-dashed border-slate-200 rounded-[2rem] p-12 flex flex-col items-center justify-center text-slate-400 hover:bg-blue-50/50 hover:border-blue-200 transition-all cursor-pointer"
+                  onClick={handleImageClick}
+                  className={`group relative border-2 border-dashed rounded-[2rem] p-12 flex flex-col items-center justify-center transition-all cursor-pointer overflow-hidden min-h-[300px] ${
+                    qrPreview ? 'border-blue-400 bg-blue-50/20' : 'border-slate-200 text-slate-400 hover:bg-blue-50/50 hover:border-blue-200'
+                  }`}
                >
-                 <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-blue-100 group-hover:text-blue-600 transition-all">
-                    <Upload size={28} />
-                 </div>
-                 <span className="text-sm font-black text-slate-500 group-hover:text-blue-600">Click or Drag to Upload QR</span>
-                 <p className="text-xs font-medium text-slate-400 mt-1">Supports PNG, JPG (Max 2MB)</p>
+                 {qrPreview ? (
+                    <div className="flex flex-col items-center">
+                        <img 
+                          src={qrPreview} 
+                          alt="QR Code" 
+                          className="max-h-56 rounded-xl shadow-lg mb-4" 
+                        />
+                        <button 
+                          onClick={removeImage}
+                          className="flex items-center gap-2 px-4 py-2 bg-rose-100 text-rose-600 rounded-xl text-xs font-bold hover:bg-rose-200 transition-colors"
+                        >
+                          <Trash2 size={14} /> Remove & Re-upload
+                        </button>
+                    </div>
+                 ) : (
+                    <>
+                        <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-blue-100 group-hover:text-blue-600 transition-all">
+                            <Upload size={28} />
+                        </div>
+                        <span className="text-sm font-black text-slate-500 group-hover:text-blue-600">Click to Select QR Image</span>
+                        <p className="text-xs font-medium text-slate-400 mt-1">Supports PNG, JPG (Max 2MB)</p>
+                    </>
+                 )}
                </div>
             </div>
           </div>

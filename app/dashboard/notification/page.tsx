@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useMemo } from 'react';
 import { 
   Search, ChevronLeft, ChevronRight, Filter,
   Trash2, Bell, Send, User, Users, X,
-  Calendar, MessageSquare, Megaphone, CheckCircle2, Save
+  Calendar, Megaphone, CheckCircle2
 } from "lucide-react";
 
 // ─── TypeScript Interfaces ──────────────────────────────────────────────────
@@ -70,6 +71,7 @@ export default function NotificationPage() {
   ]);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState("All"); // "All", "All Users", "Individual User"
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; visible: boolean }>({ msg: "", visible: false });
@@ -88,13 +90,18 @@ export default function NotificationPage() {
     setTimeout(() => setToast({ msg: "", visible: false }), 3000);
   };
 
+  // UPDATED LOGIC: Filter works with both Search and Type
   const filteredLogs = useMemo(() => {
-    return notifications.filter(n => 
-      n.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      n.msg.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      n.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [notifications, searchTerm]);
+    return notifications.filter(n => {
+      const matchesSearch = n.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                           n.msg.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           n.name.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesType = filterType === "All" || n.type === filterType;
+
+      return matchesSearch && matchesType;
+    });
+  }, [notifications, searchTerm, filterType]);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
@@ -192,12 +199,11 @@ export default function NotificationPage() {
         </button>
       </div>
 
-      {/* ── OVERVIEW STATS ── */}
+      {/* ── OVERVIEW STATS (Engagement Removed) ── */}
       <SectionLabel>Delivery Overview</SectionLabel>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <StatCard icon={Send} label="Total Sent" value={notifications.length * 310} iconBg="bg-blue-50" iconColor="text-blue-600" borderAccent="border-t-blue-500" />
         <StatCard icon={Users} label="Broadcasts" value={notifications.filter(n => n.type === 'All Users').length} iconBg="bg-purple-50" iconColor="text-purple-600" borderAccent="border-t-purple-500" />
-        <StatCard icon={MessageSquare} label="Engagement" value="88%" iconBg="bg-emerald-50" iconColor="text-emerald-600" borderAccent="border-t-emerald-500" />
       </div>
 
       {/* ── TABLE SECTION ── */}
@@ -214,10 +220,21 @@ export default function NotificationPage() {
             className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
           />
         </div>
+        
+        {/* UPDATED: Functional Filter Dropdown */}
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-100 transition-all">
-            <Filter size={14} /> Filter
-          </button>
+          <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-100 transition-all">
+            <Filter size={14} className="text-slate-400" />
+            <select 
+                value={filterType} 
+                onChange={(e) => setFilterType(e.target.value)}
+                className="bg-transparent outline-none cursor-pointer text-xs font-bold uppercase tracking-wider"
+            >
+                <option value="All">All Types</option>
+                <option value="All Users">Broadcasts</option>
+                <option value="Individual User">Individual</option>
+            </select>
+          </div>
         </div>
       </div>
 

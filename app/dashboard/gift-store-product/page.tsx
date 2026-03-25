@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import {
   Search, Plus, Edit2, Trash2,
   ChevronLeft, ChevronRight, Filter,
   Image as ImageIcon, Award, Gift as GiftIcon,
   CheckCircle2, XCircle, ChevronDown, X, Save,
+  Upload
 } from "lucide-react";
 
 // ─── TypeScript Interfaces ──────────────────────────────────────────────────
@@ -16,6 +17,7 @@ interface Gift {
   name: string;
   points: string;
   status: "Enable" | "Disable";
+  image?: string;
 }
 
 interface SectionLabelProps {
@@ -70,18 +72,21 @@ export default function GiftStorePage() {
   ]);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterCategory, setFilterCategory] = useState("All");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [actionOpen, setActionOpen] = useState(false);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; visible: boolean }>({ msg: "", visible: false });
 
-  // Form State
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: "",
     type: "Electrician",
     points: "",
-    status: "Enable" as "Enable" | "Disable"
+    status: "Enable" as "Enable" | "Disable",
+    image: ""
   });
 
   // 2. LOGIC
@@ -91,23 +96,72 @@ export default function GiftStorePage() {
   };
 
   const filtered = useMemo(() => {
-    return gifts.filter((g) =>
-      g.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      g.type.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [gifts, searchTerm]);
+    return gifts.filter((g) => {
+      const matchesSearch = g.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                           g.type.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesFilter = filterCategory === "All" || g.type === filterCategory;
+      return matchesSearch && matchesFilter;
+    });
+  }, [gifts, searchTerm, filterCategory]);
 
   const enabledCount = gifts.filter((g) => g.status === "Enable").length;
 
+  // --- Bulk Action Handlers ---
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(filtered.map(g => g.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const handleBulkEnable = () => {
+    if (selectedIds.length === 0) return;
+    setGifts(prev => prev.map(g => selectedIds.includes(g.id) ? { ...g, status: "Enable" } : g));
+    showToast(`Enabled ${selectedIds.length} items`);
+    setSelectedIds([]);
+    setActionOpen(false);
+  };
+
+  const handleBulkDisable = () => {
+    if (selectedIds.length === 0) return;
+    setGifts(prev => prev.map(g => selectedIds.includes(g.id) ? { ...g, status: "Disable" } : g));
+    showToast(`Disabled ${selectedIds.length} items`);
+    setSelectedIds([]);
+    setActionOpen(false);
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    setGifts(prev => prev.filter(g => !selectedIds.includes(g.id)));
+    showToast(`Deleted ${selectedIds.length} items`);
+    setSelectedIds([]);
+    setActionOpen(false);
+  };
+
+  // --- CRUD Handlers ---
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setFormData({ ...formData, image: reader.result as string });
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleOpenAdd = () => {
     setEditingId(null);
-    setFormData({ name: "", type: "Electrician", points: "", status: "Enable" });
+    setFormData({ name: "", type: "Electrician", points: "", status: "Enable", image: "" });
     setIsPanelOpen(true);
   };
 
   const handleOpenEdit = (gift: Gift) => {
     setEditingId(gift.id);
-    setFormData({ name: gift.name, type: gift.type, points: gift.points, status: gift.status });
+    setFormData({ name: gift.name, type: gift.type, points: gift.points, status: gift.status, image: gift.image || "" });
     setIsPanelOpen(true);
   };
 
@@ -115,14 +169,14 @@ export default function GiftStorePage() {
     e.preventDefault();
     if (editingId) {
       setGifts(prev => prev.map(g => g.id === editingId ? { ...g, ...formData } : g));
-      showToast(`${formData.name} updated successfully`);
+      showToast(`${formData.name} updated`);
     } else {
       const newGift: Gift = {
         id: (Math.max(...gifts.map(g => parseInt(g.id)), 0) + 1).toString(),
         ...formData
       };
       setGifts([newGift, ...gifts]);
-      showToast("New gift added to inventory");
+      showToast("New gift added");
     }
     setIsPanelOpen(false);
   };
@@ -130,7 +184,7 @@ export default function GiftStorePage() {
   const deleteGift = (id: string) => {
     setGifts(prev => prev.filter(g => g.id !== id));
     setConfirmDeleteId(null);
-    showToast("Gift removed from store");
+    showToast("Gift removed");
   };
 
   const toggleStatus = (id: string) => {
@@ -151,7 +205,7 @@ export default function GiftStorePage() {
         </div>
       )}
 
-      {/* ── INLINE SLIDE PANEL ── */}
+      {/* ── SLIDE PANEL ── */}
       <div className={`fixed inset-y-0 right-0 w-full max-w-md bg-white shadow-2xl z-[100] transform transition-transform duration-500 ease-out ${isPanelOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="h-full flex flex-col">
           <div className="px-6 py-8 border-b flex justify-between items-center bg-slate-50">
@@ -163,6 +217,20 @@ export default function GiftStorePage() {
           </div>
           
           <form onSubmit={handleSave} className="flex-1 overflow-y-auto p-8 space-y-6">
+            <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer group" onClick={() => fileInputRef.current?.click()}>
+              {formData.image ? (
+                <img src={formData.image} alt="Preview" className="w-24 h-24 object-cover rounded-xl shadow-md" />
+              ) : (
+                <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center text-slate-400 shadow-sm group-hover:scale-110 transition-transform">
+                  <Upload size={24} />
+                </div>
+              )}
+              <p className="mt-3 text-xs font-bold text-slate-500 uppercase tracking-widest">
+                {formData.image ? "Change Product Image" : "Upload Product Image"}
+              </p>
+              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
+            </div>
+
             <div>
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Gift Name</label>
               <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full mt-2 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none" placeholder="e.g. Smart Watch" />
@@ -242,29 +310,54 @@ export default function GiftStorePage() {
             className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
           />
         </div>
+        
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-100 transition-all">
-            <Filter size={14} /> Filter
-          </button>
+          {/* FILTER DROPDOWN */}
+          <div className="relative flex items-center bg-slate-50 border border-slate-200 rounded-xl px-3 group">
+            <Filter size={14} className="text-slate-400" />
+            <select 
+              value={filterCategory} 
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="bg-transparent py-2.5 text-sm font-semibold text-slate-600 outline-none cursor-pointer pl-2 pr-1"
+            >
+              <option value="All">All Categories</option>
+              <option value="Electrician">Electrician</option>
+              <option value="Retailer">Retailer</option>
+              <option value="Special">Special</option>
+            </select>
+          </div>
 
+          {/* BULK ACTION DROPDOWN */}
           <div className="relative">
             <button
               onClick={() => setActionOpen(!actionOpen)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-100 transition-all"
+              className={`flex items-center gap-2 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold transition-all ${selectedIds.length > 0 ? 'text-blue-600 border-blue-200 bg-blue-50' : 'text-slate-600 hover:bg-slate-100'}`}
             >
-              Bulk Action <ChevronDown size={14} className={`transition-transform duration-200 ${actionOpen ? "rotate-180" : ""}`} />
+              Bulk Action {selectedIds.length > 0 && `(${selectedIds.length})`} <ChevronDown size={14} className={`transition-transform duration-200 ${actionOpen ? "rotate-180" : ""}`} />
             </button>
             {actionOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl border border-slate-100 shadow-2xl z-50 overflow-hidden py-2 animate-in fade-in zoom-in-95">
-                <button className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+                <button 
+                  onClick={handleBulkEnable}
+                  disabled={selectedIds.length === 0}
+                  className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                >
                   <CheckCircle2 size={14} className="text-emerald-500" /> Enable Selected
                 </button>
-                <button className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+                <button 
+                   onClick={handleBulkDisable}
+                   disabled={selectedIds.length === 0}
+                   className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+                >
                   <XCircle size={14} className="text-amber-500" /> Disable Selected
                 </button>
                 <div className="h-px bg-slate-100 mx-2 my-2" />
-                <button className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-rose-500 hover:bg-rose-50 transition-colors">
-                  <Trash2 size={14} /> Delete Items
+                <button 
+                   onClick={handleBulkDelete}
+                   disabled={selectedIds.length === 0}
+                   className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-rose-500 hover:bg-rose-50 transition-colors disabled:opacity-50"
+                >
+                  <Trash2 size={14} /> Delete Selected
                 </button>
               </div>
             )}
@@ -279,7 +372,12 @@ export default function GiftStorePage() {
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50">
                 <th className="px-6 py-4 w-12 text-center">
-                  <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" />
+                  <input 
+                    type="checkbox" 
+                    checked={filtered.length > 0 && selectedIds.length === filtered.length}
+                    onChange={handleSelectAll}
+                    className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" 
+                  />
                 </th>
                 {["ID", "Gift Detail", "Category", "Status", "Actions"].map((h) => (
                   <th key={h} className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">
@@ -290,17 +388,26 @@ export default function GiftStorePage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filtered.map((gift) => (
-                <tr key={gift.id} className="hover:bg-slate-50/80 transition-colors duration-150 group">
+                <tr key={gift.id} className={`hover:bg-slate-50/80 transition-colors duration-150 group ${selectedIds.includes(gift.id) ? 'bg-blue-50/30' : ''}`}>
                   <td className="px-6 py-5 text-center">
-                    <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" />
+                    <input 
+                      type="checkbox" 
+                      checked={selectedIds.includes(gift.id)}
+                      onChange={() => handleSelectOne(gift.id)}
+                      className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" 
+                    />
                   </td>
 
                   <td className="px-6 py-5 text-xs font-bold text-slate-400">#{gift.id}</td>
 
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center flex-shrink-0 group-hover:bg-amber-100 transition-all">
-                        <ImageIcon size={20} className="text-amber-400" />
+                      <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center flex-shrink-0 group-hover:bg-amber-100 transition-all overflow-hidden">
+                        {gift.image ? (
+                          <img src={gift.image} alt={gift.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <ImageIcon size={20} className="text-amber-400" />
+                        )}
                       </div>
                       <div>
                         <p className="text-sm font-bold text-slate-800 whitespace-nowrap">{gift.name}</p>
@@ -353,11 +460,17 @@ export default function GiftStorePage() {
                   </td>
                 </tr>
               ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-slate-400 font-medium">
+                    No gifts found matching your search or filter.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination */}
         <div className="px-6 py-5 border-t border-slate-100 flex items-center justify-between bg-slate-50/30">
           <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">
             Showing <span className="text-slate-700">{filtered.length}</span> of <span className="text-slate-700">{gifts.length}</span> items
@@ -370,8 +483,7 @@ export default function GiftStorePage() {
         </div>
       </div>
 
-      {/* Overlays */}
-      {isPanelOpen && <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[90] animate-in fade-in" onClick={() => setIsPanelOpen(false)}></div>}
+      {isPanelOpen && <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[90]" onClick={() => setIsPanelOpen(false)}></div>}
       {actionOpen && <div className="fixed inset-0 z-40" onClick={() => setActionOpen(false)} />}
     </div>
   );
