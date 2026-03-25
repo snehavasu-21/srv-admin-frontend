@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import { FileDown, ShoppingBag, ArrowRight, Trophy } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { FileDown, ShoppingBag, ArrowRight, Trophy, Search } from "lucide-react";
 
 // ─── TypeScript Interfaces ──────────────────────────────────────────────────
 
@@ -54,9 +55,38 @@ function getRankStyle(rank: number): string {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function TopRedeemPage() {
+  const router = useRouter();
   const [filterType, setFilterType] = useState<string>("All Time");
   const [fromDate,   setFromDate]   = useState<string>("");
   const [toDate,     setToDate]     = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isMonthView, setIsMonthView] = useState(false);
+  
+  // Logic for filtering data
+  const filteredData = useMemo(() => {
+    return reportData.filter((item) => {
+      // 1. Search Logic
+      const matchesSearch = 
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        item.phone.includes(searchQuery);
+
+      // 2. Date Filter Logic (Only if Apply is pressed or dates are set)
+      let matchesDate = true;
+      if (fromDate && toDate) {
+        const itemDate = new Date(item.lastRedeem);
+        const start = new Date(fromDate);
+        const end = new Date(toDate);
+        matchesDate = itemDate >= start && itemDate <= end;
+      }
+
+      return matchesSearch && matchesDate;
+    });
+  }, [searchQuery, fromDate, toDate]);
+
+  // Handle CSV Export
+  const handleExport = () => {
+    alert("Exporting " + filteredData.length + " records to CSV...");
+  };
 
   return (
     <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans">
@@ -68,23 +98,56 @@ export default function TopRedeemPage() {
             <Trophy className="text-amber-600" size={20} />
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-slate-800">Electricians Redeem Points Report</h1>
-            <p className="text-sm text-slate-500 mt-0.5">Highest redeemed points are shown first</p>
+            <h1 className="text-xl font-semibold text-slate-800">
+              {isMonthView ? "Top 20 Electricians Redeem Points Report" : "Electricians Redeem Points Report"}
+            </h1>
+            <p className="text-sm text-slate-500 mt-0.5">
+              {isMonthView 
+                ? "Highest redeemed points are shown first so you can review unusually high redemption activity faster." 
+                : "Highest redeemed points are shown first"}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 hover:shadow-sm transition-all duration-200 text-sm font-medium">
+          <button 
+            onClick={() => {
+              setIsMonthView(true);
+              setFilterType("This Month");
+              setFromDate("2026-03-01");
+              setToDate("2026-03-31");
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 hover:shadow-sm transition-all duration-200 text-sm font-medium"
+          >
             This Month
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 hover:shadow-sm transition-all duration-200 text-sm font-medium">
+          <button 
+            onClick={handleExport}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 hover:shadow-sm transition-all duration-200 text-sm font-medium"
+          >
             <FileDown size={15} />
             CSV Export
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md">
+          
+          <button 
+            onClick={() => router.push("/dashboard/gift-store-order")}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+          >
             <ShoppingBag size={15} />
             View Gift Store Orders
           </button>
         </div>
+      </div>
+
+      {/* ── Search Bar ── */}
+      <div className="relative mt-4 mb-2 max-w-md">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+        <input 
+          type="text"
+          placeholder="Search by name or phone..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+        />
       </div>
 
       {/* ── Date Filter Bar ── */}
@@ -124,11 +187,20 @@ export default function TopRedeemPage() {
           />
         </div>
 
-        <button className="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-200 shadow-sm">
+        <button 
+          className="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-200 shadow-sm"
+          // Filter already happens via useMemo based on state
+        >
           Apply
         </button>
         <button
-          onClick={() => { setFromDate(""); setToDate(""); setFilterType("All Time"); }}
+          onClick={() => { 
+            setFromDate(""); 
+            setToDate(""); 
+            setSearchQuery("");
+            setFilterType("All Time"); 
+            setIsMonthView(false); 
+          }}
           className="px-5 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition-all duration-200"
         >
           Reset
@@ -142,95 +214,59 @@ export default function TopRedeemPage() {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
-                {[
-                  "Rank", "User ID", "Electrician Name", "Phone",
-                  "Electrician Code", "Associated Dealer Code",
-                  "Current Wallet", "Total Redeem Orders",
-                  "Total Redeemed Points", "Last Redeem Date", "Action"
-                ].map((h) => (
-                  <th
-                    key={h}
-                    className="px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap"
-                  >
+                {(isMonthView 
+                  ? ["Rank", "User ID", "Electrician Name", "Phone", "Dealer Code", "Sales Code", "Current Wallet", "Total Redeem Orders", "Total Redeemed Points", "Last Redeem Date", "Action"]
+                  : ["Rank", "User ID", "Electrician Name", "Phone", "Electrician Code", "Associated Dealer Code", "Current Wallet", "Total Redeem Orders", "Total Redeemed Points", "Last Redeem Date", "Action"]
+                ).map((h) => (
+                  <th key={h} className="px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap">
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {reportData.map((item) => (
-                <tr
-                  key={item.userId}
-                  className="hover:bg-slate-50 transition-colors duration-150"
-                >
-                  {/* Rank */}
-                  <td className="px-4 py-4">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${getRankStyle(item.rank)}`}>
-                      {item.rank}
-                    </div>
-                  </td>
-
-                  {/* User ID */}
-                  <td className="px-4 py-4 text-sm font-medium text-slate-500">
-                    {item.userId}
-                  </td>
-
-                  {/* Electrician Name */}
-                  <td className="px-4 py-4 text-sm font-medium text-slate-800 whitespace-nowrap">
-                    {item.name}
-                  </td>
-
-                  {/* Phone */}
-                  <td className="px-4 py-4 text-sm text-slate-700">
-                    {item.phone}
-                  </td>
-
-                  {/* Electrician Code */}
-                  <td className="px-4 py-4 text-sm font-medium text-blue-600">
-                    {item.electricianCode}
-                  </td>
-
-                  {/* Associated Dealer Code */}
-                  <td className="px-4 py-4 text-sm text-slate-600">
-                    {item.dealerCode}
-                  </td>
-
-                  {/* Current Wallet */}
-                  <td className="px-4 py-4">
-                    <span className="inline-flex items-center px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-semibold">
-                      ₹{item.wallet}
-                    </span>
-                  </td>
-
-                  {/* Total Redeem Orders */}
-                  <td className="px-4 py-4 text-sm text-slate-700 text-center">
-                    {item.totalOrders}
-                  </td>
-
-                  {/* Total Redeemed Points */}
-                  <td className="px-4 py-4 text-sm font-semibold text-green-600">
-                    {item.totalPoints}
-                  </td>
-
-                  {/* Last Redeem Date */}
-                  <td className="px-4 py-4 text-sm text-slate-500 whitespace-nowrap">
-                    {item.lastRedeem}
-                  </td>
-
-                  {/* Action */}
-                  <td className="px-4 py-4">
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg text-xs font-medium hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-200 whitespace-nowrap">
-                      View Orders
-                      <ArrowRight size={12} />
-                    </button>
+              {filteredData.length > 0 ? (
+                filteredData.map((item) => (
+                  <tr key={item.userId} className="hover:bg-slate-50 transition-colors duration-150">
+                    <td className="px-4 py-4">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${getRankStyle(item.rank)}`}>
+                        {item.rank}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 text-sm font-medium text-slate-500">{item.userId}</td>
+                    <td className="px-4 py-4 text-sm font-medium text-slate-800 whitespace-nowrap">{item.name}</td>
+                    <td className="px-4 py-4 text-sm text-slate-700">{item.phone}</td>
+                    <td className="px-4 py-4 text-sm font-medium text-blue-600">{item.electricianCode}</td>
+                    <td className="px-4 py-4 text-sm text-slate-600">{item.dealerCode}</td>
+                    <td className="px-4 py-4">
+                      <span className="inline-flex items-center px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-semibold">
+                        ₹{item.wallet}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 text-sm text-slate-700 text-center">{item.totalOrders}</td>
+                    <td className="px-4 py-4 text-sm font-semibold text-green-600">{item.totalPoints}</td>
+                    <td className="px-4 py-4 text-sm text-slate-500 whitespace-nowrap">{item.lastRedeem}</td>
+                    <td className="px-4 py-4">
+                      <button 
+                        onClick={() => router.push("/dashboard/gift-store-order")}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg text-xs font-medium hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-200 whitespace-nowrap"
+                      >
+                        View Orders <ArrowRight size={12} />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={11} className="px-4 py-10 text-center text-sm text-slate-500 font-medium">
+                    No records found matching your criteria.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
       </div>
-
     </div>
   );
 }

@@ -1,16 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
-  Search, Plus, FileDown,
-  ChevronLeft, ChevronRight,
-  Filter, ArrowUpRight, ArrowDownLeft,
+  Search, Plus, ChevronLeft,
   Wallet, TrendingUp, Users, Receipt,
-  LucideIcon
+  Save, Edit2, RotateCcw, Trash2
 } from "lucide-react";
 
-// ─── TypeScript Interfaces ──────────────────────────────────────────────────
-
+// --- Interfaces ---
 interface Transaction {
   id: string;
   userName: string;
@@ -20,267 +17,337 @@ interface Transaction {
   type: "Credit" | "Debit";
 }
 
-interface SectionLabelProps {
-  children: React.ReactNode;
-}
-
-interface StatCardProps {
-  icon: LucideIcon;
-  label: string;
-  value: string | number;
-  iconBg: string;
-  iconColor: string;
-  borderAccent: string;
-}
-
-interface TypeBadgeProps {
-  type: "Credit" | "Debit";
-}
-
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const historyData: Transaction[] = [
-  { id: "24457", userName: "Amarjeet Singh",   description: "You have earned 0.5 from Junction Box 1 QRcode.",     date: "2026-03-20 10:07:53", point: "0.5", type: "Credit" },
-  { id: "24456", userName: "Varinder",         description: "You have earned 1 from FDB 4\" 19/40 PC QRcode.",   date: "2026-03-20 10:07:18", point: "1",   type: "Credit" },
-  { id: "24455", userName: "Amarjeet Singh",   description: "You have earned 0.5 from Junction Box 1 QRcode.",     date: "2026-03-20 10:06:18", point: "0.5", type: "Credit" },
-  { id: "24454", userName: "Amarjeet Singh",   description: "You have earned 0.5 from Junction Box 1 QRcode.",     date: "2026-03-20 10:05:31", point: "0.5", type: "Credit" },
-  { id: "24453", userName: "Amarjeet Singh",   description: "You have earned 0.5 from Junction Box 1 QRcode.",     date: "2026-03-20 10:03:59", point: "0.5", type: "Credit" },
-  { id: "24452", userName: "Jagjeevan Sharma", description: "You have earned 5 from 9x3 6L HZ Draw QRcode.",      date: "2026-03-20 10:03:42", point: "5",   type: "Credit" },
-  { id: "24451", userName: "Amarjeet Singh",   description: "You have earned 0.5 from Junction Box 1 QRcode.",     date: "2026-03-20 10:03:01", point: "0.5", type: "Credit" },
-  { id: "24450", userName: "Jagjeevan Sharma", description: "You have earned 5 from 9x3 6L HZ Draw QRcode.",      date: "2026-03-20 10:02:52", point: "5",   type: "Credit" },
+const initialHistoryData: Transaction[] = [
+  { id: "24457", userName: "Amarjeet Singh", description: "Earned 0.5 from Junction Box 1", date: "2026-03-20 10:07", point: "0.5", type: "Credit" },
+  { id: "24456", userName: "Varinder", description: "Earned 1.0 from FDB 4", date: "2026-03-20 10:07", point: "1.0", type: "Credit" },
+  { id: "24452", userName: "Jagjeevan Sharma", description: "Earned 5.0 from 9x3 Draw", date: "2026-03-20 10:03", point: "5.0", type: "Credit" },
 ];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function SectionLabel({ children }: SectionLabelProps) {
-  return (
-    <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mt-6 mb-3">
-      {children}
-    </p>
-  );
-}
-
-function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent }: StatCardProps) {
-  return (
-    <div
-      className={`bg-white rounded-xl border border-slate-200 border-t-4 ${borderAccent} p-5 flex flex-col gap-3
-        transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer`}
-    >
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBg} ${iconColor}`}>
-        <Icon size={18} />
-      </div>
-      <div>
-        <p className="text-2xl font-semibold text-slate-800">{value}</p>
-        <p className="text-xs text-slate-500 mt-1">{label}</p>
-      </div>
-    </div>
-  );
-}
-
-function TypeBadge({ type }: TypeBadgeProps) {
-  if (type === "Credit") {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-green-50 text-green-700 border border-green-200">
-        <ArrowUpRight size={11} />
-        Credit
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-      <ArrowDownLeft size={11} />
-      Debit
-    </span>
-  );
-}
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export default function WalletHistoryPage() {
-  const [searchTerm, setSearchTerm]   = useState<string>("");
-  const [userFilter, setUserFilter]   = useState<string>("All User");
+  // 1. Primary Data State
+  const [data, setData] = useState<Transaction[]>(initialHistoryData);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  
+  // 2. UI View State
+  const [isAdding, setIsAdding] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
 
-  const totalPoints   = historyData.reduce((acc, i) => acc + parseFloat(i.point), 0);
-  const creditCount   = historyData.filter((i) => i.type === "Credit").length;
-  const uniqueUsers   = new Set(historyData.map((i) => i.userName)).size;
+  // 3. Search & Filter State
+  const [searchTerm, setSearchTerm] = useState("");
+  const [userFilter, setUserFilter] = useState("All Users");
 
-  const filteredHistory = historyData.filter((item) => {
-    const matchSearch =
-      item.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchSearch;
+  // 4. Form State (For Add/Edit)
+  const [formData, setFormData] = useState({
+    userName: "",
+    point: "",
+    description: "",
+    type: "Credit" as "Credit" | "Debit"
   });
 
+  // --- FILTER LOGIC (Deep Search) ---
+  const filteredHistory = useMemo(() => {
+    return data.filter((item) => {
+      // Convert everything to lowercase for a "fuzzy" search
+      const s = searchTerm.toLowerCase();
+      const matchesSearch = 
+        item.userName.toLowerCase().includes(s) ||
+        item.description.toLowerCase().includes(s) ||
+        item.id.toLowerCase().includes(s) ||
+        item.point.includes(s);
+
+      const matchesDropdown = userFilter === "All Users" || item.userName === userFilter;
+      
+      return matchesSearch && matchesDropdown;
+    });
+  }, [data, searchTerm, userFilter]);
+
+  const uniqueNames = useMemo(() => {
+    return ["All Users", ...Array.from(new Set(data.map(item => item.userName)))];
+  }, [data]);
+
+  // --- ACTION HANDLERS ---
+  
+  const handleToggleRow = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(filteredHistory.map(i => i.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleStartEdit = (e: React.MouseEvent, item: Transaction) => {
+    e.stopPropagation(); // STOP the click from selecting the row checkbox
+    setEditId(item.id);
+    setFormData({
+      userName: item.userName,
+      point: item.point,
+      description: item.description,
+      type: item.type
+    });
+    setIsAdding(true);
+  };
+
+  const handleSave = () => {
+    if (!formData.userName || !formData.point) return alert("Please fill all fields");
+
+    if (editId) {
+      // UPDATE logic
+      setData(prev => prev.map(item => item.id === editId ? { ...item, ...formData } : item));
+    } else {
+      // CREATE logic
+      const newEntry: Transaction = {
+        id: Math.floor(10000 + Math.random() * 90000).toString(),
+        ...formData,
+        date: new Date().toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' })
+      };
+      setData(prev => [newEntry, ...prev]);
+    }
+
+    // Reset UI
+    setIsAdding(false);
+    setEditId(null);
+    setFormData({ userName: "", point: "", description: "", type: "Credit" });
+  };
+
+  const handleDelete = () => {
+    if (window.confirm("Delete selected items?")) {
+      setData(prev => prev.filter(item => !selectedIds.includes(item.id)));
+      setSelectedIds([]);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans">
-
-      {/* ── Header ── */}
-      <div className="flex flex-wrap items-end justify-between gap-3 mb-2">
+    <div className="min-h-screen bg-[#f8fafc] p-4 md:p-10 text-slate-900 font-sans">
+      
+      {/* HEADER SECTION */}
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
         <div>
-          <h1 className="text-xl font-semibold text-slate-800">Wallet History</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Track all points and transactions</p>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">WALLET HISTORY</h1>
+          <p className="text-slate-500 font-medium">Real-time credit and debit tracking</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 hover:shadow-sm transition-all duration-200 text-sm font-medium">
-            <FileDown size={15} />
-            Export
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md">
-            <Plus size={15} />
-            Add Entry
-          </button>
-        </div>
-      </div>
-
-      {/* ── Summary Stats ── */}
-      <SectionLabel>Overview</SectionLabel>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <StatCard icon={Receipt}   label="Total Transactions" value={historyData.length}         iconBg="bg-blue-100"   iconColor="text-blue-600"   borderAccent="border-t-blue-500"   />
-        <StatCard icon={TrendingUp} label="Total Points Earned" value={totalPoints.toFixed(1)} iconBg="bg-green-100"  iconColor="text-green-600"  borderAccent="border-t-green-500"  />
-        <StatCard icon={Wallet}    label="Total Money Withdrawal"      value={creditCount}               iconBg="bg-emerald-100" iconColor="text-emerald-600" borderAccent="border-t-emerald-500" />
-        <StatCard icon={Users}     label="Total Gift Withdrawal"        value={uniqueUsers}               iconBg="bg-purple-100" iconColor="text-purple-600" borderAccent="border-t-purple-500" />
-      </div>
-
-      {/* ── Table Section ── */}
-      <SectionLabel>Transaction Log</SectionLabel>
-
-      {/* Search + Filter bar */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <select
-            value={userFilter}
-            onChange={(e) => setUserFilter(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
+        <div className="flex gap-3">
+          {selectedIds.length > 0 && (
+            <button onClick={handleDelete} className="bg-red-50 text-red-600 p-3 rounded-2xl hover:bg-red-100 transition-all border border-red-200">
+              <Trash2 size={22} />
+            </button>
+          )}
+          <button 
+            onClick={() => { setEditId(null); setIsAdding(true); }}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-xl shadow-indigo-100 transition-transform active:scale-95"
           >
-            <option>All User</option>
-            <option>Electrician</option>
-            <option>Dealer</option>
-          </select>
-          <div className="relative flex-1 sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
-            <input
-              type="text"
-              placeholder="Search by name or description..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-            />
-          </div>
+            <Plus size={22} /> Create New
+          </button>
         </div>
-        <button className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-100 transition-all">
-          <Filter size={14} />
-          Filter
-        </button>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-slate-100 bg-slate-50">
-                <th className="px-5 py-3.5 w-10">
-                  <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" />
-                </th>
-                {["ID", "User Name", "Description", "Date & Time", "Points", "Type"].map((h) => (
-                  <th key={h} className="px-5 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredHistory.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-50/80 transition-colors duration-150 group">
+      {!isAdding ? (
+        <div className="max-w-6xl mx-auto space-y-6">
+          
+          {/* STATS AREA */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+              <Receipt className="text-indigo-500 mb-3" size={24} />
+              <div className="text-2xl font-black">{filteredHistory.length}</div>
+              <div className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Visible Logs</div>
+            </div>
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+              <TrendingUp className="text-emerald-500 mb-3" size={24} />
+              <div className="text-2xl font-black text-emerald-600">
+                {filteredHistory.reduce((acc, curr) => acc + (curr.type === 'Credit' ? Number(curr.point) : -Number(curr.point)), 0).toFixed(1)}
+              </div>
+              <div className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Net Points</div>
+            </div>
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+              <Users className="text-purple-500 mb-3" size={24} />
+              <div className="text-2xl font-black">{selectedIds.length}</div>
+              <div className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Selected</div>
+            </div>
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+              <Wallet className="text-orange-500 mb-3" size={24} />
+              <div className="text-2xl font-black">{data.length}</div>
+              <div className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">Database Total</div>
+            </div>
+          </div>
 
-                  <td className="px-5 py-4">
-                    <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" />
-                  </td>
+          {/* FILTER TOOLBAR */}
+          <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+            <select 
+              value={userFilter} 
+              onChange={(e) => setUserFilter(e.target.value)}
+              className="w-full md:w-56 bg-slate-50 border border-slate-200 p-3.5 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+            >
+              {uniqueNames.map(name => <option key={name} value={name}>{name}</option>)}
+            </select>
 
-                  {/* ID */}
-                  <td className="px-5 py-4 text-xs font-medium text-slate-400">
-                    #{item.id}
-                  </td>
+            <div className="relative flex-1 w-full">
+              <Search className="absolute left-4 top-4 text-slate-400" size={20} />
+              <input 
+                type="text" 
+                placeholder="Deep search by ID, name, or points..."
+                className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
 
-                  {/* User Name */}
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-semibold flex-shrink-0">
-                        {item.userName.charAt(0)}
-                      </div>
-                      <p className="text-sm font-medium text-slate-800 whitespace-nowrap">{item.userName}</p>
-                    </div>
-                  </td>
+            <button 
+              onClick={() => { setSearchTerm(""); setUserFilter("All Users"); }}
+              className="text-slate-400 hover:text-indigo-600 font-bold text-sm flex items-center gap-2 px-4"
+            >
+              <RotateCcw size={18} /> Reset
+            </button>
+          </div>
 
-                  {/* Description */}
-                  <td className="px-5 py-4">
-                    <p className="text-xs text-slate-500 max-w-xs leading-relaxed">{item.description}</p>
-                  </td>
-
-                  {/* Date & Time */}
-                  <td className="px-5 py-4 whitespace-nowrap">
-                    <p className="text-xs font-medium text-slate-700">{item.date.split(" ")[0]}</p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">{item.date.split(" ")[1]}</p>
-                  </td>
-
-                  {/* Points */}
-                  <td className="px-5 py-4">
-                    <div className={`flex items-center gap-1 font-semibold ${item.type === 'Credit' ? 'text-green-600' : 'text-rose-600'}`}>
-                      {item.type === 'Credit' ? <ArrowUpRight size={13} /> : <ArrowDownLeft size={13} />}
-                      <span className="text-sm">{item.point}</span>
-                    </div>
-                  </td>
-
-                  {/* Type */}
-                  <td className="px-5 py-4">
-                    <TypeBadge type={item.type} />
-                  </td>
-
-                </tr>
-              ))}
-
+          {/* DATA TABLE */}
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-slate-50/50 border-b border-slate-100">
+                  <tr>
+                    <th className="p-6 w-12 text-center">
+                      <input 
+                        type="checkbox" 
+                        className="w-5 h-5 accent-indigo-600 cursor-pointer" 
+                        checked={filteredHistory.length > 0 && selectedIds.length === filteredHistory.length}
+                        onChange={handleSelectAll}
+                      />
+                    </th>
+                    <th className="p-6 text-xs font-black text-slate-400 uppercase tracking-widest">User Details</th>
+                    <th className="p-6 text-xs font-black text-slate-400 uppercase tracking-widest">Log Info</th>
+                    <th className="p-6 text-xs font-black text-slate-400 uppercase tracking-widest text-right">Points</th>
+                    <th className="p-6 text-xs font-black text-slate-400 uppercase tracking-widest text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {filteredHistory.map((item) => (
+                    <tr 
+                      key={item.id} 
+                      onClick={() => handleToggleRow(item.id)}
+                      className={`group cursor-pointer transition-all ${selectedIds.includes(item.id) ? 'bg-indigo-50/50' : 'hover:bg-slate-50/80'}`}
+                    >
+                      <td className="p-6 text-center">
+                        <input 
+                          type="checkbox" 
+                          className="w-5 h-5 accent-indigo-600" 
+                          checked={selectedIds.includes(item.id)}
+                          readOnly 
+                        />
+                      </td>
+                      <td className="p-6">
+                        <div className="font-black text-slate-800 text-base">{item.userName}</div>
+                        <div className="text-[10px] font-mono text-slate-400">ID: #{item.id}</div>
+                      </td>
+                      <td className="p-6">
+                        <div className="text-sm text-slate-600 font-medium line-clamp-1">{item.description}</div>
+                        <div className="text-[10px] text-slate-400 font-bold mt-1">{item.date}</div>
+                      </td>
+                      <td className="p-6 text-right">
+                        <div className={`text-lg font-black ${item.type === 'Credit' ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          {item.type === 'Credit' ? '+' : '-'}{item.point}
+                        </div>
+                      </td>
+                      <td className="p-6 text-center">
+                        <button 
+                          onClick={(e) => handleStartEdit(e, item)}
+                          className="bg-white p-3 text-slate-400 hover:text-indigo-600 rounded-xl shadow-sm border border-slate-100 hover:border-indigo-200 transition-all active:scale-90"
+                        >
+                          <Edit2 size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
               {filteredHistory.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="px-5 py-12 text-center text-sm text-slate-400">
-                    No transactions found matching{" "}
-                    <span className="font-semibold text-slate-600">&quot;{searchTerm}&quot;</span>
-                  </td>
-                </tr>
+                <div className="p-20 text-center flex flex-col items-center">
+                  <Search size={48} className="text-slate-200 mb-4" />
+                  <p className="text-slate-400 font-bold">No transactions found matching "{searchTerm}"</p>
+                </div>
               )}
-            </tbody>
-          </table>
+            </div>
+          </div>
         </div>
-
-        {/* Pagination */}
-        <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between bg-white">
-          <p className="text-xs text-slate-400 font-medium">
-            Showing{" "}
-            <span className="text-slate-600 font-semibold">{filteredHistory.length}</span>{" "}
-            of{" "}
-            <span className="text-slate-600 font-semibold">{historyData.length}</span> entries
-          </p>
-          <div className="flex items-center gap-1.5">
-            <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100 transition-all">
-              <ChevronLeft size={14} />
+      ) : (
+        /* FORM VIEW (ADD/EDIT) */
+        <div className="max-w-xl mx-auto bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-100">
+          <div className="bg-slate-900 p-8 text-white flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-black tracking-tight">{editId ? "Update Record" : "New Transaction"}</h2>
+              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Wallet Ledger System</p>
+            </div>
+            <button onClick={() => setIsAdding(false)} className="bg-white/10 p-3 rounded-2xl hover:bg-white/20 transition-colors">
+              <ChevronLeft size={24} />
             </button>
-            {[1, 2].map((n) => (
-              <button
-                key={n}
-                className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all ${
-                  n === 1
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100"
-                }`}
+          </div>
+          
+          <div className="p-10 space-y-8">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-slate-400 ml-1 tracking-widest">Account Name</label>
+              <select 
+                value={formData.userName}
+                onChange={(e) => setFormData({...formData, userName: e.target.value})}
+                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all"
               >
-                {n}
-              </button>
-            ))}
-            <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100 transition-all">
-              <ChevronRight size={14} />
+                <option value="">Select account holder...</option>
+                <option>Amarjeet Singh</option>
+                <option>Varinder</option>
+                <option>Jagjeevan Sharma</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-slate-400 ml-1 tracking-widest">Points Value</label>
+                <input 
+                  type="number" 
+                  value={formData.point}
+                  onChange={(e) => setFormData({...formData, point: e.target.value})}
+                  className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-indigo-500/10"
+                  placeholder="0.00"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-slate-400 ml-1 tracking-widest">Log Type</label>
+                <div className="flex bg-slate-100 p-1.5 rounded-[1.2rem]">
+                  {["Credit", "Debit"].map(t => (
+                    <button
+                      key={t}
+                      onClick={() => setFormData({...formData, type: t as any})}
+                      className={`flex-1 py-3 rounded-[0.8rem] text-xs font-bold transition-all ${formData.type === t ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase text-slate-400 ml-1 tracking-widest">Transaction Notes</label>
+              <textarea 
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                rows={3}
+                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-medium text-slate-700 outline-none focus:ring-4 focus:ring-indigo-500/10 resize-none"
+                placeholder="Describe the transaction source..."
+              />
+            </div>
+
+            <button 
+              onClick={handleSave}
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-5 rounded-3xl font-black shadow-2xl shadow-indigo-200 transition-all active:scale-95 flex items-center justify-center gap-3 text-lg"
+            >
+              <Save size={24} /> {editId ? "CONFIRM UPDATE" : "SAVE TRANSACTION"}
             </button>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
