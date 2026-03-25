@@ -72,7 +72,7 @@ export default function Navbar() {
 
             {/* 4. Logout button par onClick lagayein */}
             <button 
-              onClick={handleLogout}
+              onClick={handleLogout}               
               className="w-full text-left px-4 py-2 hover:bg-gray-100 transition text-red-500 font-medium"
             >
               Logout

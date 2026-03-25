@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Search, ChevronDown, ChevronLeft, ChevronRight,
   CheckCircle2, XCircle, Trash2, Edit2, Eye,
   Printer, FileSpreadsheet, ShoppingBag,
-  Calendar, Package, Clock,
+  Calendar, Package, Clock, X, Save
 } from "lucide-react";
 
-// ─── Interfaces (Fixes the Red Lines) ─────────────────────────────────────────
+// ─── Interfaces ─────────────────────────────────────────────────────────────
 
 interface Order {
   id: string;
@@ -19,12 +19,10 @@ interface Order {
   address: string;
   points: string;
   date: string;
-  status: string;
+  status: "Delivered" | "Rejected" | "Pending";
 }
 
-interface SectionLabelProps {
-  children: React.ReactNode;
-}
+interface SectionLabelProps { children: React.ReactNode; }
 
 interface StatCardProps {
   icon: React.ElementType;
@@ -35,25 +33,12 @@ interface StatCardProps {
   borderAccent: string;
 }
 
-interface StatusBadgeProps {
-  status: string;
-}
-
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const ordersData: Order[] = [
-  { id: "62", userName: "Manjeet Singh",  productName: "Electrician Bag",           receiverName: "Nsjwja",           receiverPhone: "7009524322", address: "X9HR+78 Green Valley Colony, Mansa, Punjab, India",                    points: "75",   date: "2026-03-14", status: "Rejected"  },
-  { id: "61", userName: "Amit Sihag",     productName: "Electrician Bag",           receiverName: "Sumit Choudhary",  receiverPhone: "8107844354", address: "Priya Electrical Gadakhera",                                           points: "75",   date: "2026-02-28", status: "Rejected"  },
-  { id: "60", userName: "Amit Sihag",     productName: "BLDS Ceiling Fan (4 Blade)",receiverName: "Sumit Choudhary",  receiverPhone: "8107844354", address: "Priya Electrical Gadakhera",                                           points: "1500", date: "2026-02-26", status: "Rejected"  },
-  { id: "59", userName: "Anil",           productName: "Drill Machine",             receiverName: "Anil Kumar",       receiverPhone: "6375055052", address: "6MR2+7RM, Shiv Colony, Chirawa, Rajasthan 333026, India",              points: "750",  date: "2026-02-13", status: "Delivered" },
-  { id: "58", userName: "Sanjeev Kumar",  productName: "Electrician Bag",           receiverName: "Suraj",            receiverPhone: "7087734521", address: "Guru Har Sahai, Punjab 152022, India",                                   points: "75",   date: "2026-02-12", status: "Delivered" },
-];
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Components ──────────────────────────────────────────────────────────────
 
 function SectionLabel({ children }: SectionLabelProps) {
   return (
-    <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mt-6 mb-3">
+    <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mt-8 mb-3 flex items-center gap-2">
+      <span className="w-8 h-[1px] bg-slate-200"></span>
       {children}
     </p>
   );
@@ -61,199 +46,240 @@ function SectionLabel({ children }: SectionLabelProps) {
 
 function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent }: StatCardProps) {
   return (
-    <div className={`bg-white rounded-xl border border-slate-200 border-t-4 ${borderAccent} p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer`}>
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBg} ${iconColor}`}>
-        <Icon size={18} />
+    <div className={`bg-white rounded-2xl border border-slate-200 border-t-4 ${borderAccent} p-5 flex flex-col gap-3 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group`}>
+      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 ${iconBg} ${iconColor}`}>
+        <Icon size={22} />
       </div>
       <div>
-        <p className="text-2xl font-semibold text-slate-800">{value}</p>
-        <p className="text-xs text-slate-500 mt-1">{label}</p>
+        <p className="text-3xl font-bold text-slate-800 tracking-tight">{value}</p>
+        <p className="text-xs font-medium text-slate-500 mt-1 uppercase tracking-wider">{label}</p>
       </div>
     </div>
   );
 }
 
-function StatusBadge({ status }: StatusBadgeProps) {
-  if (status === "Delivered") {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-green-50 text-green-700 border border-green-200">
-        <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
-        Delivered
-      </span>
-    );
-  }
-  if (status === "Rejected") {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 inline-block" />
-        Rejected
-      </span>
-    );
-  }
+function StatusBadge({ status }: { status: string }) {
+  const styles: Record<string, string> = {
+    Delivered: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    Rejected: "bg-rose-50 text-rose-700 border-rose-200",
+    Pending: "bg-amber-50 text-amber-700 border-amber-200",
+  };
+  const dots: Record<string, string> = {
+    Delivered: "bg-emerald-500",
+    Rejected: "bg-rose-500",
+    Pending: "bg-amber-500",
+  };
+
   return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
-      Pending
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border ${styles[status]}`}>
+      <span className={`w-1.5 h-1.5 rounded-full inline-block ${dots[status]}`} />
+      {status}
     </span>
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ─── Main Page ──────────────────────────────────────────────────────────────
 
 export default function GiftStoreOrderPage() {
-  const [actionOpen, setActionOpen] = useState(false);
+  // 1. STATE
+  const [orders, setOrders] = useState<Order[]>([
+    { id: "62", userName: "Manjeet Singh", productName: "Electrician Bag", receiverName: "Nsjwja", receiverPhone: "7009524322", address: "X9HR+78 Green Valley Colony, Mansa, Punjab, India", points: "75", date: "2026-03-14", status: "Rejected" },
+    { id: "61", userName: "Amit Sihag", productName: "Electrician Bag", receiverName: "Sumit Choudhary", receiverPhone: "8107844354", address: "Priya Electrical Gadakhera", points: "75", date: "2026-02-28", status: "Rejected" },
+    { id: "60", userName: "Amit Sihag", productName: "BLDS Ceiling Fan (4 Blade)", receiverName: "Sumit Choudhary", receiverPhone: "8107844354", address: "Priya Electrical Gadakhera", points: "1500", date: "2026-02-26", status: "Rejected" },
+    { id: "59", userName: "Anil", productName: "Drill Machine", receiverName: "Anil Kumar", receiverPhone: "6375055052", address: "6MR2+7RM, Shiv Colony, Chirawa, Rajasthan 333026, India", points: "750", date: "2026-02-13", status: "Delivered" },
+    { id: "58", userName: "Sanjeev Kumar", productName: "Electrician Bag", receiverName: "Suraj", receiverPhone: "7087734521", address: "Guru Har Sahai, Punjab 152022, India", points: "75", date: "2026-02-12", status: "Delivered" },
+  ]);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All Status");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [actionOpen, setActionOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  const deliveredCount = ordersData.filter((o) => o.status === "Delivered").length;
-  const rejectedCount  = ordersData.filter((o) => o.status === "Rejected").length;
-  const pendingCount   = ordersData.filter((o) => o.status === "Pending").length;
+  // 2. FILTERING LOGIC
+  const filteredOrders = useMemo(() => {
+    return orders.filter((o) => {
+      const matchesSearch = 
+        o.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        o.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        o.receiverPhone.includes(searchTerm);
+      
+      const matchesStatus = statusFilter === "All Status" || o.status === statusFilter;
+      
+      const orderDate = new Date(o.date);
+      const start = fromDate ? new Date(fromDate) : null;
+      const end = toDate ? new Date(toDate) : null;
+      const matchesDate = (!start || orderDate >= start) && (!end || orderDate <= end);
 
-  const filtered = ordersData.filter((o) => {
-    const matchSearch =
-      o.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      o.productName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchStatus = statusFilter === "All Status" || o.status === statusFilter;
-    return matchSearch && matchStatus;
-  });
+      return matchesSearch && matchesStatus && matchesDate;
+    });
+  }, [orders, searchTerm, statusFilter, fromDate, toDate]);
+
+  // 3. HANDLERS
+  const updateStatus = (id: string, newStatus: Order["status"]) => {
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
+    setActionOpen(false);
+  };
+
+  const deleteOrder = (id: string) => {
+    if(confirm("Are you sure you want to remove this redemption record?")) {
+      setOrders(prev => prev.filter(o => o.id !== id));
+    }
+  };
+
+  const handleBulkStatus = (newStatus: Order["status"]) => {
+    setOrders(prev => prev.map(o => selectedIds.includes(o.id) ? { ...o, status: newStatus } : o));
+    setSelectedIds([]);
+    setActionOpen(false);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filteredOrders.length) setSelectedIds([]);
+    else setSelectedIds(filteredOrders.map(o => o.id));
+  };
+
+  // Stats
+  const stats = {
+    total: orders.length,
+    delivered: orders.filter(o => o.status === "Delivered").length,
+    rejected: orders.filter(o => o.status === "Rejected").length,
+    pending: orders.filter(o => o.status === "Pending").length,
+  };
 
   return (
     <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans print:bg-white print:p-0">
-
-      {/* ── Header ── */}
-      <div className="flex flex-wrap items-end justify-between gap-3 mb-2 print:hidden">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-            <ShoppingBag className="text-blue-600" size={20} />
+      
+      {/* ── HEADER ── */}
+      <div className="flex flex-wrap items-end justify-between gap-4 mb-2 print:hidden">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center shadow-inner">
+            <ShoppingBag className="text-blue-600" size={24} />
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-slate-800">Manage User Redeem</h1>
+            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Manage User Redeem</h1>
             <p className="text-sm text-slate-500 mt-0.5">Order fulfillment for SRV Electricals</p>
           </div>
         </div>
-        <button
-          onClick={() => window.print()}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 hover:shadow-sm transition-all duration-200 text-sm font-medium"
-        >
-          <Printer size={15} />
-          Print Report
-        </button>
-      </div>
-
-      {/* ── Stats ── */}
-      <div className="print:hidden">
-        <SectionLabel>Overview</SectionLabel>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <StatCard icon={Package}      label="Total Orders"  value={ordersData.length} iconBg="bg-blue-100"   iconColor="text-blue-600"   borderAccent="border-t-blue-500"   />
-          <StatCard icon={CheckCircle2} label="Delivered"     value={deliveredCount}    iconBg="bg-green-100"  iconColor="text-green-600"  borderAccent="border-t-green-500"  />
-          <StatCard icon={XCircle}      label="Rejected"      value={rejectedCount}     iconBg="bg-rose-100"   iconColor="text-rose-500"   borderAccent="border-t-rose-400"   />
-          <StatCard icon={Clock}        label="Pending"       value={pendingCount}      iconBg="bg-amber-100"  iconColor="text-amber-600"  borderAccent="border-t-amber-500"  />
+        <div className="flex gap-2">
+          <button onClick={() => window.print()} className="flex items-center gap-2 px-5 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all text-sm font-bold">
+            <Printer size={18} /> Print
+          </button>
         </div>
       </div>
 
-      {/* ── Filters ── */}
+      {/* ── STATS ── */}
       <div className="print:hidden">
-        <SectionLabel>Filters</SectionLabel>
-        <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4">
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="flex-1 min-w-[180px]">
-              <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Search</label>
+        <SectionLabel>Quick Insights</SectionLabel>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatCard icon={Package} label="Total Redeem" value={stats.total} iconBg="bg-blue-50" iconColor="text-blue-600" borderAccent="border-t-blue-500" />
+          <StatCard icon={CheckCircle2} label="Delivered" value={stats.delivered} iconBg="bg-emerald-50" iconColor="text-emerald-600" borderAccent="border-t-emerald-500" />
+          <StatCard icon={XCircle} label="Rejected" value={stats.rejected} iconBg="bg-rose-50" iconColor="text-rose-500" borderAccent="border-t-rose-400" />
+          <StatCard icon={Clock} label="Pending" value={stats.pending} iconBg="bg-amber-50" iconColor="text-amber-600" borderAccent="border-t-amber-500" />
+        </div>
+      </div>
+
+      {/* ── SEARCH & FILTERS ── */}
+      <div className="print:hidden">
+        <SectionLabel>Filters & Search</SectionLabel>
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 mb-6 shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+            <div className="lg:col-span-2">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Search Orders</label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                <input
-                  type="text"
-                  placeholder="Search by user or product..."
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <input 
+                  type="text" 
+                  placeholder="User, Product, or Phone..." 
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
                 />
               </div>
             </div>
 
-            <div className="min-w-[140px]">
-              <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Status</label>
-              <select
+            <div>
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">Status</label>
+              <select 
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 outline-none"
               >
                 <option>All Status</option>
                 <option>Delivered</option>
-                <option>Rejected</option>
                 <option>Pending</option>
+                <option>Rejected</option>
               </select>
             </div>
 
-            <div className="min-w-[150px]">
-              <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Start Date</label>
-              <input
-                type="date"
+            <div>
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">From Date</label>
+              <input 
+                type="date" 
                 value={fromDate}
                 onChange={(e) => setFromDate(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-              />
-            </div>
-
-            <div className="min-w-[150px]">
-              <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">End Date</label>
-              <input
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-600 outline-none"
               />
             </div>
 
             <div className="flex gap-2">
-              <button className="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-all shadow-sm">
-                Apply
-              </button>
-              <button
-                onClick={() => { setSearchTerm(""); setStatusFilter("All Status"); setFromDate(""); setToDate(""); }}
-                className="px-5 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition-all"
+              <div className="flex-1">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 block">To Date</label>
+                <input 
+                  type="date" 
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-600 outline-none"
+                />
+              </div>
+              <button 
+                onClick={() => {setSearchTerm(""); setStatusFilter("All Status"); setFromDate(""); setToDate("");}}
+                className="px-4 py-2.5 bg-slate-100 text-slate-500 rounded-xl hover:bg-slate-200 transition-colors"
+                title="Reset Filters"
               >
-                Reset
+                <X size={18}/>
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── Table ── */}
-      <SectionLabel>All Orders</SectionLabel>
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between print:hidden">
-          <div className="flex items-center gap-2">
-            <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600" />
-            <span className="text-xs font-medium text-slate-500">Select All</span>
+      {/* ── DATA TABLE ── */}
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        {/* Table Toolbar */}
+        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 print:hidden">
+          <div className="flex items-center gap-3">
+            <input 
+              type="checkbox" 
+              checked={selectedIds.length === filteredOrders.length && filteredOrders.length > 0}
+              onChange={toggleSelectAll}
+              className="w-4 h-4 rounded border-slate-300 accent-blue-600" 
+            />
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              {selectedIds.length > 0 ? `${selectedIds.length} Selected` : "Select All"}
+            </span>
           </div>
+
           <div className="relative">
-            <button
+            <button 
+              disabled={selectedIds.length === 0}
               onClick={() => setActionOpen(!actionOpen)}
-              className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-100 transition-all"
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-white transition-all disabled:opacity-50"
             >
-              Action
-              <ChevronDown size={14} className={`transition-transform duration-200 ${actionOpen ? "rotate-180" : ""}`} />
+              Bulk Status <ChevronDown size={14} className={actionOpen ? "rotate-180" : ""} />
             </button>
+            
             {actionOpen && (
-              <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl border border-slate-200 shadow-lg z-50 overflow-hidden py-1">
-                <p className="px-3 py-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-100">
-                  Status Updates
-                </p>
-                <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-green-50 hover:text-green-600 transition-colors">
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl border border-slate-100 shadow-2xl z-50 py-2 animate-in fade-in zoom-in-95">
+                <button onClick={() => handleBulkStatus("Delivered")} className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-emerald-50 hover:text-emerald-700">
                   <CheckCircle2 size={14} /> Mark Delivered
                 </button>
-                <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition-colors">
+                <button onClick={() => handleBulkStatus("Rejected")} className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-rose-50 hover:text-rose-700">
                   <XCircle size={14} /> Mark Rejected
                 </button>
-                <div className="h-px bg-slate-100 mx-2 my-1" />
-                <p className="px-3 py-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-100">
-                  Reports
-                </p>
-                <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-colors">
-                  <FileSpreadsheet size={14} /> Export Excel
+                <div className="h-px bg-slate-100 mx-2 my-2" />
+                <button className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-blue-600 hover:bg-blue-50">
+                  <FileSpreadsheet size={14} /> Export Selected
                 </button>
               </div>
             )}
@@ -263,111 +289,87 @@ export default function GiftStoreOrderPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50">
-                <th className="px-5 py-3.5 w-10 print:hidden">
-                  <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600" />
-                </th>
-                {["ID", "User / Product", "Receiver Info", "Address", "Points & Date", "Status", "Actions"].map((h) => (
-                  <th
-                    key={h}
-                    className={`px-5 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap ${h === "Actions" ? "print:hidden" : ""}`}
-                  >
+              <tr className="border-b border-slate-100 bg-slate-50/50">
+                <th className="px-6 py-4 w-12 print:hidden"></th>
+                {["ID", "Redeemer", "Receiver", "Shipping Address", "Value & Date", "Status", "Actions"].map((h) => (
+                  <th key={h} className={`px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-400 ${h === "Actions" ? "print:hidden text-right" : ""}`}>
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filtered.map((order) => (
-                <tr key={order.id} className="hover:bg-slate-50 transition-colors duration-150">
-                  <td className="px-5 py-4 print:hidden">
-                    <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600" />
+              {filteredOrders.map((order) => (
+                <tr key={order.id} className={`hover:bg-slate-50/80 transition-colors group ${selectedIds.includes(order.id) ? 'bg-blue-50/30' : ''}`}>
+                  <td className="px-6 py-5 print:hidden">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedIds.includes(order.id)}
+                      onChange={() => setSelectedIds(prev => prev.includes(order.id) ? prev.filter(i => i !== order.id) : [...prev, order.id])}
+                      className="w-4 h-4 rounded border-slate-300 accent-blue-600" 
+                    />
                   </td>
-                  <td className="px-5 py-4 text-xs font-medium text-slate-400">
-                    #{order.id}
-                  </td>
-                  <td className="px-5 py-4">
-                    <p className="text-sm font-medium text-slate-800 whitespace-nowrap">{order.userName}</p>
-                    <button className="flex items-center gap-1 text-[11px] text-blue-600 font-medium mt-0.5 hover:underline">
-                      <Eye size={11} className="print:hidden" />
-                      {order.productName}
-                    </button>
-                  </td>
-                  <td className="px-5 py-4">
-                    <p className="text-sm font-medium text-slate-800 whitespace-nowrap">{order.receiverName}</p>
-                    <p className="text-xs text-slate-400 mt-0.5">{order.receiverPhone}</p>
-                  </td>
-                  <td className="px-5 py-4">
-                    <p className="text-xs text-slate-500 max-w-[200px] leading-relaxed line-clamp-2">
-                      {order.address}
+                  <td className="px-6 py-5 text-xs font-bold text-slate-400">#{order.id}</td>
+                  <td className="px-6 py-5">
+                    <p className="text-sm font-bold text-slate-800">{order.userName}</p>
+                    <p className="text-[11px] font-semibold text-blue-600 mt-0.5 flex items-center gap-1">
+                      <Package size={12}/> {order.productName}
                     </p>
                   </td>
-                  <td className="px-5 py-4">
-                    <p className="text-sm font-semibold text-green-600">{order.points} pts</p>
-                    <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-0.5">
-                      <Calendar size={11} />
-                      {order.date}
-                    </div>
+                  <td className="px-6 py-5">
+                    <p className="text-sm font-bold text-slate-800">{order.receiverName}</p>
+                    <p className="text-xs font-medium text-slate-400 mt-1">{order.receiverPhone}</p>
                   </td>
-                  <td className="px-5 py-4">
+                  <td className="px-6 py-5">
+                    <p className="text-[11px] leading-relaxed text-slate-500 max-w-[180px] line-clamp-2">{order.address}</p>
+                  </td>
+                  <td className="px-6 py-5">
+                    <p className="text-sm font-bold text-emerald-600">{order.points} pts</p>
+                    <p className="text-[10px] font-bold text-slate-400 mt-1 flex items-center gap-1 uppercase">
+                      <Calendar size={12}/> {order.date}
+                    </p>
+                  </td>
+                  <td className="px-6 py-5">
                     <StatusBadge status={order.status} />
                   </td>
-                  <td className="px-5 py-4 print:hidden">
-                    <div className="flex items-center gap-1">
-                      <button className="w-8 h-8 flex items-center justify-center rounded-lg text-amber-500 hover:bg-amber-50 transition-all duration-200" title="Edit">
-                        <Edit2 size={15} />
-                      </button>
-                      <button className="w-8 h-8 flex items-center justify-center rounded-lg text-rose-500 hover:bg-rose-50 transition-all duration-200" title="Delete">
-                        <Trash2 size={15} />
-                      </button>
+                  <td className="px-6 py-5 print:hidden text-right">
+                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => updateStatus(order.id, "Delivered")} className="w-8 h-8 flex items-center justify-center rounded-lg text-emerald-500 hover:bg-emerald-50" title="Mark Delivered"><CheckCircle2 size={16}/></button>
+                      <button onClick={() => updateStatus(order.id, "Rejected")} className="w-8 h-8 flex items-center justify-center rounded-lg text-rose-500 hover:bg-rose-50" title="Reject"><XCircle size={16}/></button>
+                      <button onClick={() => deleteOrder(order.id)} className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100" title="Delete"><Trash2 size={16}/></button>
                     </div>
                   </td>
                 </tr>
               ))}
-              {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={8} className="px-5 py-12 text-center text-sm text-slate-400">
-                    No orders found matching your filters.
-                  </td>
-                </tr>
-              )}
             </tbody>
           </table>
         </div>
 
-        <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between print:hidden">
-          <p className="text-xs text-slate-400 font-medium">
-            Showing{" "}
-            <span className="text-slate-600 font-semibold">{filtered.length}</span>{" "}
-            of{" "}
-            <span className="text-slate-600 font-semibold">{ordersData.length}</span> orders
+        {/* Empty State */}
+        {filteredOrders.length === 0 && (
+          <div className="py-20 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 mb-4">
+              <Search className="text-slate-300" size={32} />
+            </div>
+            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">No matching redemptions found</p>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="px-6 py-5 border-t border-slate-100 flex items-center justify-between bg-slate-50/30 print:hidden">
+          <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">
+            Showing <span className="text-slate-700">{filteredOrders.length}</span> results
           </p>
           <div className="flex items-center gap-1.5">
-            <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100 transition-all">
-              <ChevronLeft size={14} />
-            </button>
-            {[1, 2].map((n) => (
-              <button
-                key={n}
-                className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all ${
-                  n === 1
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100"
-                }`}
-              >
-                {n}
-              </button>
-            ))}
-            <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100 transition-all">
-              <ChevronRight size={14} />
-            </button>
+            <button className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400"><ChevronLeft size={16} /></button>
+            <button className="w-9 h-9 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-lg shadow-blue-200">1</button>
+            <button className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400"><ChevronRight size={16} /></button>
           </div>
         </div>
       </div>
-
-      {actionOpen && (
-        <div className="fixed inset-0 z-40" onClick={() => setActionOpen(false)} />
-      )}
+      
+      {/* Backdrop for Bulk Menu */}
+      {actionOpen && <div className="fixed inset-0 z-40" onClick={() => setActionOpen(false)} />}
     </div>
   );
 }

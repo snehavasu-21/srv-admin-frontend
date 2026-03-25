@@ -1,10 +1,11 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Settings, Globe, Smartphone, Landmark, 
-  Bell, Save, Upload, Mail, Info, LucideIcon 
+  Bell, Save, Upload, Mail, Info, LucideIcon,
+  CheckCircle2, XCircle, Loader2
 } from "lucide-react";
 
 // ─── TypeScript Interfaces ──────────────────────────────────────────────────
@@ -17,225 +18,274 @@ interface TabConfig {
   icon: LucideIcon;
 }
 
-interface TabButtonProps extends TabConfig {
-  activeTab: TabId;
-  setActiveTab: (id: TabId) => void;
-}
-
-interface ParameterField {
-  label: string;
-  val: string;
-}
-
 // ─── Sub-components ─────────────────────────────────────────────────────────
 
-const TabButton = ({ id, label, icon: Icon, activeTab, setActiveTab }: TabButtonProps) => (
-  <button
-    onClick={() => setActiveTab(id)}
-    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
-      activeTab === id
-        ? "bg-blue-600 text-white shadow-md shadow-blue-200"
-        : "bg-white text-slate-500 hover:bg-slate-50 border border-slate-200"
-    }`}
-  >
-    <Icon size={16} />
-    {label}
-  </button>
-);
+const Toast = ({ message, type, onClose }: { message: string, type: 'success' | 'error', onClose: () => void }) => {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className={`fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-6 py-3 rounded-2xl shadow-2xl border animate-in slide-in-from-top-full duration-300 ${
+      type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'
+    }`}>
+      {type === 'success' ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
+      <span className="text-sm font-bold">{message}</span>
+    </div>
+  );
+};
 
 // ─── Page Component ──────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<TabId>("general");
+  const [isSaving, setIsSaving] = useState(false);
+  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+
+  // Form State
+  const [generalData, setGeneralData] = useState({
+    hostEmail: "srvelectericals.app@gmail.com",
+    appName: "SRV Electricals",
+    appDescription: "SRV Electricals management platform.",
+    author: "+91 84275 84682",
+    contact: "+91 88376 84004",
+    website: "srvelectricals.com",
+    minTransfer: "10",
+    referPoint: "70",
+    minRedeem: "100",
+    helpDesk: "+91 70095 24322",
+    minWithdrawal: "100",
+    conversion: "1"
+  });
+
+  const [appData, setAppData] = useState({
+    maintenance: false,
+    version: "1.0.4",
+    playStore: "https://play.google.com/store/...",
+    forceMsg: "This version is outdated. Please update."
+  });
+
+  const showToast = (msg: string, type: 'success' | 'error' = 'success') => {
+    setToast({ msg, type });
+  };
+
+  const handleSave = () => {
+    setIsSaving(true);
+    // Simulate API Call
+    setTimeout(() => {
+      setIsSaving(false);
+      showToast("Settings updated successfully!");
+    }, 800);
+  };
 
   const tabs: TabConfig[] = [
-    { id: "general", label: "General Settings", icon: Globe },
-    { id: "app", label: "App Settings", icon: Smartphone },
-    { id: "bank", label: "Banking Settings", icon: Landmark },
+    { id: "general", label: "General", icon: Globe },
+    { id: "app", label: "App UI", icon: Smartphone },
+    { id: "bank", label: "Banking", icon: Landmark },
     { id: "notification", label: "System Keys", icon: Bell },
   ];
 
-  const coreParameters: ParameterField[] = [
-    { label: "Author", val: "+91 84275 84682" },
-    { label: "Contact", val: "+91 88376 84004" },
-    { label: "Website", val: "srvelectricals.com" },
-    { label: "Min Transfer Point", val: "10" },
-    { label: "Refer Point", val: "70" },
-    { label: "Min Product Redeem", val: "100" },
-    { label: "Help Desk 1", val: "+91 70095 24322" },
-    { label: "Min Withdrawal", val: "₹100" },
-    { label: "Conversion Rate", val: "1" },
-  ];
-
   return (
-    <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans text-slate-900">
+    <div className="min-h-screen bg-slate-50 p-4 md:p-10 font-sans text-slate-900">
       
+      {/* TOAST SYSTEM */}
+      {toast && <Toast message={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
+
       {/* HEADER */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="max-w-5xl mx-auto flex items-center justify-between mb-10">
         <div>
-          <h1 className="text-xl font-semibold text-slate-800 flex items-center gap-2">
-            <Settings className="text-blue-600" size={24} /> Settings
+          <h1 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+            <div className="p-2 bg-blue-600 rounded-lg text-white">
+                <Settings size={20} />
+            </div> 
+            Settings
           </h1>
-          <p className="text-sm text-slate-500 mt-0.5">Configure your application parameters and keys</p>
+          <p className="text-sm text-slate-500 font-medium">Global Configuration Dashboard</p>
         </div>
-        <button className="hidden md:flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-sm font-medium shadow-sm">
-          <Save size={16} /> Save All Changes
+        <button 
+          onClick={handleSave}
+          disabled={isSaving}
+          className="hidden md:flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all text-sm font-bold shadow-xl shadow-blue-100 disabled:opacity-70"
+        >
+          {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+          {isSaving ? "Saving..." : "Save Changes"}
         </button>
       </div>
 
-      {/* TAB NAVIGATION */}
-      <div className="flex gap-3 mb-8 overflow-x-auto pb-2 scrollbar-hide">
+      {/* NAVIGATION */}
+      <div className="max-w-5xl mx-auto flex gap-2 mb-8 bg-white p-1.5 rounded-2xl border border-slate-200 overflow-x-auto shadow-sm">
         {tabs.map((tab) => (
-          <TabButton 
-            key={tab.id} 
-            {...tab} 
-            activeTab={activeTab} 
-            setActiveTab={setActiveTab} 
-          />
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
+              activeTab === tab.id
+                ? "bg-slate-900 text-white shadow-lg"
+                : "text-slate-500 hover:bg-slate-50"
+            }`}
+          >
+            <tab.icon size={16} />
+            {tab.label}
+          </button>
         ))}
       </div>
 
-      <div className="max-w-5xl">
-        {/* ================= GENERAL SETTINGS ================= */}
+      <div className="max-w-5xl mx-auto">
+        {/* ================= GENERAL ================= */}
         {activeTab === "general" && (
-          <div className="grid gap-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-6 flex items-center gap-2">
-                <Info size={14} /> Core Information
-              </h3>
+          <div className="grid gap-6 animate-in fade-in slide-in-from-bottom-4 duration-400">
+            <div className="bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm">
+              <div className="flex items-center gap-2 mb-8">
+                <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
+                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Core Information</h3>
+              </div>
               
-              <div className="space-y-5">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">Host Email</label>
+              <div className="grid md:grid-cols-2 gap-8 mb-8">
+                <div className="space-y-2">
+                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider ml-1">Host Email</label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                        <input 
+                            type="email"
+                            value={generalData.hostEmail}
+                            onChange={(e) => setGeneralData({...generalData, hostEmail: e.target.value})}
+                            className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-blue-500/10 transition-all" 
+                        />
+                    </div>
+                </div>
+                <div className="space-y-2">
+                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider ml-1">App Title</label>
+                    <input 
+                        value={generalData.appName}
+                        onChange={(e) => setGeneralData({...generalData, appName: e.target.value})}
+                        className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-blue-500/10 transition-all" 
+                    />
+                </div>
+              </div>
+
+              <div className="space-y-2 mb-10">
+                <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider ml-1">Short Description</label>
+                <textarea 
+                  rows={3} 
+                  value={generalData.appDescription}
+                  onChange={(e) => setGeneralData({...generalData, appDescription: e.target.value})}
+                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-blue-500/10 resize-none" 
+                />
+              </div>
+
+              <div className="pt-8 border-t border-slate-100">
+                <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-6">Contact & System Logic</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {Object.entries(generalData).slice(3).map(([key, val], i) => (
+                    <div key={i} className="space-y-1.5">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">{key.replace(/([A-Z])/g, ' $1')}</label>
                       <input 
-                        type="email"
-                        defaultValue="srvelectericals.app@gmail.com" 
-                        className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20" 
+                        value={val} 
+                        onChange={(e) => setGeneralData({...generalData, [key]: e.target.value})}
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500/10" 
                       />
                     </div>
-                    <p className="text-[11px] text-slate-400 mt-1.5 italic">Used for "Forgot Password" system emails</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">App Name</label>
-                    <input 
-                      defaultValue="SRV Electricals" 
-                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20" 
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">App Description</label>
-                  <textarea 
-                    rows={3} 
-                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20" 
-                    placeholder="Describe the purpose of SRV Electricals app..." 
-                  />
-                </div>
-
-                <div className="pt-4 border-t border-slate-100">
-                  <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-6">Contact & Logic Parameters</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    {coreParameters.map((field, i) => (
-                      <div key={i}>
-                        <label className="block text-xs font-bold text-slate-500 mb-1">{field.label}</label>
-                        <input 
-                          defaultValue={field.val} 
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20" 
-                        />
-                      </div>
-                    ))}
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* ================= APP SETTINGS ================= */}
+        {/* ================= APP ================= */}
         {activeTab === "app" && (
-          <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-6 animate-in fade-in slide-in-from-bottom-2">
-            <div className="flex items-center justify-between p-4 bg-amber-50 border border-amber-100 rounded-lg">
-              <div className="flex gap-3">
-                <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center text-amber-600">
-                  <Smartphone size={20} />
+          <div className="bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm space-y-8 animate-in fade-in slide-in-from-bottom-4">
+            <div className={`flex items-center justify-between p-6 rounded-[1.5rem] transition-colors ${appData.maintenance ? 'bg-amber-50 border border-amber-100' : 'bg-slate-50 border border-slate-100'}`}>
+              <div className="flex gap-4">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${appData.maintenance ? 'bg-amber-100 text-amber-600' : 'bg-slate-200 text-slate-500'}`}>
+                  <Smartphone size={24} />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-amber-800">Maintenance Mode</h4>
-                  <p className="text-xs text-amber-600">Toggle this to lock the app for users during updates.</p>
+                  <h4 className={`text-sm font-black ${appData.maintenance ? 'text-amber-900' : 'text-slate-800'}`}>Maintenance Mode</h4>
+                  <p className="text-xs font-medium text-slate-500 mt-1">Users will see a "Maintenance" screen when opening the app.</p>
                 </div>
               </div>
-              <input 
-                type="checkbox" 
-                className="w-10 h-5 bg-slate-200 rounded-full appearance-none checked:bg-blue-600 cursor-pointer transition-all relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:w-4 after:h-4 after:rounded-full after:transition-all checked:after:translate-x-5" 
-              />
+              <button 
+                onClick={() => setAppData({...appData, maintenance: !appData.maintenance})}
+                className={`w-14 h-7 rounded-full relative transition-all duration-300 ${appData.maintenance ? 'bg-blue-600' : 'bg-slate-300'}`}
+              >
+                <div className={`absolute top-1 bg-white w-5 h-5 rounded-full transition-all duration-300 ${appData.maintenance ? 'left-8' : 'left-1'}`} />
+              </button>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Version Code</label>
-                <input defaultValue="1.0.4" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20" />
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="space-y-2">
+                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Version Code</label>
+                <input value={appData.version} onChange={(e) => setAppData({...appData, version: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500/10" />
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1.5">Update Link (Play Store)</label>
-                <input defaultValue="https://play.google.com/store/..." className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20" />
+              <div className="space-y-2">
+                <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Play Store Link</label>
+                <input value={appData.playStore} onChange={(e) => setAppData({...appData, playStore: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500/10" />
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-1.5">Force Update Message</label>
-              <textarea defaultValue="This version is outdated. Please update." className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20" rows={2} />
+            <div className="space-y-2">
+              <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Force Update Message</label>
+              <textarea value={appData.forceMsg} onChange={(e) => setAppData({...appData, forceMsg: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500/10 resize-none" rows={2} />
             </div>
           </div>
         )}
 
-        {/* ================= BANK SETTINGS ================= */}
+        {/* ================= BANKING ================= */}
         {activeTab === "bank" && (
-          <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm animate-in fade-in slide-in-from-bottom-2">
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
-              <div className="space-y-4">
-                <h4 className="text-xs font-bold text-blue-600 uppercase tracking-widest">Business Details</h4>
-                <input placeholder="GSTIN Number" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20" />
-                <input placeholder="PAN Number" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20" />
-                <textarea placeholder="Business Address" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20" rows={2} />
+          <div className="bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm animate-in fade-in slide-in-from-bottom-4">
+            <div className="grid md:grid-cols-2 gap-10 mb-10">
+              <div className="space-y-5">
+                <h4 className="text-xs font-black text-blue-600 uppercase tracking-[0.2em] mb-4">Business Profile</h4>
+                <input placeholder="GSTIN Number" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500/10" />
+                <input placeholder="PAN Number" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500/10" />
+                <textarea placeholder="Registered Address" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500/10 resize-none" rows={3} />
               </div>
-              <div className="space-y-4">
-                <h4 className="text-xs font-bold text-blue-600 uppercase tracking-widest">Payout Account</h4>
-                <input placeholder="Bank Name" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20" />
-                <input placeholder="Account Number" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20" />
-                <input placeholder="IFSC Code" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20" />
+              <div className="space-y-5">
+                <h4 className="text-xs font-black text-blue-600 uppercase tracking-[0.2em] mb-4">Settlement Account</h4>
+                <input placeholder="Beneficiary Bank" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500/10" />
+                <input placeholder="Account Number" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500/10" />
+                <input placeholder="IFSC Code" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500/10" />
               </div>
             </div>
             
-            <div className="pt-6 border-t border-slate-100">
-               <label className="block text-sm font-semibold text-slate-700 mb-3">Company UPI QR Code</label>
-               <div className="border-2 border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-50 transition-all cursor-pointer group">
-                 <Upload size={32} className="mb-2 group-hover:text-blue-500 transition-colors" />
-                 <span className="text-xs font-medium">Click to upload UPI QR image</span>
+            <div className="pt-8 border-t border-slate-100">
+               <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">Company UPI QR Code</label>
+               <div 
+                  onClick={() => showToast("File selector opened", "success")}
+                  className="group border-2 border-dashed border-slate-200 rounded-[2rem] p-12 flex flex-col items-center justify-center text-slate-400 hover:bg-blue-50/50 hover:border-blue-200 transition-all cursor-pointer"
+               >
+                 <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-blue-100 group-hover:text-blue-600 transition-all">
+                    <Upload size={28} />
+                 </div>
+                 <span className="text-sm font-black text-slate-500 group-hover:text-blue-600">Click or Drag to Upload QR</span>
+                 <p className="text-xs font-medium text-slate-400 mt-1">Supports PNG, JPG (Max 2MB)</p>
                </div>
             </div>
           </div>
         )}
 
-        {/* ================= NOTIFICATION/KEYS SETTINGS ================= */}
+        {/* ================= KEYS ================= */}
         {activeTab === "notification" && (
-          <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-6 animate-in fade-in slide-in-from-bottom-2">
-            <div className="grid md:grid-cols-2 gap-4">
+          <div className="bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm space-y-6 animate-in fade-in slide-in-from-bottom-4">
+            <div className="flex items-center gap-3 mb-4 p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-700">
+                <Info size={18} />
+                <p className="text-xs font-bold uppercase tracking-wider">Warning: These keys give access to sensitive systems. Do not share.</p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-8">
               {[
                 { label: "OneSignal App ID", placeholder: "xxxx-xxxx-xxxx" },
                 { label: "OneSignal Rest Key", placeholder: "ODQ..." },
                 { label: "Google Maps API Key", placeholder: "AIza..." },
                 { label: "Razorpay Secret Key", placeholder: "rzp_live..." },
               ].map((key, i) => (
-                <div key={i}>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">{key.label}</label>
+                <div key={i} className="space-y-2">
+                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{key.label}</label>
                   <input 
                     type="password" 
                     placeholder={key.placeholder} 
-                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20" 
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-rose-500/5 transition-all" 
                   />
                 </div>
               ))}
@@ -245,8 +295,13 @@ export default function SettingsPage() {
 
         {/* MOBILE SAVE BUTTON */}
         <div className="mt-8 md:hidden">
-           <button className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 active:scale-[0.98] transition-transform">
-             Save All Settings
+           <button 
+             onClick={handleSave}
+             disabled={isSaving}
+             className="w-full py-5 bg-blue-600 text-white rounded-[2rem] font-black shadow-2xl shadow-blue-200 active:scale-[0.98] transition-transform flex items-center justify-center gap-3"
+           >
+             {isSaving ? <Loader2 className="animate-spin" /> : <Save />}
+             {isSaving ? "SAVING..." : "SAVE SETTINGS"}
            </button>
         </div>
       </div>

@@ -65,7 +65,7 @@ function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent }:
 
 export default function ManageQRCodePage() {
   // Data State
-  const [qrCodes] = useState<QRCodeBatch[]>([
+  const [qrCodes, setQrCodes] = useState<QRCodeBatch[]>([
     { id: "1195", productName: "CC RG 4\" 18/60 PC", batchNo: "1535", date: "2026-03-20", point: "2", qty: "4000" },
     { id: "1193", productName: "CC PL 4.5\" 24/60 PC", batchNo: "1534", date: "2026-03-20", point: "2", qty: "1000" },
     { id: "1192", productName: "CC NP 3.5\" 14/56 PC", batchNo: "1533", date: "2026-03-20", point: "1", qty: "3500" },
@@ -76,18 +76,54 @@ export default function ManageQRCodePage() {
   ]);
 
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(qrCodes);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "QR_Codes");
-    XLSX.writeFile(workbook, "SRV_QR_Codes_List.xlsx");
-  };
+  // ─── Functionalities ───────────────────────────────────────────────────────
 
   const filteredCodes = qrCodes.filter(qr => 
     qr.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     qr.batchNo.includes(searchTerm)
   );
+
+  const exportToExcel = () => {
+    const dataToExport = selectedIds.length > 0 
+      ? qrCodes.filter(q => selectedIds.includes(q.id)) 
+      : filteredCodes;
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "QR_Codes");
+    XLSX.writeFile(workbook, "SRV_QR_Codes_List.xlsx");
+  };
+
+  const handleDelete = (id: string) => {
+    setQrCodes(prev => prev.filter(item => item.id !== id));
+    setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(filteredCodes.map(q => q.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectRow = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkAction = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const action = e.target.value;
+    if (action === "Delete Selected" && selectedIds.length > 0) {
+      setQrCodes(prev => prev.filter(item => !selectedIds.includes(item.id)));
+      setSelectedIds([]);
+    } else if (action === "Download Selected" && selectedIds.length > 0) {
+      exportToExcel();
+    }
+    e.target.value = "Bulk Actions"; 
+  };
 
   return (
     <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans text-slate-900">
@@ -116,15 +152,14 @@ export default function ManageQRCodePage() {
       {/* ── Summary Stats ── */}
       <SectionLabel>Overview</SectionLabel>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <StatCard icon={QrCode} label="Total Batches" value="1,195" iconBg="bg-blue-100" iconColor="text-blue-600" borderAccent="border-t-blue-500" />
-        <StatCard icon={Layers} label="Total Qty Generated" value="12,345" iconBg="bg-purple-100" iconColor="text-purple-600" borderAccent="border-t-purple-500" />
-        <StatCard icon={Calendar} label="Updated Today" value="7 Batches" iconBg="bg-emerald-100" iconColor="text-emerald-600" borderAccent="border-t-emerald-500" />
+        <StatCard icon={QrCode} label="Total Batches" value={qrCodes.length.toString()} iconBg="bg-blue-100" iconColor="text-blue-600" borderAccent="border-t-blue-500" />
+        <StatCard icon={Layers} label="Total Qty Generated" value={qrCodes.reduce((acc, curr) => acc + parseInt(curr.qty), 0).toLocaleString()} iconBg="bg-purple-100" iconColor="text-purple-600" borderAccent="border-t-purple-500" />
+        <StatCard icon={Calendar} label="Filtered Batches" value={filteredCodes.length.toString()} iconBg="bg-emerald-100" iconColor="text-emerald-600" borderAccent="border-t-emerald-500" />
       </div>
 
       {/* ── Table Section ── */}
       <SectionLabel>Batch List</SectionLabel>
 
-      {/* Search + Filter bar */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
@@ -141,7 +176,10 @@ export default function ManageQRCodePage() {
             <Filter size={14} />
             Filter
           </button>
-          <select className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer">
+          <select 
+            onChange={handleBulkAction}
+            className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all cursor-pointer"
+          >
             <option>Bulk Actions</option>
             <option>Delete Selected</option>
             <option>Download Selected</option>
@@ -149,14 +187,18 @@ export default function ManageQRCodePage() {
         </div>
       </div>
 
-      {/* Table */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
                 <th className="px-5 py-3.5 w-10">
-                  <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" />
+                  <input 
+                    type="checkbox" 
+                    onChange={handleSelectAll}
+                    checked={selectedIds.length === filteredCodes.length && filteredCodes.length > 0}
+                    className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" 
+                  />
                 </th>
                 {["ID", "Product Details", "Batch Info", "Points", "Quantity", "Actions"].map((h) => (
                   <th key={h} className="px-5 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap">
@@ -167,17 +209,16 @@ export default function ManageQRCodePage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredCodes.map((qr) => (
-                <tr key={qr.id} className="hover:bg-slate-50/80 transition-colors duration-150 group">
+                <tr key={qr.id} className={`hover:bg-slate-50/80 transition-colors duration-150 group ${selectedIds.includes(qr.id) ? 'bg-blue-50/30' : ''}`}>
                   <td className="px-5 py-4">
-                    <input type="checkbox" className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" />
+                    <input 
+                      type="checkbox" 
+                      checked={selectedIds.includes(qr.id)}
+                      onChange={() => handleSelectRow(qr.id)}
+                      className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" 
+                    />
                   </td>
-
-                  {/* ID */}
-                  <td className="px-5 py-4 text-xs font-medium text-slate-400">
-                    #{qr.id}
-                  </td>
-
-                  {/* Product Name */}
+                  <td className="px-5 py-4 text-xs font-medium text-slate-400">#{qr.id}</td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
@@ -186,8 +227,6 @@ export default function ManageQRCodePage() {
                       <p className="text-sm font-medium text-slate-800 whitespace-nowrap">{qr.productName}</p>
                     </div>
                   </td>
-
-                  {/* Batch Info */}
                   <td className="px-5 py-4">
                     <div className="flex flex-col">
                       <div className="text-xs font-semibold text-slate-700 flex items-center gap-1">
@@ -198,20 +237,12 @@ export default function ManageQRCodePage() {
                       </div>
                     </div>
                   </td>
-
-                  {/* Points */}
                   <td className="px-5 py-4">
                     <span className="inline-flex items-center px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-semibold">
                       {qr.point} Pts
                     </span>
                   </td>
-
-                  {/* Quantity */}
-                  <td className="px-5 py-4 text-sm text-slate-700 font-semibold">
-                    {qr.qty}
-                  </td>
-
-                  {/* Actions */}
+                  <td className="px-5 py-4 text-sm text-slate-700 font-semibold">{qr.qty}</td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-1">
                       <button className="w-8 h-8 flex items-center justify-center rounded-lg text-blue-500 hover:bg-blue-50 transition-all" title="View">
@@ -223,7 +254,7 @@ export default function ManageQRCodePage() {
                       <button className="w-8 h-8 flex items-center justify-center rounded-lg text-amber-500 hover:bg-amber-50 transition-all" title="Edit">
                         <Edit2 size={15} />
                       </button>
-                      <button className="w-8 h-8 flex items-center justify-center rounded-lg text-rose-500 hover:bg-rose-50 transition-all" title="Delete">
+                      <button onClick={() => handleDelete(qr.id)} className="w-8 h-8 flex items-center justify-center rounded-lg text-rose-500 hover:bg-rose-50 transition-all" title="Delete">
                         <Trash2 size={15} />
                       </button>
                     </div>
@@ -232,12 +263,14 @@ export default function ManageQRCodePage() {
               ))}
             </tbody>
           </table>
+          {filteredCodes.length === 0 && (
+            <div className="p-10 text-center text-slate-400 text-sm italic">No batches found matching your search.</div>
+          )}
         </div>
 
-        {/* Pagination */}
         <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between bg-white">
           <p className="text-xs text-slate-400 font-medium">
-            Showing <span className="text-slate-600 font-semibold">1–{filteredCodes.length}</span> of <span className="text-slate-600 font-semibold">1,195</span> batches
+            Showing <span className="text-slate-600 font-semibold">1–{filteredCodes.length}</span> of <span className="text-slate-600 font-semibold">{qrCodes.length}</span> batches
           </p>
           <div className="flex items-center gap-1.5">
             <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100 transition-all">
