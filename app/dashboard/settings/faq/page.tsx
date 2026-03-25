@@ -7,8 +7,7 @@ import {
   X, Save, Loader2, Edit3
 } from "lucide-react";
 
-// ─── TypeScript Interfaces ──────────────────────────────────────────────────
-
+// --- TypeScript Interfaces ---
 type FAQStatus = "Active" | "Inactive";
 
 interface FAQ {
@@ -17,8 +16,6 @@ interface FAQ {
   answer: string;
   status: FAQStatus;
 }
-
-// ─── Page Component ──────────────────────────────────────────────────────────
 
 export default function FAQPage() {
   const [faqs, setFaqs] = useState<FAQ[]>([
@@ -119,11 +116,11 @@ export default function FAQPage() {
   }, [faqs, searchTerm]);
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] p-4 md:p-10 font-sans text-slate-900">
+    <div className="min-h-screen bg-[#f8fafc] p-4 md:p-10 font-sans text-slate-900 overflow-visible">
       
       {/* TOAST MESSAGE */}
       {toast && (
-        <div className={`fixed top-10 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 px-6 py-3 rounded-2xl shadow-2xl border animate-in slide-in-from-top-full ${
+        <div className={`fixed top-10 left-1/2 -translate-x-1/2 z-[250] flex items-center gap-3 px-6 py-3 rounded-2xl shadow-2xl border animate-in slide-in-from-top-full ${
           toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'
         }`}>
           {toast.type === 'success' ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
@@ -131,6 +128,7 @@ export default function FAQPage() {
         </div>
       )}
 
+      {/* HEADER */}
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
         <div>
           <h1 className="text-2xl font-black text-slate-800 flex items-center gap-3 uppercase tracking-tight">
@@ -143,7 +141,8 @@ export default function FAQPage() {
         </button>
       </div>
 
-      <div className="max-w-6xl mx-auto bg-white p-5 rounded-[2rem] border border-slate-200 mb-8 flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm">
+      {/* SEARCH & ACTIONS */}
+      <div className="max-w-6xl mx-auto bg-white p-5 rounded-[2rem] border border-slate-200 mb-8 flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm relative z-[60]">
         <div className="relative w-full md:w-96">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input
@@ -169,9 +168,9 @@ export default function FAQPage() {
         </div>
       </div>
 
-      {/* TABLE CONTAINER - Removed overflow-hidden from main container to allow dropdown visibility */}
+      {/* TABLE CONTAINER - Overflow visible allows the dropdown to pop out */}
       <div className="max-w-6xl mx-auto bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-visible">
-        <div className="overflow-x-auto rounded-[2rem]">
+        <div className="overflow-visible">
           <table className="w-full text-left border-separate border-spacing-0">
             <thead>
               <tr className="bg-slate-50/50">
@@ -192,7 +191,7 @@ export default function FAQPage() {
             <tbody className="divide-y divide-slate-50">
               {filteredFaqs.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="text-center py-24">
+                  <td colSpan={4} className="text-center py-24 rounded-b-[2rem]">
                     <HelpCircle size={48} className="mx-auto mb-4 text-slate-200" />
                     <p className="text-slate-400 font-bold">No results found</p>
                   </td>
@@ -222,7 +221,7 @@ export default function FAQPage() {
                         {faq.status}
                       </span>
                     </td>
-                    {/* DROPDOWN CELL - Uses z-index and overflow-visible */}
+                    {/* DROPDOWN CELL - Strictly set to overflow-visible */}
                     <td className="px-8 py-6 text-right relative overflow-visible">
                       <button
                         onClick={() => setOpenDropdown(openDropdown === faq.id ? null : faq.id)}
@@ -232,12 +231,12 @@ export default function FAQPage() {
                       </button>
 
                       {openDropdown === faq.id && (
-                        <>
-                          {/* Transparent Overlay to close dropdown */}
+                        <div className="relative">
+                          {/* Full screen overlay to detect click outside */}
                           <div className="fixed inset-0 z-[100]" onClick={() => setOpenDropdown(null)}></div>
                           
-                          {/* THE DROPDOWN MENU - Increased z-index and fixed positioning context */}
-                          <div className="absolute right-8 top-16 w-48 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.15)] rounded-[1.5rem] border border-slate-100 z-[110] py-2 overflow-hidden animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-150">
+                          {/* THE DROPDOWN MENU - Elevated z-index and explicit positioning */}
+                          <div className="absolute right-0 top-2 w-48 bg-white shadow-[0_10px_40px_rgba(0,0,0,0.2)] rounded-[1.5rem] border border-slate-100 z-[110] py-2 animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-150">
                             <button onClick={() => openEditModal(faq)} className="w-full flex items-center gap-3 px-5 py-3 text-xs font-bold text-slate-600 hover:bg-slate-50">
                               <Edit3 size={16} className="text-blue-500" /> Edit Content
                             </button>
@@ -252,7 +251,7 @@ export default function FAQPage() {
                               <Trash2 size={16} /> Delete Forever
                             </button>
                           </div>
-                        </>
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -265,7 +264,7 @@ export default function FAQPage() {
 
       {/* MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => !isSaving && setIsModalOpen(false)}></div>
           <div className="relative bg-white w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="bg-slate-900 p-8 text-white flex justify-between items-center">

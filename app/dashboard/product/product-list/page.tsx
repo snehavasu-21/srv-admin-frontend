@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, useRef } from "react";
 import {
   Search, Plus, Package, Edit2, Trash2,
-  ChevronLeft, ChevronRight, Filter, FileDown,
-  X, Save, AlertCircle, CheckCircle2
+  ChevronLeft, ChevronRight, X, Save,
+  AlertCircle, CheckCircle2, FileDown,
+  Image as ImageIcon
 } from "lucide-react";
 
 // ─── TypeScript Interfaces ──────────────────────────────────────────────────
@@ -15,6 +16,7 @@ interface Product {
   id: string;
   category: string;
   name: string;
+  productImage: string; 
   oriPrice: string;
   offerPrice: string;
   status: ToggleStatus;
@@ -28,11 +30,11 @@ interface SectionLabelProps {
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
 const productsData: Product[] = [
-  { id: "302", category: "PVC Casing Batten",  name: "PVC Casing Batten",           oriPrice: "76",  offerPrice: "45.6",  status: "Enable",  featured: "Disable" },
-  { id: "301", category: "PVC Casing Batten",  name: "PVC Casing Batten",           oriPrice: "70",  offerPrice: "42",    status: "Enable",  featured: "Disable" },
-  { id: "300", category: "PVC Casing Batten",  name: "PVC Casing Batten",           oriPrice: "51",  offerPrice: "30.6",  status: "Enable",  featured: "Disable" },
-  { id: "299", category: "PVC Conduit Bend",   name: "Conduit Bend Medium 2.5\"",  oriPrice: "91",  offerPrice: "54.6",  status: "Enable",  featured: "Disable" },
-  { id: "298", category: "PVC Conduit Pipe",   name: "Conduit Pipe Medium 1.50\"", oriPrice: "356", offerPrice: "213.6", status: "Disable", featured: "Disable" },
+  { id: "302", category: "PVC Casing Batten", name: "PVC Casing Batten", productImage: "", oriPrice: "76", offerPrice: "45.6", status: "Enable", featured: "Disable" },
+  { id: "301", category: "PVC Casing Batten", name: "PVC Casing Batten", productImage: "", oriPrice: "70", offerPrice: "42", status: "Enable", featured: "Disable" },
+  { id: "300", category: "PVC Casing Batten", name: "PVC Casing Batten", productImage: "", oriPrice: "51", offerPrice: "30.6", status: "Enable", featured: "Disable" },
+  { id: "299", category: "PVC Conduit Bend",  name: "Conduit Bend Medium 2.5\"", productImage: "", oriPrice: "91", offerPrice: "54.6", status: "Enable", featured: "Disable" },
+  { id: "298", category: "PVC Conduit Pipe",  name: "Conduit Pipe Medium 1.50\"", productImage: "", oriPrice: "356", offerPrice: "213.6", status: "Disable", featured: "Disable" },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -58,12 +60,18 @@ export default function ProductListPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ message: string; visible: boolean }>({ message: "", visible: false });
+  const [toast, setToast] = useState({ message: "", visible: false });
+
+  // Refs for Image Uploads
+  const modalFileInputRef = useRef<HTMLInputElement>(null);
+  const tableFileInputRef = useRef<HTMLInputElement>(null);
+  const [activeTableId, setActiveTableId] = useState<string | null>(null);
 
   // Form State
   const [formData, setFormData] = useState({
     name: "",
     category: "PVC Casing Batten",
+    productImage: "",
     oriPrice: "",
     offerPrice: "",
     status: "Enable" as ToggleStatus
@@ -76,18 +84,29 @@ export default function ProductListPage() {
     setTimeout(() => setToast({ message: "", visible: false }), 3000);
   };
 
-  // Advanced Filtering Logic
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, isTable: boolean = false) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const imageUrl = URL.createObjectURL(file);
+      if (isTable && activeTableId) {
+        setProducts(prev => prev.map(p => p.id === activeTableId ? { ...p, productImage: imageUrl } : p));
+        showToast("Image updated");
+      } else {
+        setFormData(prev => ({ ...prev, productImage: imageUrl }));
+      }
+      e.target.value = ""; 
+    }
+  };
+
   const filteredProducts = products.filter((p) => {
-    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         p.id.includes(searchTerm);
+    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.id.includes(searchTerm);
     const matchesCategory = categoryFilter === "All Categories" || p.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
 
-  // Handlers
   const handleOpenAdd = () => {
     setEditingProduct(null);
-    setFormData({ name: "", category: "PVC Casing Batten", oriPrice: "", offerPrice: "", status: "Enable" });
+    setFormData({ name: "", category: "PVC Casing Batten", productImage: "", oriPrice: "", offerPrice: "", status: "Enable" });
     setIsModalOpen(true);
   };
 
@@ -96,6 +115,7 @@ export default function ProductListPage() {
     setFormData({
       name: prod.name,
       category: prod.category,
+      productImage: prod.productImage,
       oriPrice: prod.oriPrice,
       offerPrice: prod.offerPrice,
       status: prod.status
@@ -136,6 +156,10 @@ export default function ProductListPage() {
   return (
     <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans relative">
       
+      {/* Hidden File Inputs */}
+      <input type="file" ref={modalFileInputRef} onChange={(e) => handleImageUpload(e)} accept="image/*" className="hidden" />
+      <input type="file" ref={tableFileInputRef} onChange={(e) => handleImageUpload(e, true)} accept="image/*" className="hidden" />
+
       {/* ── Toast Notification ── */}
       {toast.visible && (
         <div className="fixed bottom-10 right-10 z-[110] flex items-center gap-3 px-6 py-3 bg-slate-900 text-white rounded-2xl shadow-2xl transition-all animate-bounce">
@@ -144,7 +168,7 @@ export default function ProductListPage() {
         </div>
       )}
 
-      {/* ── Modals ── */}
+      {/* ── Delete Modal ── */}
       {isDeleteModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
           <div className="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl text-center">
@@ -159,6 +183,7 @@ export default function ProductListPage() {
         </div>
       )}
 
+      {/* ── Add/Edit Modal ── */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
           <form onSubmit={handleSaveProduct} className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
@@ -167,6 +192,24 @@ export default function ProductListPage() {
               <X className="cursor-pointer text-slate-400" onClick={() => setIsModalOpen(false)} />
             </div>
             <div className="p-6 space-y-4">
+              {/* Image Upload Area */}
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase">Product Image</label>
+                <div 
+                  onClick={() => modalFileInputRef.current?.click()}
+                  className="mt-1 w-full h-32 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition-all overflow-hidden"
+                >
+                  {formData.productImage ? (
+                    <img src={formData.productImage} alt="Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <>
+                      <ImageIcon size={20} className="text-slate-300 mb-1" />
+                      <p className="text-[10px] font-bold text-slate-400">Click to upload</p>
+                    </>
+                  )}
+                </div>
+              </div>
+
               <div>
                 <label className="text-[10px] font-bold text-slate-400 uppercase">Name</label>
                 <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full mt-1 px-4 py-2 bg-slate-50 border rounded-xl" />
@@ -241,7 +284,7 @@ export default function ProductListPage() {
 
       {/* ── Filters ── */}
       <SectionLabel>All Products</SectionLabel>
-      <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
+      <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4 flex flex-col sm:row items-center justify-between gap-3 shadow-sm">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
           <input
@@ -285,7 +328,21 @@ export default function ProductListPage() {
                   <td className="px-5 py-4 text-xs font-medium text-slate-400">#{prod.id}</td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-orange-50 flex items-center justify-center"><Package size={16} className="text-orange-500" /></div>
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="w-10 h-10 rounded-lg bg-orange-50 border border-slate-100 flex items-center justify-center overflow-hidden">
+                          {prod.productImage ? (
+                            <img src={prod.productImage} className="w-full h-full object-cover" alt="" />
+                          ) : (
+                            <Package size={16} className="text-orange-500" />
+                          )}
+                        </div>
+                        <button 
+                          onClick={() => { setActiveTableId(prod.id); tableFileInputRef.current?.click(); }}
+                          className="text-[8px] font-bold text-blue-600 uppercase hover:underline"
+                        >
+                          Change
+                        </button>
+                      </div>
                       <span className="text-sm font-medium text-slate-800">{prod.name}</span>
                     </div>
                   </td>
@@ -294,8 +351,8 @@ export default function ProductListPage() {
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex bg-slate-100 p-0.5 rounded-lg w-[120px] border">
-                      <button onClick={() => toggleStatus(prod.id, "Enable")} className={`flex-1 py-1 rounded-md text-[10px] font-bold ${prod.status === "Enable" ? "bg-green-500 text-white" : "text-slate-400"}`}>Enable</button>
-                      <button onClick={() => toggleStatus(prod.id, "Disable")} className={`flex-1 py-1 rounded-md text-[10px] font-bold ${prod.status === "Disable" ? "bg-rose-500 text-white" : "text-slate-400"}`}>Disable</button>
+                      <button onClick={() => toggleStatus(prod.id, "Enable")} className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all ${prod.status === "Enable" ? "bg-green-500 text-white shadow-sm" : "text-slate-400"}`}>Enable</button>
+                      <button onClick={() => toggleStatus(prod.id, "Disable")} className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all ${prod.status === "Disable" ? "bg-rose-500 text-white shadow-sm" : "text-slate-400"}`}>Disable</button>
                     </div>
                   </td>
                   <td className="px-5 py-4">
@@ -310,31 +367,21 @@ export default function ProductListPage() {
                   </td>
                 </tr>
               ))}
-              {filteredProducts.length === 0 && (
-                <tr><td colSpan={7} className="px-5 py-12 text-center text-sm text-slate-400">No matching products found.</td></tr>
-              )}
             </tbody>
           </table>
         </div>
 
-        {/* Pagination Logic */}
+        {/* ── Pagination ── */}
         <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between bg-white">
           <p className="text-xs text-slate-400 font-medium">
             Showing <span className="text-slate-600 font-semibold">{filteredProducts.length}</span> of <span className="text-slate-600 font-semibold">{products.length}</span>
           </p>
           <div className="flex items-center gap-1.5">
-            <button 
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage(p => p - 1)}
-              className={`w-8 h-8 flex items-center justify-center rounded-lg border ${currentPage === 1 ? 'opacity-30' : 'hover:bg-slate-100'}`}
-            >
+            <button disabled={currentPage === 1} className="w-8 h-8 flex items-center justify-center rounded-lg border opacity-30 cursor-not-allowed">
               <ChevronLeft size={14} />
             </button>
             <button className="w-8 h-8 rounded-lg text-xs font-bold bg-blue-600 text-white">1</button>
-            <button 
-              disabled={true} // Hardcoded for this mock as we only have 5 items
-              className="w-8 h-8 flex items-center justify-center rounded-lg border opacity-30"
-            >
+            <button disabled className="w-8 h-8 flex items-center justify-center rounded-lg border opacity-30 cursor-not-allowed">
               <ChevronRight size={14} />
             </button>
           </div>
