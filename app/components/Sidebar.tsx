@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import React, { useState } from "react";
@@ -17,7 +18,6 @@ import {
 
 // --- Types & Interfaces ---
 
-// 1. Sidebar ke liye Props interface add kiya
 interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
@@ -72,7 +72,6 @@ const menus: MenuItem[] = [
   { name: "Settings", icon: Settings, submenu: [{ label: "General Settings", icon: Sliders }, { label: "Pages Settings", icon: FileText }, { label: "FAQ", icon: HelpCircle }] },
 ];
 
-// 2. Component ko Props accept karne ke liye update kiya
 export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const pathname = usePathname();
@@ -88,36 +87,36 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
   return (
     <div
-      className="flex-shrink-0 flex flex-col h-screen transition-all duration-300 ease-in-out relative"
+      className="flex-shrink-0 flex flex-col h-screen transition-all duration-300 ease-in-out relative select-none"
       style={{
         background: "#0a1930",
         width: collapsed ? "70px" : "240px",
         borderRight: "1px solid rgba(255,255,255,0.08)"
       }}
     >
-      {/* Header */}
+      {/* Header / Logo Section */}
       <div className="px-4 py-5 flex items-center justify-between flex-shrink-0"
         style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
         
-        <div className="flex items-center gap-3 overflow-hidden">
-          <div className="w-9 h-9 relative rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0"
+        {/* Profile/Logo with Hover Effect */}
+        <div className="flex items-center gap-3 overflow-hidden group cursor-pointer hover:opacity-80 transition-all">
+          <div className="w-9 h-9 relative rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105"
             style={{ background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)" }}>
-            {/* Logo placeholder - replace src with your actual srv.svg path */}
             <div className="w-full h-full bg-blue-500/20 flex items-center justify-center text-[10px] font-bold text-blue-400">SRV</div>
             <Image src="/srv.svg" alt="SRV Logo" fill className="object-contain p-1" />
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <p className="text-[13px] font-bold text-white truncate">SRV Electricals</p>
+              <p className="text-[13px] font-bold text-white truncate group-hover:text-blue-300 transition-colors">SRV Electricals</p>
               <p className="text-[10px]" style={{ color: "#60A5FA" }}>Admin Panel</p>
             </div>
           )}
         </div>
 
-        {/* Toggle Button - Now calls onToggle from props */}
+        {/* Toggle Button */}
         <button 
           onClick={onToggle}
-          className="p-1.5 rounded-lg hover:bg-white/5 transition-colors"
+          className="p-1.5 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
           style={{ color: "#3B6EA5" }}
         >
           {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
@@ -147,7 +146,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 <div>
                   <button
                     onClick={() => toggleMenu(menu.name)}
-                    className="w-full flex items-center rounded-xl text-[13px] font-medium transition-all group"
+                    className="w-full flex items-center rounded-xl text-[13px] font-medium transition-all group cursor-pointer"
                     style={{
                       background: parentActive || isOpen ? "rgba(59,130,246,0.12)" : "transparent",
                       color: parentActive || isOpen ? "#93C5FD" : "#94A3B8",
@@ -155,7 +154,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                       justifyContent: collapsed ? "center" : "flex-start"
                     }}
                   >
-                    <Icon size={18} className={`${collapsed ? "" : "mr-3"} flex-shrink-0`} />
+                    <Icon size={18} className={`${collapsed ? "" : "mr-3"} flex-shrink-0 transition-transform group-hover:scale-110`} />
                     {!collapsed && (
                       <>
                         <span className="flex-1 text-left">{menu.name}</span>
@@ -171,7 +170,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                         const active = pathname === route;
                         return (
                           <Link key={i} href={route}
-                            className="flex items-center gap-3 px-3 py-2 rounded-lg text-[12px] transition-all"
+                            className="flex items-center gap-3 px-3 py-2 rounded-lg text-[12px] transition-all cursor-pointer hover:bg-white/5"
                             style={{
                               background: active ? "#2563EB" : "transparent",
                               color: active ? "#fff" : "#64748B",
@@ -188,7 +187,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
               ) : (
                 <Link
                   href={menu.link || "#"}
-                  className="flex items-center rounded-xl text-[13px] font-medium transition-all"
+                  className="flex items-center rounded-xl text-[13px] font-medium transition-all cursor-pointer hover:bg-white/5"
                   style={{
                     background: isActive(menu.link) ? "#2563EB" : "transparent",
                     color: isActive(menu.link) ? "#fff" : "#94A3B8",
@@ -196,7 +195,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                     justifyContent: collapsed ? "center" : "flex-start"
                   }}
                 >
-                  <Icon size={18} className={`${collapsed ? "" : "mr-3"} flex-shrink-0`} />
+                  <Icon size={18} className={`${collapsed ? "" : "mr-3"} flex-shrink-0 transition-transform group-hover:scale-110`} />
                   {!collapsed && menu.name}
                 </Link>
               )}
@@ -205,15 +204,15 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-white/5 bg-[#081426]">
-        <div className={`flex items-center ${collapsed ? "justify-center" : "gap-3"}`}>
-          <div className="w-8 h-8 rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0">
+      {/* Footer / Account Section with Hover */}
+      <div className="p-3 border-t border-white/5 bg-[#081426]">
+        <div className={`flex items-center p-2 rounded-xl transition-all cursor-pointer hover:bg-white/5 group ${collapsed ? "justify-center" : "gap-3"}`}>
+          <div className="w-8 h-8 rounded-full bg-blue-600/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105">
             <span className="text-[10px] font-bold text-blue-400">AD</span>
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-[12px] font-semibold text-white truncate">Admin Account</p>
+              <p className="text-[12px] font-semibold text-white truncate group-hover:text-blue-300 transition-colors">Admin Account</p>
               <p className="text-[10px] text-blue-400/60 truncate">admin@srv.com</p>
             </div>
           )}

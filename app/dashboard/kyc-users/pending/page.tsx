@@ -1,10 +1,11 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import React, { useState, ChangeEvent } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { 
   Search, Eye, ChevronLeft, ChevronRight, 
-  Filter, Clock, Users, CheckCircle, XCircle, 
-  Image as ImageIcon 
+  Filter, Clock, Users, XCircle, 
+  Image as ImageIcon, X, RotateCcw, Upload, AlertTriangle
 } from "lucide-react";
 
 // ─── Types & Interfaces ──────────────────────────────────────────────────────
@@ -24,92 +25,15 @@ interface PendingUser {
   kycStatus: "Pending";
 }
 
-interface SectionLabelProps {
-  children: React.ReactNode;
-}
-
-interface TypeBadgeProps {
-  type: UserType;
-}
-
-interface ImageCellProps {
-  label: string;
-}
-
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const pendingUsersData: PendingUser[] = [
-  {
-    id: "3401",
-    type: "Retailer",
-    name: "Harpreet Singh",
-    phone: "9876543210",
-    address: "Ludhiana, Punjab",
-    aadharFront: null,
-    aadharBack: null,
-    pancard: null,
-    gstNo: "03AABCU9603R1ZV",
-    kycStatus: "Pending",
-  },
-  {
-    id: "3398",
-    type: "Distributor",
-    name: "Rajesh Kumar",
-    phone: "8765432109",
-    address: "Amritsar, Punjab",
-    aadharFront: null,
-    aadharBack: null,
-    pancard: null,
-    gstNo: "03BBBCK1234M1ZP",
-    kycStatus: "Pending",
-  },
-  {
-    id: "3385",
-    type: "Retailer",
-    name: "Gurpreet Kaur",
-    phone: "7654321098",
-    address: "Patiala, Punjab",
-    aadharFront: null,
-    aadharBack: null,
-    pancard: null,
-    gstNo: "-",
-    kycStatus: "Pending",
-  },
-  {
-    id: "3370",
-    type: "Wholesaler",
-    name: "Vikram Sharma",
-    phone: "9543210987",
-    address: "Jalandhar, Punjab",
-    aadharFront: null,
-    aadharBack: null,
-    pancard: null,
-    gstNo: "03CCCCI5678N1ZQ",
-    kycStatus: "Pending",
-  },
-  {
-    id: "3361",
-    type: "Retailer",
-    name: "Sukhwinder Gill",
-    phone: "8432109876",
-    address: "Bathinda, Punjab",
-    aadharFront: null,
-    aadharBack: null,
-    pancard: null,
-    gstNo: "-",
-    kycStatus: "Pending",
-  },
-];
-
 // ─── Sub-Components ──────────────────────────────────────────────────────────
 
-const SectionLabel: React.FC<SectionLabelProps> = ({ children }) => (
+const SectionLabel = ({ children }: { children: React.ReactNode }) => (
   <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mt-6 mb-3">
     {children}
   </p>
 );
 
-const TypeBadge: React.FC<TypeBadgeProps> = ({ type }) => {
+const TypeBadge = ({ type }: { type: UserType }) => {
   const styles: Record<UserType, string> = {
     Retailer: "bg-blue-50 text-blue-700 border-blue-200",
     Distributor: "bg-purple-50 text-purple-700 border-purple-200",
@@ -122,38 +46,157 @@ const TypeBadge: React.FC<TypeBadgeProps> = ({ type }) => {
   );
 };
 
-const ImageCell: React.FC<ImageCellProps> = ({ label }) => (
-  <button
-    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-medium text-slate-500 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-all duration-150"
-    title={`View ${label}`}
-  >
-    <ImageIcon size={11} />
-    View
-  </button>
-);
-
 // ─── Main Page Component ─────────────────────────────────────────────────────
 
 export default function PendingKYCPage() {
+  // --- States ---
+  const [users, setUsers] = useState<PendingUser[]>([
+    {
+      id: "3401",
+      type: "Retailer",
+      name: "Harpreet Singh",
+      phone: "9876543210",
+      address: "Ludhiana, Punjab",
+      aadharFront: null,
+      aadharBack: null,
+      pancard: null,
+      gstNo: "03AABCU9603R1ZV",
+      kycStatus: "Pending",
+    },
+    {
+      id: "3398",
+      type: "Distributor",
+      name: "Rajesh Kumar",
+      phone: "8765432109",
+      address: "Amritsar, Punjab",
+      aadharFront: null,
+      aadharBack: null,
+      pancard: null,
+      gstNo: "03BBBCK1234M1ZP",
+      kycStatus: "Pending",
+    },
+  ]);
+
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const totalPages = 10;
+  const [typeFilter, setTypeFilter] = useState<string>("All");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const filterRef = useRef<HTMLDivElement>(null);
 
-  const filtered = pendingUsersData.filter(
-    (u) =>
-      u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.phone.includes(searchTerm) ||
-      u.id.includes(searchTerm)
-  );
+  // States for Modals
+  const [selectedImage, setSelectedImage] = useState<{url: string, title: string} | null>(null);
+  const [selectedUser, setSelectedUser] = useState<PendingUser | null>(null);
+  const [userToReject, setUserToReject] = useState<PendingUser | null>(null);
 
-  const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1); // Reset page on search
+  // --- Handlers ---
+
+  const handleFileUpload = (userId: string, field: keyof PendingUser, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUsers(prev => prev.map(u => 
+          u.id === userId ? { ...u, [field]: reader.result as string } : u
+        ));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
+  // Confirm Rejection from Custom Modal
+  const confirmReject = () => {
+    if (userToReject) {
+      setUsers(prev => prev.filter(u => u.id !== userToReject.id));
+      setUserToReject(null);
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+        setIsFilterOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filtered = users.filter((u) => {
+    const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         u.phone.includes(searchTerm) || 
+                         u.id.includes(searchTerm);
+    const matchesType = typeFilter === "All" || u.type === typeFilter;
+    return matchesSearch && matchesType;
+  });
+
   return (
-    <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans">
+    <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans relative">
       
+      {/* ── Custom Rejection Confirmation Modal ── */}
+      {userToReject && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertTriangle size={32} />
+              </div>
+              <h3 className="text-lg font-bold text-slate-800">Reject User?</h3>
+              <p className="text-sm text-slate-500 mt-2">
+                Are you sure you want to reject <b>{userToReject.name}</b>? This action will remove them from the pending list.
+              </p>
+            </div>
+            <div className="flex border-t">
+              <button 
+                onClick={() => setUserToReject(null)}
+                className="flex-1 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors border-r"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={confirmReject}
+                className="flex-1 px-4 py-3 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors"
+              >
+                Yes, Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Image Preview Modal ── */}
+      {selectedImage && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl relative overflow-hidden animate-in zoom-in duration-200">
+            <div className="p-4 border-b flex justify-between items-center bg-slate-50">
+              <h3 className="font-bold text-slate-800">{selectedImage.title}</h3>
+              <button onClick={() => setSelectedImage(null)} className="p-1 hover:bg-slate-200 rounded-full transition-colors"><X size={20} /></button>
+            </div>
+            <div className="p-2 flex justify-center">
+              <img src={selectedImage.url} alt="Document" className="max-h-[70vh] w-auto rounded-lg object-contain" />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── User Details Modal ── */}
+      {selectedUser && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative overflow-hidden animate-in zoom-in duration-200">
+            <div className="p-5 border-b flex justify-between items-center bg-slate-50">
+              <h3 className="font-bold text-slate-800">Review KYC Profile</h3>
+              <button onClick={() => setSelectedUser(null)} className="p-1 hover:bg-slate-200 rounded-full transition-colors"><X size={18} /></button>
+            </div>
+            <div className="p-6 space-y-4 text-sm font-sans">
+              <div className="flex justify-between border-b pb-2"> <span className="text-slate-500">Full Name:</span> <span className="text-slate-800 font-semibold">{selectedUser.name}</span> </div>
+              <div className="flex justify-between border-b pb-2"> <span className="text-slate-500">User ID:</span> <span className="font-bold text-blue-600">#{selectedUser.id}</span> </div>
+              <div className="flex justify-between border-b pb-2"> <span className="text-slate-500">Type:</span> <TypeBadge type={selectedUser.type} /> </div>
+              <div className="flex justify-between border-b pb-2"> <span className="text-slate-500">GST No:</span> <span className="font-mono text-slate-700">{selectedUser.gstNo}</span> </div>
+              <div className="flex justify-between"> <span className="text-slate-500">Status:</span> <span className="text-amber-600 font-bold">{selectedUser.kycStatus}</span> </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Header ── */}
       <div className="flex flex-wrap items-end justify-between gap-3 mb-2">
         <div className="flex items-center gap-3">
@@ -170,44 +213,60 @@ export default function PendingKYCPage() {
       {/* ── Stats ── */}
       <SectionLabel>Overview</SectionLabel>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-10">
-        <div className="bg-white rounded-xl border border-slate-200 border-t-4 border-t-blue-500 p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer">
-          <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-            <Users size={20} className="text-blue-600" />
-          </div>
-          <div>
-            <p className="text-2xl font-semibold text-slate-800">{pendingUsersData.length}</p>
-            <p className="text-xs text-slate-500 mt-1">Total Pending</p>
-          </div>
+        <div className="bg-white rounded-xl border border-slate-200 border-t-4 border-t-blue-500 p-5 flex flex-col gap-3 shadow-sm transition-all hover:shadow-md cursor-pointer">
+          <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center"> <Users size={20} className="text-blue-600" /> </div>
+          <div> <p className="text-2xl font-semibold text-slate-800">{users.length}</p> <p className="text-xs text-slate-500 mt-1">Total Pending</p> </div>
         </div>
-
-        <div className="bg-white rounded-xl border border-slate-200 border-t-4 border-t-amber-500 p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-pointer">
-          <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
-            <Clock size={20} className="text-amber-600" />
-          </div>
-          <div>
-            <p className="text-2xl font-semibold text-slate-800">{pendingUsersData.length}</p>
-            <p className="text-xs text-slate-500 mt-1">Awaiting Review</p>
-          </div>
+        <div className="bg-white rounded-xl border border-slate-200 border-t-4 border-t-amber-500 p-5 flex flex-col gap-3 shadow-sm transition-all hover:shadow-md cursor-pointer">
+          <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center"> <Clock size={20} className="text-amber-600" /> </div>
+          <div> <p className="text-2xl font-semibold text-slate-800">{users.length}</p> <p className="text-xs text-slate-500 mt-1">Awaiting Review</p> </div>
         </div>
       </div>
 
       {/* ── Search + Filter ── */}
       <SectionLabel>All Pending KYC Users</SectionLabel>
-      <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4 flex flex-col sm:flex-row items-center justify-between gap-3 relative">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
           <input
             type="text"
             placeholder="Search by name, phone or ID..."
             value={searchTerm}
-            onChange={handleSearch}
-            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
           />
         </div>
-        <button className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-100 transition-all">
-          <Filter size={14} />
-          Filters
-        </button>
+        
+        <div className="relative" ref={filterRef}>
+          <button 
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-sm font-medium transition-all ${isFilterOpen ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}`}
+          >
+            <Filter size={14} />
+            Filters {typeFilter !== "All" && <span className="w-1.5 h-1.5 bg-amber-400 rounded-full" />}
+          </button>
+
+          {isFilterOpen && (
+            <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-slate-200 shadow-xl rounded-xl z-50 p-4 animate-in slide-in-from-top-2">
+              <div className="flex items-center justify-between mb-3 pb-2 border-b">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Filter by Type</span>
+                <button onClick={() => setTypeFilter("All")} className="text-[10px] text-blue-600 font-bold flex items-center gap-1 hover:underline">
+                  <RotateCcw size={10}/> Reset
+                </button>
+              </div>
+              <select 
+                value={typeFilter} 
+                onChange={(e) => {setTypeFilter(e.target.value); setIsFilterOpen(false);}}
+                className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none"
+              >
+                <option value="All">All Types</option>
+                <option value="Retailer">Retailer</option>
+                <option value="Distributor">Distributor</option>
+                <option value="Wholesaler">Wholesaler</option>
+              </select>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── Table ── */}
@@ -216,18 +275,12 @@ export default function PendingKYCPage() {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
-                {[
-                  "User ID", "Type", "User Name", "User Phone", "Address",
-                  "Adharcard Front", "Adharcard Back", "Pancard", "GST NO",
-                  "Status", "Action"
-                ].map((h) => (
-                  <th key={h} className="px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap">
-                    {h}
-                  </th>
+                {[ "User ID", "Type", "User Name", "User Phone", "Address", "Adharcard Front", "Adharcard Back", "Pancard", "GST NO", "Status", "Action" ].map((h) => (
+                  <th key={h} className="px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 font-sans">
               {filtered.map((user) => (
                 <tr key={user.id} className="hover:bg-slate-50 transition-colors duration-150">
                   <td className="px-4 py-4 text-sm font-medium text-slate-500">{user.id}</td>
@@ -235,58 +288,73 @@ export default function PendingKYCPage() {
                   <td className="px-4 py-4 text-sm font-medium text-slate-800">{user.name}</td>
                   <td className="px-4 py-4 text-sm font-medium text-slate-700">{user.phone}</td>
                   <td className="px-4 py-4 text-sm text-slate-500 max-w-[160px] truncate">{user.address}</td>
-                  <td className="px-4 py-4"><ImageCell label="Front" /></td>
-                  <td className="px-4 py-4"><ImageCell label="Back" /></td>
-                  <td className="px-4 py-4"><ImageCell label="PAN" /></td>
+                  
+                  {[
+                    { label: "Aadhar Front", field: "aadharFront" as const },
+                    { label: "Aadhar Back", field: "aadharBack" as const },
+                    { label: "PAN Card", field: "pancard" as const }
+                  ].map((doc) => (
+                    <td key={doc.field} className="px-4 py-4">
+                      <div className="flex flex-col gap-1">
+                        <label className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[10px] font-medium text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-all cursor-pointer">
+                          <Upload size={11} /> Choose File
+                          <input 
+                            type="file" 
+                            className="hidden" 
+                            accept="image/*"
+                            onChange={(e) => handleFileUpload(user.id, doc.field, e)}
+                          />
+                        </label>
+                        {user[doc.field] && (
+                          <button 
+                            onClick={() => setSelectedImage({ url: user[doc.field]!, title: doc.label })}
+                            className="text-[9px] text-blue-500 hover:underline flex items-center gap-0.5"
+                          >
+                            <ImageIcon size={9}/> View Uploaded
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  ))}
+
                   <td className="px-4 py-4 text-xs font-mono text-slate-600">{user.gstNo}</td>
                   <td className="px-4 py-4">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
-                      {user.kycStatus}
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" /> {user.kycStatus}
                     </span>
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-1">
-                      <button className="w-8 h-8 flex items-center justify-center rounded-lg text-blue-500 hover:bg-blue-50 transition-all" title="View Details">
+                      <button onClick={() => setSelectedUser(user)} className="w-8 h-8 flex items-center justify-center rounded-lg text-blue-500 hover:bg-blue-50 transition-all" title="View Details">
                         <Eye size={15} />
                       </button>
-                      <button className="w-8 h-8 flex items-center justify-center rounded-lg text-green-500 hover:bg-green-50 transition-all" title="Approve">
-                        <CheckCircle size={15} />
-                      </button>
-                      <button className="w-8 h-8 flex items-center justify-center rounded-lg text-red-400 hover:bg-red-50 transition-all" title="Reject">
+                      <button 
+                        onClick={() => setUserToReject(user)}
+                        className="w-8 h-8 flex items-center justify-center rounded-lg text-red-400 hover:bg-red-50 transition-all" 
+                        title="Reject"
+                      >
                         <XCircle size={15} />
                       </button>
                     </div>
                   </td>
                 </tr>
               ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={11} className="py-12 text-center text-slate-400 text-sm">No pending KYC users found matching your search.</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
 
         {/* Pagination */}
-        <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
-          <p className="text-xs text-slate-400 font-medium">
-            Page <span className="text-slate-600 font-semibold">{currentPage}</span> of {totalPages}
-          </p>
+        <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between text-xs font-medium">
+          <p className="text-slate-400">Page <span className="text-slate-600 font-bold">{currentPage}</span> of 10</p>
           <div className="flex items-center gap-1.5">
-            <button 
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100"
-            >
-              <ChevronLeft size={14} />
-            </button>
-            <button 
-              className="w-8 h-8 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow-sm"
-            >
-              {currentPage}
-            </button>
-            <button 
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100"
-            >
-              <ChevronRight size={14} />
-            </button>
+            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100 transition-all"><ChevronLeft size={14} /></button>
+            <button className="w-8 h-8 rounded-lg bg-blue-600 text-white shadow-sm">{currentPage}</button>
+            <button onClick={() => setCurrentPage(p => Math.min(10, p + 1))} className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100 transition-all"><ChevronRight size={14} /></button>
           </div>
         </div>
       </div>

@@ -149,6 +149,31 @@ export default function ProductListPage() {
     showToast(`Status: ${newStatus}`);
   };
 
+  // --- EXPORT LOGIC ---
+  const handleExportCSV = () => {
+    const headers = ["ID", "Category", "Name", "Original Price", "Offer Price", "Status"];
+    const csvRows = filteredProducts.map(p => [
+      p.id,
+      p.category,
+      `"${p.name}"`, // Encapsulate in quotes for safety
+      p.oriPrice,
+      p.offerPrice,
+      p.status
+    ].join(","));
+
+    const csvContent = [headers.join(","), ...csvRows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "srv_electricals_inventory.csv");
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("CSV Exported successfully");
+  };
+
   // Stats
   const enabledCount = products.filter(p => p.status === "Enable").length;
   const disabledCount = products.filter(p => p.status === "Disable").length;
@@ -253,10 +278,11 @@ export default function ProductListPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => showToast("CSV Export Started")} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium">
+          {/* Working Export Button */}
+          <button onClick={handleExportCSV} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors">
             <FileDown size={15} /> Export
           </button>
-          <button onClick={handleOpenAdd} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium">
+          <button onClick={handleOpenAdd} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">
             <Plus size={15} /> Add Product
           </button>
         </div>
@@ -270,7 +296,7 @@ export default function ProductListPage() {
           { label: "Enabled", count: enabledCount, color: "border-t-green-500", bg: "bg-green-100", text: "text-green-600" },
           { label: "Disabled", count: disabledCount, color: "border-t-rose-400", bg: "bg-rose-100", text: "text-rose-500" }
         ].map((stat, i) => (
-          <div key={i} className={`bg-white rounded-xl border border-slate-200 border-t-4 ${stat.color} p-5 flex flex-col gap-3`}>
+          <div key={i} className={`bg-white rounded-xl border border-slate-200 border-t-4 ${stat.color} p-5 flex flex-col gap-3 shadow-sm`}>
             <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center`}>
               <Package size={18} className={stat.text} />
             </div>
@@ -284,7 +310,7 @@ export default function ProductListPage() {
 
       {/* ── Filters ── */}
       <SectionLabel>All Products</SectionLabel>
-      <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4 flex flex-col sm:row items-center justify-between gap-3 shadow-sm">
+      <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
           <input
@@ -292,7 +318,7 @@ export default function ProductListPage() {
             placeholder="Search by name or ID..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm"
+            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/10 outline-none"
           />
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">

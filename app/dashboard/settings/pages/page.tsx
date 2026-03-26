@@ -76,10 +76,7 @@ export default function PagesSettings() {
   /* ✅ SAVE HANDLER */
   const handleSave = () => {
     setIsSaving(true);
-    
-    // Simulating API Call
     setTimeout(() => {
-      console.log("Saving Content to Database:", content);
       setIsSaving(false);
       showToast("All pages updated successfully!");
     }, 1500);
@@ -108,7 +105,7 @@ export default function PagesSettings() {
       
       {/* TOAST MESSAGE */}
       {toast && (
-        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 px-6 py-3 rounded-2xl shadow-2xl border animate-in slide-in-from-top-full ${
+        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 px-6 py-3 rounded-2xl shadow-2xl border animate-in slide-in-from-top-full duration-300 ${
           toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'
         }`}>
           {toast.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
@@ -127,12 +124,12 @@ export default function PagesSettings() {
         <button 
           onClick={handleSave}
           disabled={isSaving}
-          className="flex items-center justify-center gap-2 px-8 py-3.5 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 active:scale-95 transition-all text-sm font-bold shadow-xl shadow-slate-200 disabled:opacity-70 disabled:cursor-not-allowed"
+          className="flex items-center justify-center gap-2 px-8 py-3.5 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 hover:scale-105 hover:shadow-2xl active:scale-95 transition-all duration-300 text-sm font-bold shadow-xl shadow-slate-200 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer group"
         >
           {isSaving ? (
             <Loader2 size={18} className="animate-spin" />
           ) : (
-            <Save size={18} />
+            <Save size={18} className="group-hover:rotate-12 transition-transform" />
           )}
           {isSaving ? "SAVING..." : "SAVE ALL CHANGES"}
         </button>
@@ -149,24 +146,24 @@ export default function PagesSettings() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all border ${
+                className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 border cursor-pointer ${
                   isActive
-                    ? "bg-white text-blue-600 shadow-md border-white"
-                    : "text-slate-500 hover:bg-white/50 border-transparent"
+                    ? "bg-white text-blue-600 shadow-xl border-white translate-x-2"
+                    : "text-slate-500 hover:bg-white hover:text-slate-800 hover:shadow-lg border-transparent hover:-translate-y-1"
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Icon size={18} className={isActive ? "text-blue-600" : "text-slate-400"} />
+                  <Icon size={18} className={`${isActive ? "text-blue-600" : "text-slate-400"} transition-colors`} />
                   {tab.label}
                 </div>
-                {isActive && <div className="w-1.5 h-1.5 bg-blue-600 rounded-full" />}
+                {isActive && <div className="w-2 h-2 bg-blue-600 rounded-full shadow-[0_0_10px_rgba(37,99,235,0.5)]" />}
               </button>
             );
           })}
         </div>
 
         {/* EDITOR AREA */}
-        <div className="flex-1 bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col min-h-[650px]">
+        <div className="flex-1 bg-white rounded-[2rem] border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-500 overflow-hidden flex flex-col min-h-[650px]">
           <div className="px-8 py-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
             <div className="flex flex-col">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
@@ -176,8 +173,8 @@ export default function PagesSettings() {
                 {currentTabLabel}
               </span>
             </div>
-            <div className="flex items-center gap-2 text-[10px] font-black px-3 py-1.5 bg-white text-emerald-600 rounded-full border border-slate-100 shadow-sm uppercase tracking-tighter">
-              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+            <div className="flex items-center gap-2 text-[10px] font-black px-4 py-2 bg-white text-emerald-600 rounded-full border border-slate-100 shadow-sm uppercase tracking-tighter hover:bg-emerald-50 transition-colors cursor-help">
+              <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
               Live Preview Active
             </div>
           </div>
@@ -185,7 +182,7 @@ export default function PagesSettings() {
           <div className="p-8 flex-1 editor-container">
             {editorLoaded && CKEditorComp && ClassicEditor ? (
               <CKEditorComp
-                key={activeTab} // Crucial for re-initializing when tab changes
+                key={activeTab}
                 editor={ClassicEditor}
                 data={content[activeTab]}
                 onChange={(_event: any, editor: any) => {
@@ -216,8 +213,23 @@ export default function PagesSettings() {
 
       {/* CUSTOM CKEDITOR STYLING */}
       <style jsx global>{`
+        /* Cursor changes for Editor UI */
+        .ck.ck-button, .ck.ck-link-form__save, .ck.ck-link-form__cancel {
+          cursor: pointer !important;
+        }
+        .ck-content {
+          cursor: text !important;
+        }
+        
+        /* Interactive CKEditor UI */
+        .ck.ck-button:hover {
+          background: #eff6ff !important;
+          color: #2563eb !important;
+          transition: all 0.2s ease;
+        }
+
         .ck-editor__animated_wrapper {
-          border-radius: 0 0 20px 20px !important;
+          border-radius: 0 0 24px 24px !important;
         }
         .ck-editor__top {
           border-bottom: 1px solid #f1f5f9 !important;
@@ -225,22 +237,23 @@ export default function PagesSettings() {
         .ck-toolbar {
           background-color: #f8fafc !important;
           border: 1px solid #e2e8f0 !important;
-          border-radius: 20px 20px 0 0 !important;
-          padding: 0.5rem !important;
+          border-radius: 24px 24px 0 0 !important;
+          padding: 0.75rem !important;
         }
         .ck-content {
           min-height: 480px !important;
           border: 1px solid #e2e8f0 !important;
           border-top: none !important;
-          border-radius: 0 0 20px 20px !important;
-          padding: 2rem !important;
+          border-radius: 0 0 24px 24px !important;
+          padding: 2.5rem !important;
           font-family: inherit !important;
           font-size: 16px !important;
           color: #1e293b !important;
+          transition: border-color 0.3s ease;
         }
         .ck-content:focus {
           border-color: #3b82f6 !important;
-          box-shadow: none !important;
+          box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.05) !important;
         }
         .ck.ck-editor__main>.ck-editor__editable:not(.ck-focused) {
           border-color: #e2e8f0 !important;
