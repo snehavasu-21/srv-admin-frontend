@@ -6,7 +6,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { 
   Search, Plus, FileDown, Eye, Edit2, Trash2, 
   Building2, CheckCircle2, XCircle, Filter,
-  ChevronLeft, ChevronRight, AlertCircle, RotateCcw, X
+  ChevronLeft, ChevronRight, AlertCircle, RotateCcw, X, Check
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -18,7 +18,7 @@ interface Dealer {
   gstNo: string;
   city: string;
   phone: string;
-  status: "Active" | "Pending";
+  status: "Active" | "Inactive";
 }
 
 const StatCard = ({ icon: Icon, label, value, iconBg, iconColor, borderAccent }: any) => (
@@ -35,26 +35,45 @@ const INITIAL_DEALERS: Dealer[] = Array.from({ length: 8 }).map((_, i) => ({
   gstNo: `03AAACV${1000 + i}R1Z5`,
   city: i % 4 === 0 ? "Ludhiana" : i % 4 === 1 ? "Mansa" : i % 4 === 2 ? "Bathinda" : "Patiala",
   phone: "9876543210",
-  status: i % 3 === 0 ? "Pending" : "Active",
+  status: i % 3 === 0 ? "Inactive" : "Active",
 }));
 
 export default function DealersPage() {
   const router = useRouter();
   const filterRef = useRef<HTMLDivElement>(null);
   
-  const [data, setData] = useState<Dealer[]>(INITIAL_DEALERS);
+  const [data, setData] = useState<Dealer[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [cityFilter, setCityFilter] = useState<string>("All");
 
-  // --- New States for View & Confirm ---
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
   const [viewDealer, setViewDealer] = useState<Dealer | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; type: 'single' | 'bulk'; targetId?: string }>({
     isOpen: false,
     type: 'single'
   });
+
+  useEffect(() => {
+    const savedDealers = localStorage.getItem("dealers_list");
+    if (savedDealers) {
+      setData(JSON.parse(savedDealers));
+    } else {
+      setData(INITIAL_DEALERS);
+      localStorage.setItem("dealers_list", JSON.stringify(INITIAL_DEALERS));
+    }
+  }, []);
+
+  const updateData = (newData: Dealer[]) => {
+    setData(newData);
+    localStorage.setItem("dealers_list", JSON.stringify(newData));
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -66,18 +85,28 @@ export default function DealersPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Deep Search Implementation
   const filteredData = data.filter(dealer => {
-    const matchesSearch = dealer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          dealer.firmName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          dealer.id.includes(searchTerm);
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = 
+      dealer.name.toLowerCase().includes(searchLower) ||
+      dealer.firmName.toLowerCase().includes(searchLower) ||
+      dealer.id.includes(searchLower) ||
+      dealer.city.toLowerCase().includes(searchLower) ||
+      dealer.gstNo.toLowerCase().includes(searchLower) ||
+      dealer.phone.includes(searchLower);
+
     const matchesStatus = statusFilter === "All" || dealer.status === statusFilter;
     const matchesCity = cityFilter === "All" || dealer.city === cityFilter;
     return matchesSearch && matchesStatus && matchesCity;
   });
 
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+
   const cities = Array.from(new Set(data.map(d => d.city)));
 
-  // --- 1. Export Functionality (CSV) ---
   const handleExport = () => {
     const headers = ["ID,Name,Firm Name,GST No,City,Phone,Status"];
     const rows = filteredData.map(d => `${d.id},${d.name},${d.firmName},${d.gstNo},${d.city},${d.phone},${d.status}`);
@@ -92,25 +121,47 @@ export default function DealersPage() {
   };
 
   const executeDelete = () => {
+    let newData;
     if (confirmModal.type === 'single' && confirmModal.targetId) {
-      setData(data.filter(item => item.id !== confirmModal.targetId));
+      newData = data.filter(item => item.id !== confirmModal.targetId);
       setSelectedIds(selectedIds.filter(sid => sid !== confirmModal.targetId));
-    } else if (confirmModal.type === 'bulk') {
-      setData(data.filter(item => !selectedIds.includes(item.id)));
+    } else {
+      newData = data.filter(item => !selectedIds.includes(item.id));
       setSelectedIds([]);
     }
+    updateData(newData);
     setConfirmModal({ isOpen: false, type: 'single' });
+    
+    // Show center success box
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 2000);
   };
 
   const toggleSelectAll = () => {
-    if (selectedIds.length === filteredData.length && filteredData.length > 0) setSelectedIds([]);
-    else setSelectedIds(filteredData.map(item => item.id));
+    if (selectedIds.length === currentItems.length && currentItems.length > 0) setSelectedIds([]);
+    else setSelectedIds(currentItems.map(item => item.id));
   };
 
   return (
     <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans relative">
       
-      {/* --- View Modal --- */}
+      {/* Success Center Box */}
+      {showSuccess && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-[2px]" />
+          <div className="bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center gap-4 relative z-[201] animate-in zoom-in duration-300 max-w-xs w-full text-center border border-slate-100">
+            <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+              <Check size={32} strokeWidth={3} />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-slate-800">Success!</h3>
+              <p className="text-slate-500 text-sm mt-1">Dealer information has been updated successfully.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Modal */}
       {viewDealer && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setViewDealer(null)} />
@@ -140,7 +191,9 @@ export default function DealersPage() {
             <div className="p-6 text-center">
               <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4"> <AlertCircle size={32} /> </div>
               <h3 className="text-lg font-bold text-slate-800">Confirm Deletion</h3>
-              <p className="text-sm text-slate-500 mt-2">Are you sure you want to remove this data?</p>
+              <p className="text-sm text-slate-500 mt-2">
+                {confirmModal.type === 'bulk' ? `Delete ${selectedIds.length} selected dealers?` : 'Are you sure you want to remove this dealer?'}
+              </p>
             </div>
             <div className="flex border-t border-slate-100">
               <button onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })} className="flex-1 px-4 py-4 text-sm font-semibold text-slate-600 hover:bg-slate-50">Cancel</button>
@@ -157,7 +210,6 @@ export default function DealersPage() {
           <p className="text-sm text-slate-500">Manage your dealer network</p>
         </div>
         <div className="flex items-center gap-2">
-          {/* EXPORT WORKING NOW */}
           <button onClick={handleExport} className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50 flex items-center gap-2">
             <FileDown size={15}/> Export
           </button>
@@ -171,19 +223,23 @@ export default function DealersPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
         <StatCard icon={Building2} label="Total Dealers" value={data.length.toString()} iconBg="bg-blue-100" iconColor="text-blue-600" borderAccent="border-t-blue-500" />
         <StatCard icon={CheckCircle2} label="Active" value={data.filter(d => d.status === "Active").length} iconBg="bg-green-100" iconColor="text-green-600" borderAccent="border-t-green-500" />
-        <StatCard icon={XCircle} label="Pending" value={data.filter(d => d.status === "Pending").length} iconBg="bg-amber-100" iconColor="text-amber-600" borderAccent="border-t-amber-400" />
+        <StatCard icon={XCircle} label="Inactive" value={data.filter(d => d.status === "Inactive").length} iconBg="bg-amber-100" iconColor="text-amber-600" borderAccent="border-t-amber-400" />
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="relative w-full sm:w-80">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
-                <input type="text" placeholder="Search by name, firm or ID..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20" />
+                <input type="text" placeholder="Deep search by name, city, GST, phone..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20" />
             </div>
             
             <div className="flex items-center gap-2 w-full sm:w-auto relative" ref={filterRef}>
-              <select onChange={(e) => e.target.value === "delete" && setConfirmModal({isOpen: true, type: 'bulk'})} className="px-3 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium outline-none cursor-pointer">
-                <option value="">Bulk Actions</option>
+              <select 
+                value="" 
+                onChange={(e) => e.target.value === "delete" && selectedIds.length > 0 && setConfirmModal({isOpen: true, type: 'bulk'})} 
+                className="px-3 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium outline-none cursor-pointer"
+              >
+                <option value="" disabled>Bulk Actions</option>
                 <option value="delete">Delete Selected ({selectedIds.length})</option>
               </select>
 
@@ -206,7 +262,7 @@ export default function DealersPage() {
                       <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500">
                         <option value="All">All Status</option>
                         <option value="Active">Active</option>
-                        <option value="Pending">Inactive</option>
+                        <option value="Inactive">Inactive</option>
                       </select>
                     </div>
                     <div>
@@ -227,7 +283,7 @@ export default function DealersPage() {
             <thead className="bg-slate-50/50 border-b border-slate-100">
               <tr>
                 <th className="px-5 py-4 w-10">
-                  <input type="checkbox" className="rounded accent-blue-600 cursor-pointer" checked={selectedIds.length === filteredData.length && filteredData.length > 0} onChange={toggleSelectAll} />
+                  <input type="checkbox" className="rounded accent-blue-600 cursor-pointer" checked={selectedIds.length === currentItems.length && currentItems.length > 0} onChange={toggleSelectAll} />
                 </th>
                 {["ID", "Dealer Details", "Firm Name", "GST Number", "City", "Status", "Actions"].map(h => (
                   <th key={h} className="px-5 py-4 text-[10px] font-bold uppercase tracking-wider text-slate-400">{h}</th>
@@ -235,7 +291,7 @@ export default function DealersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredData.map((dealer) => (
+              {currentItems.map((dealer) => (
                 <tr key={dealer.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-5 py-4">
                     <input type="checkbox" className="rounded accent-blue-600 cursor-pointer" checked={selectedIds.includes(dealer.id)} onChange={() => setSelectedIds(prev => prev.includes(dealer.id) ? prev.filter(i => i !== dealer.id) : [...prev, dealer.id])} />
@@ -261,11 +317,8 @@ export default function DealersPage() {
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex gap-1">
-                      {/* VIEW WORKING NOW */}
                       <button onClick={() => setViewDealer(dealer)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-md transition-colors"><Eye size={15}/></button>
-                      
                       <button onClick={() => router.push(`/dashboard/users/dealers/edit?id=${dealer.id}`)} className="p-1.5 text-amber-500 hover:bg-amber-50 rounded-md transition-colors"><Edit2 size={15}/></button>
-                      
                       <button onClick={() => setConfirmModal({ isOpen: true, type: 'single', targetId: dealer.id })} className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-md transition-colors"><Trash2 size={15}/></button>
                     </div>
                   </td>
@@ -281,10 +334,22 @@ export default function DealersPage() {
         </div>
         
         <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400 font-medium">
-          Showing {filteredData.length} results
+          Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredData.length)} of {filteredData.length} results
           <div className="flex gap-1">
-            <button className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50"><ChevronLeft size={14} /></button>
-            <button className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50"><ChevronRight size={14} /></button>
+            <button 
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => prev - 1)}
+              className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50"
+            >
+              <ChevronLeft size={14} />
+            </button>
+            <button 
+              disabled={indexOfLastItem >= filteredData.length}
+              onClick={() => setCurrentPage(prev => prev + 1)}
+              className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50"
+            >
+              <ChevronRight size={14} />
+            </button>
           </div>
         </div>
       </div>

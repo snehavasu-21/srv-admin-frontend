@@ -65,12 +65,10 @@ export default function TopRedeemPage() {
   // Logic for filtering data
   const filteredData = useMemo(() => {
     return reportData.filter((item) => {
-      // 1. Search Logic
       const matchesSearch = 
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
         item.phone.includes(searchQuery);
 
-      // 2. Date Filter Logic (Only if Apply is pressed or dates are set)
       let matchesDate = true;
       if (fromDate && toDate) {
         const itemDate = new Date(item.lastRedeem);
@@ -189,7 +187,6 @@ export default function TopRedeemPage() {
 
         <button 
           className="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-200 shadow-sm"
-          // Filter already happens via useMemo based on state
         >
           Apply
         </button>
@@ -247,8 +244,9 @@ export default function TopRedeemPage() {
                     <td className="px-4 py-4 text-sm font-semibold text-green-600">{item.totalPoints}</td>
                     <td className="px-4 py-4 text-sm text-slate-500 whitespace-nowrap">{item.lastRedeem}</td>
                     <td className="px-4 py-4">
+                      {/* UPDATED: Passing userId as a query parameter */}
                       <button 
-                        onClick={() => router.push("/dashboard/gift-store-order")}
+                        onClick={() => router.push(`/dashboard/gift-store-order?userId=${item.userId}`)}
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg text-xs font-medium hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-200 whitespace-nowrap"
                       >
                         View Orders <ArrowRight size={12} />

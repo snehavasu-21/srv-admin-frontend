@@ -43,7 +43,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent }: StatCardProps) {
   return (
-    <div className={`bg-white rounded-xl border border-slate-200 border-t-4 ${borderAccent} p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5`}>
+    <div className={`bg-white rounded-xl border border-slate-200 border-t-4 ${borderAccent} p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 cursor-default`}>
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBg} ${iconColor}`}>
         <Icon size={18} />
       </div>
@@ -89,7 +89,6 @@ export default function AllQRCodesPage() {
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
-  // LOGIC: Export Excel
   const exportAllData = () => {
     const worksheet = XLSX.utils.json_to_sheet(filteredData);
     const workbook = XLSX.utils.book_new();
@@ -97,23 +96,17 @@ export default function AllQRCodesPage() {
     XLSX.writeFile(workbook, `QR_Inventory_${new Date().toLocaleDateString()}.xlsx`);
   };
 
-  // FIXED LOGIC: Download Single QR Image using a Public API (No 'qrcode' library needed)
   const handleDownloadSingle = async (qr: QRCode) => {
-    // We use GoQR.me API to generate the image on the fly
     const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${qr.codeNumber}`;
-    
     try {
       const response = await fetch(apiUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      
       const link = document.createElement('a');
       link.href = url;
       link.download = `QR_Code_${qr.id}.png`;
       document.body.appendChild(link);
       link.click();
-      
-      // Cleanup
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (err) {
@@ -133,7 +126,7 @@ export default function AllQRCodesPage() {
         </div>
         <button 
           onClick={exportAllData}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-sm font-medium shadow-sm"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-sm font-medium shadow-sm cursor-pointer"
         >
           <FileArchive size={15} /> Download Excel
         </button>
@@ -158,7 +151,7 @@ export default function AllQRCodesPage() {
             placeholder="Search QR Number or ID..."
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none cursor-text"
           />
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -194,10 +187,10 @@ export default function AllQRCodesPage() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {paginatedData.map((qr) => (
-                <tr key={qr.id} className="hover:bg-slate-50/80 transition-colors">
+                <tr key={qr.id} className="hover:bg-slate-50/80 transition-colors cursor-pointer">
                   <td className="px-5 py-4 text-xs font-medium text-slate-400">#{qr.id}</td>
                   <td className="px-5 py-4">
-                    <span className="text-[13px] font-mono font-medium text-slate-700 bg-slate-50 px-2 py-1 rounded border border-slate-100">
+                    <span className="text-[13px] font-mono font-medium text-slate-700 bg-slate-50 px-2 py-1 rounded border border-slate-100 cursor-text">
                       {qr.codeNumber}
                     </span>
                   </td>
@@ -213,7 +206,7 @@ export default function AllQRCodesPage() {
                   </td>
                   <td className="px-5 py-4 text-sm font-medium text-slate-600">{qr.batch}</td>
                   <td className="px-5 py-4">
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-1 cursor-default">
                       <div className="text-[10px] font-bold text-slate-400 flex items-center gap-1 uppercase">
                         <Calendar size={10} className="text-blue-400" /> Gen: {qr.genDate}
                       </div>
@@ -234,8 +227,8 @@ export default function AllQRCodesPage() {
                   </td>
                   <td className="px-5 py-4 text-right">
                     <button 
-                      onClick={() => handleDownloadSingle(qr)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg text-[11px] font-bold transition-all active:scale-95"
+                      onClick={(e) => { e.stopPropagation(); handleDownloadSingle(qr); }}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg text-[11px] font-bold transition-all active:scale-95 cursor-pointer"
                     >
                       <Download size={12} /> Download
                     </button>
@@ -255,15 +248,15 @@ export default function AllQRCodesPage() {
             <button 
               disabled={currentPage === 1}
               onClick={() => setCurrentPage(prev => prev - 1)}
-              className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 border border-slate-200 text-slate-500 disabled:opacity-50 hover:bg-slate-100"
+              className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 border border-slate-200 text-slate-500 disabled:opacity-50 hover:bg-slate-100 cursor-pointer disabled:cursor-not-allowed"
             >
               <ChevronLeft size={14} />
             </button>
-            <div className="text-xs font-bold text-slate-600 px-2">Page {currentPage} of {totalPages || 1}</div>
+            <div className="text-xs font-bold text-slate-600 px-2 cursor-default">Page {currentPage} of {totalPages || 1}</div>
             <button 
               disabled={currentPage === totalPages || totalPages === 0}
               onClick={() => setCurrentPage(prev => prev + 1)}
-              className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 border border-slate-200 text-slate-500 disabled:opacity-50 hover:bg-slate-100"
+              className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 border border-slate-200 text-slate-500 disabled:opacity-50 hover:bg-slate-100 cursor-pointer disabled:cursor-not-allowed"
             >
               <ChevronRight size={14} />
             </button>
