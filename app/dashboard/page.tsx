@@ -73,7 +73,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Admin Dashboard</h1>
+          <h1 className="text-2xl font-bold text-slate-800">SRV Dashboard</h1>
           <p className="text-sm text-slate-500 mt-0.5">Platform-wide metrics overview</p>
         </div>
         <span className="text-xs font-medium text-slate-500 bg-white border border-slate-200 rounded-lg px-4 py-2 shadow-sm">

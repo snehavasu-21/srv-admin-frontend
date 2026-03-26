@@ -41,6 +41,16 @@ export default function AddElectricianPage() {
                 </select>
               </div>
 
+              {/* Status Field with Proactive added */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-600">Status :-</label>
+                <select className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 text-sm">
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                  <option value="Proactive">Proactive</option>
+                </select>
+              </div>
+
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-600">Name <span className="text-red-500">*</span> :-</label>
                 <input type="text" placeholder="Enter Name" className="w-full p-2.5 bg-blue-50/30 border border-blue-100 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm" required />
@@ -106,7 +116,6 @@ export default function AddElectricianPage() {
                 </div>
               ))}
 
-              {/* UPI ID Restore kiya yahan */}
               <div className="md:col-span-2 space-y-1.5">
                 <label className="text-xs font-semibold text-slate-600">UPI ID :-</label>
                 <input type="text" placeholder="e.g. name@upi" className="w-full p-2.5 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 text-sm" />
@@ -121,11 +130,11 @@ export default function AddElectricianPage() {
 
           {/* ── Footer Buttons ── */}
           <div className="flex items-center gap-3 pt-8 border-t border-slate-100">
-            <button type="submit" className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-100 active:scale-95">
+            <button type="submit" className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-100 active:scale-95 cursor-pointer">
               <Save size={18} />
               Save Details
             </button>
-            <Link href="/dashboard/users/electricians" className="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-rose-100 active:scale-95">
+            <Link href="/dashboard/users/electricians" className="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-rose-100 active:scale-95 cursor-pointer">
               <X size={18} />
               Cancel
             </Link>

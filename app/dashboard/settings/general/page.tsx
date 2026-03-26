@@ -83,7 +83,6 @@ export default function SettingsPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validate size (2MB)
       if (file.size > 2 * 1024 * 1024) {
         showToast("Image size must be less than 2MB", "error");
         return;
@@ -109,7 +108,6 @@ export default function SettingsPage() {
 
   const handleSave = () => {
     setIsSaving(true);
-    // Simulate API Call
     setTimeout(() => {
       setIsSaving(false);
       showToast("Settings updated successfully!");
@@ -126,14 +124,13 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-10 font-sans text-slate-900">
       
-      {/* TOAST SYSTEM */}
       {toast && <Toast message={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
 
       {/* HEADER */}
       <div className="max-w-5xl mx-auto flex items-center justify-between mb-10">
         <div>
           <h1 className="text-2xl font-black text-slate-800 flex items-center gap-3">
-            <div className="p-2 bg-blue-600 rounded-lg text-white">
+            <div className="p-2 bg-blue-600 rounded-lg text-white shadow-lg shadow-blue-200">
                 <Settings size={20} />
             </div> 
             Settings
@@ -143,7 +140,7 @@ export default function SettingsPage() {
         <button 
           onClick={handleSave}
           disabled={isSaving}
-          className="hidden md:flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all text-sm font-bold shadow-xl shadow-blue-100 disabled:opacity-70"
+          className="hidden md:flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 hover:scale-105 hover:shadow-2xl transition-all duration-300 text-sm font-bold shadow-xl shadow-blue-100 disabled:opacity-70 disabled:hover:scale-100 cursor-pointer"
         >
           {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
           {isSaving ? "Saving..." : "Save Changes"}
@@ -156,10 +153,10 @@ export default function SettingsPage() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
+            className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all duration-200 whitespace-nowrap cursor-pointer ${
               activeTab === tab.id
-                ? "bg-slate-900 text-white shadow-lg"
-                : "text-slate-500 hover:bg-slate-50"
+                ? "bg-slate-900 text-white shadow-lg scale-[1.02]"
+                : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
             }`}
           >
             <tab.icon size={16} />
@@ -172,42 +169,42 @@ export default function SettingsPage() {
         {/* ================= GENERAL ================= */}
         {activeTab === "general" && (
           <div className="grid gap-6 animate-in fade-in slide-in-from-bottom-4 duration-400">
-            <div className="bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm">
+            <div className="bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-center gap-2 mb-8">
                 <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
                 <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Core Information</h3>
               </div>
               
               <div className="grid md:grid-cols-2 gap-8 mb-8">
-                <div className="space-y-2">
-                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider ml-1">Host Email</label>
+                <div className="space-y-2 group">
+                    <label className="text-[11px] font-black text-slate-400 group-focus-within:text-blue-600 uppercase tracking-wider ml-1 transition-colors">Host Email</label>
                     <div className="relative">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
                         <input 
                             type="email"
                             value={generalData.hostEmail}
                             onChange={(e) => setGeneralData({...generalData, hostEmail: e.target.value})}
-                            className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-blue-500/10 transition-all" 
+                            className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-300 transition-all cursor-text" 
                         />
                     </div>
                 </div>
-                <div className="space-y-2">
-                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider ml-1">App Title</label>
+                <div className="space-y-2 group">
+                    <label className="text-[11px] font-black text-slate-400 group-focus-within:text-blue-600 uppercase tracking-wider ml-1 transition-colors">App Title</label>
                     <input 
                         value={generalData.appName}
                         onChange={(e) => setGeneralData({...generalData, appName: e.target.value})}
-                        className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-blue-500/10 transition-all" 
+                        className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-300 transition-all cursor-text" 
                     />
                 </div>
               </div>
 
-              <div className="space-y-2 mb-10">
-                <label className="text-[11px] font-black text-slate-400 uppercase tracking-wider ml-1">Short Description</label>
+              <div className="space-y-2 mb-10 group">
+                <label className="text-[11px] font-black text-slate-400 group-focus-within:text-blue-600 uppercase tracking-wider ml-1 transition-colors">Short Description</label>
                 <textarea 
                   rows={3} 
                   value={generalData.appDescription}
                   onChange={(e) => setGeneralData({...generalData, appDescription: e.target.value})}
-                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-blue-500/10 resize-none" 
+                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-blue-500/10 focus:bg-white focus:border-blue-300 transition-all resize-none cursor-text" 
                 />
               </div>
 
@@ -215,12 +212,12 @@ export default function SettingsPage() {
                 <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-6">Contact & System Logic</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {Object.entries(generalData).slice(3).map(([key, val], i) => (
-                    <div key={i} className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">{key.replace(/([A-Z])/g, ' $1')}</label>
+                    <div key={i} className="space-y-1.5 group">
+                      <label className="text-[10px] font-bold text-slate-400 group-focus-within:text-blue-600 uppercase ml-1 transition-colors">{key.replace(/([A-Z])/g, ' $1')}</label>
                       <input 
                         value={val} 
                         onChange={(e) => setGeneralData({...generalData, [key]: e.target.value})}
-                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500/10" 
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500/10 focus:bg-white transition-all cursor-text" 
                       />
                     </div>
                   ))}
@@ -233,9 +230,12 @@ export default function SettingsPage() {
         {/* ================= APP ================= */}
         {activeTab === "app" && (
           <div className="bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm space-y-8 animate-in fade-in slide-in-from-bottom-4">
-            <div className={`flex items-center justify-between p-6 rounded-[1.5rem] transition-colors ${appData.maintenance ? 'bg-amber-50 border border-amber-100' : 'bg-slate-50 border border-slate-100'}`}>
+            <div 
+              onClick={() => setAppData({...appData, maintenance: !appData.maintenance})}
+              className={`flex items-center justify-between p-6 rounded-[1.5rem] transition-all cursor-pointer border hover:shadow-md ${appData.maintenance ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-100 hover:border-slate-200'}`}
+            >
               <div className="flex gap-4">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${appData.maintenance ? 'bg-amber-100 text-amber-600' : 'bg-slate-200 text-slate-500'}`}>
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${appData.maintenance ? 'bg-amber-100 text-amber-600' : 'bg-slate-200 text-slate-500'}`}>
                   <Smartphone size={24} />
                 </div>
                 <div>
@@ -243,28 +243,25 @@ export default function SettingsPage() {
                   <p className="text-xs font-medium text-slate-500 mt-1">Users will see a "Maintenance" screen when opening the app.</p>
                 </div>
               </div>
-              <button 
-                onClick={() => setAppData({...appData, maintenance: !appData.maintenance})}
-                className={`w-14 h-7 rounded-full relative transition-all duration-300 ${appData.maintenance ? 'bg-blue-600' : 'bg-slate-300'}`}
-              >
-                <div className={`absolute top-1 bg-white w-5 h-5 rounded-full transition-all duration-300 ${appData.maintenance ? 'left-8' : 'left-1'}`} />
-              </button>
+              <div className={`w-14 h-7 rounded-full relative transition-all duration-300 ${appData.maintenance ? 'bg-blue-600 shadow-lg shadow-blue-100' : 'bg-slate-300'}`}>
+                <div className={`absolute top-1 bg-white w-5 h-5 rounded-full transition-all duration-300 shadow-sm ${appData.maintenance ? 'left-8' : 'left-1'}`} />
+              </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-8">
               <div className="space-y-2">
                 <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Version Code</label>
-                <input value={appData.version} onChange={(e) => setAppData({...appData, version: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500/10" />
+                <input value={appData.version} onChange={(e) => setAppData({...appData, version: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500/10 focus:bg-white transition-all cursor-text" />
               </div>
               <div className="space-y-2">
                 <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Play Store Link</label>
-                <input value={appData.playStore} onChange={(e) => setAppData({...appData, playStore: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500/10" />
+                <input value={appData.playStore} onChange={(e) => setAppData({...appData, playStore: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500/10 focus:bg-white transition-all cursor-text" />
               </div>
             </div>
 
             <div className="space-y-2">
               <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">Force Update Message</label>
-              <textarea value={appData.forceMsg} onChange={(e) => setAppData({...appData, forceMsg: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500/10 resize-none" rows={2} />
+              <textarea value={appData.forceMsg} onChange={(e) => setAppData({...appData, forceMsg: e.target.value})} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-blue-500/10 focus:bg-white transition-all resize-none cursor-text" rows={2} />
             </div>
           </div>
         )}
@@ -275,22 +272,20 @@ export default function SettingsPage() {
             <div className="grid md:grid-cols-2 gap-10 mb-10">
               <div className="space-y-5">
                 <h4 className="text-xs font-black text-blue-600 uppercase tracking-[0.2em] mb-4">Business Profile</h4>
-                <input placeholder="GSTIN Number" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500/10" />
-                <input placeholder="PAN Number" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500/10" />
-                <textarea placeholder="Registered Address" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500/10 resize-none" rows={3} />
+                <input placeholder="GSTIN Number" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500/10 focus:bg-white transition-all cursor-text" />
+                <input placeholder="PAN Number" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500/10 focus:bg-white transition-all cursor-text" />
+                <textarea placeholder="Registered Address" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500/10 focus:bg-white transition-all resize-none cursor-text" rows={3} />
               </div>
               <div className="space-y-5">
                 <h4 className="text-xs font-black text-blue-600 uppercase tracking-[0.2em] mb-4">Settlement Account</h4>
-                <input placeholder="Beneficiary Bank" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500/10" />
-                <input placeholder="Account Number" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500/10" />
-                <input placeholder="IFSC Code" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500/10" />
+                <input placeholder="Beneficiary Bank" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500/10 focus:bg-white transition-all cursor-text" />
+                <input placeholder="Account Number" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500/10 focus:bg-white transition-all cursor-text" />
+                <input placeholder="IFSC Code" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-blue-500/10 focus:bg-white transition-all cursor-text" />
               </div>
             </div>
             
             <div className="pt-8 border-t border-slate-100">
                <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">Company UPI QR Code</label>
-               
-               {/* HIDDEN FILE INPUT */}
                <input 
                   type="file" 
                   ref={fileInputRef} 
@@ -301,30 +296,30 @@ export default function SettingsPage() {
 
                <div 
                   onClick={handleImageClick}
-                  className={`group relative border-2 border-dashed rounded-[2rem] p-12 flex flex-col items-center justify-center transition-all cursor-pointer overflow-hidden min-h-[300px] ${
-                    qrPreview ? 'border-blue-400 bg-blue-50/20' : 'border-slate-200 text-slate-400 hover:bg-blue-50/50 hover:border-blue-200'
+                  className={`group relative border-2 border-dashed rounded-[2rem] p-12 flex flex-col items-center justify-center transition-all cursor-pointer overflow-hidden min-h-[300px] hover:scale-[1.01] active:scale-[0.99] ${
+                    qrPreview ? 'border-blue-400 bg-blue-50/20 shadow-inner' : 'border-slate-200 text-slate-400 hover:bg-blue-50/50 hover:border-blue-200'
                   }`}
                >
                  {qrPreview ? (
-                    <div className="flex flex-col items-center">
+                    <div className="flex flex-col items-center animate-in zoom-in-95 duration-300">
                         <img 
                           src={qrPreview} 
                           alt="QR Code" 
-                          className="max-h-56 rounded-xl shadow-lg mb-4" 
+                          className="max-h-56 rounded-xl shadow-2xl mb-4 border-4 border-white" 
                         />
                         <button 
                           onClick={removeImage}
-                          className="flex items-center gap-2 px-4 py-2 bg-rose-100 text-rose-600 rounded-xl text-xs font-bold hover:bg-rose-200 transition-colors"
+                          className="flex items-center gap-2 px-6 py-2.5 bg-rose-100 text-rose-600 rounded-xl text-xs font-bold hover:bg-rose-600 hover:text-white transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md"
                         >
                           <Trash2 size={14} /> Remove & Re-upload
                         </button>
                     </div>
                  ) : (
                     <>
-                        <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-blue-100 group-hover:text-blue-600 transition-all">
+                        <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white group-hover:rotate-12 transition-all duration-300 shadow-sm">
                             <Upload size={28} />
                         </div>
-                        <span className="text-sm font-black text-slate-500 group-hover:text-blue-600">Click to Select QR Image</span>
+                        <span className="text-sm font-black text-slate-500 group-hover:text-blue-600 transition-colors">Click to Select QR Image</span>
                         <p className="text-xs font-medium text-slate-400 mt-1">Supports PNG, JPG (Max 2MB)</p>
                     </>
                  )}
@@ -336,7 +331,7 @@ export default function SettingsPage() {
         {/* ================= KEYS ================= */}
         {activeTab === "notification" && (
           <div className="bg-white rounded-[2rem] border border-slate-200 p-8 shadow-sm space-y-6 animate-in fade-in slide-in-from-bottom-4">
-            <div className="flex items-center gap-3 mb-4 p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-700">
+            <div className="flex items-center gap-3 mb-4 p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-700 shadow-sm">
                 <Info size={18} />
                 <p className="text-xs font-bold uppercase tracking-wider">Warning: These keys give access to sensitive systems. Do not share.</p>
             </div>
@@ -347,12 +342,12 @@ export default function SettingsPage() {
                 { label: "Google Maps API Key", placeholder: "AIza..." },
                 { label: "Razorpay Secret Key", placeholder: "rzp_live..." },
               ].map((key, i) => (
-                <div key={i} className="space-y-2">
-                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-1">{key.label}</label>
+                <div key={i} className="space-y-2 group">
+                  <label className="text-[11px] font-black text-slate-400 group-focus-within:text-rose-600 uppercase tracking-widest ml-1 transition-colors">{key.label}</label>
                   <input 
                     type="password" 
                     placeholder={key.placeholder} 
-                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-rose-500/5 transition-all" 
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-rose-500/5 focus:bg-white focus:border-rose-200 transition-all cursor-text" 
                   />
                 </div>
               ))}
@@ -365,7 +360,7 @@ export default function SettingsPage() {
            <button 
              onClick={handleSave}
              disabled={isSaving}
-             className="w-full py-5 bg-blue-600 text-white rounded-[2rem] font-black shadow-2xl shadow-blue-200 active:scale-[0.98] transition-transform flex items-center justify-center gap-3"
+             className="w-full py-5 bg-blue-600 text-white rounded-[2rem] font-black shadow-2xl shadow-blue-200 active:scale-[0.98] hover:bg-blue-700 transition-all flex items-center justify-center gap-3 cursor-pointer"
            >
              {isSaving ? <Loader2 className="animate-spin" /> : <Save />}
              {isSaving ? "SAVING..." : "SAVE SETTINGS"}

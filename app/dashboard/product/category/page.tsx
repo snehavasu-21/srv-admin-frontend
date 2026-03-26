@@ -5,18 +5,18 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { 
   Search, Plus, FileDown, Edit2, Trash2, 
-  Filter, LayoutGrid, AlertCircle, RotateCcw 
+  Filter, LayoutGrid, AlertCircle, RotateCcw, X, Save
 } from "lucide-react";
 import Link from "next/link";
 
 // --- Mock Data ---
 const INITIAL_DATA = [
-  { id: "37", name: "PVC Casing Batten", colorCode: "#000000", image: null, status: "Enable" },
-  { id: "36", name: "PVC Conduit Bend", colorCode: "#000000", image: null, status: "Enable" },
-  { id: "35", name: "PVC Conduit Pipe", colorCode: "#000000", image: null, status: "Disable" },
-  { id: "34", name: "Kitkat Fuses", colorCode: "#000000", image: null, status: "Enable" },
-  { id: "33", name: "Surface Type PVC MCB", colorCode: "#000000", image: null, status: "Enable" },
-  { id: "32", name: "Fan Rods", colorCode: "#000000", image: null, status: "Disable" },
+  { id: "37", name: "PVC Casing Batten", colorCode: "#000000", status: "Enable" },
+  { id: "36", name: "PVC Conduit Bend", colorCode: "#2563eb", status: "Enable" },
+  { id: "35", name: "PVC Conduit Pipe", colorCode: "#dc2626", status: "Disable" },
+  { id: "34", name: "Kitkat Fuses", colorCode: "#16a34a", status: "Enable" },
+  { id: "33", name: "Surface Type PVC MCB", colorCode: "#ca8a04", status: "Enable" },
+  { id: "32", name: "Fan Rods", colorCode: "#4b5563", status: "Disable" },
 ];
 
 export default function CategoryPage() {
@@ -24,15 +24,20 @@ export default function CategoryPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   
-  // --- Filter State ---
+  // --- UI States ---
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("All");
   const filterRef = useRef<HTMLDivElement>(null);
 
-  // --- Modal State ---
+  // --- Modal States ---
   const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; type: 'single' | 'bulk'; targetId?: string }>({
     isOpen: false,
     type: 'single'
+  });
+
+  const [editModal, setEditModal] = useState<{ isOpen: boolean; category: any | null }>({
+    isOpen: false,
+    category: null
   });
 
   // --- Click Outside Handler ---
@@ -55,7 +60,7 @@ export default function CategoryPage() {
     });
   }, [searchTerm, data, statusFilter]);
 
-  // --- Runnable Export Function ---
+  // --- Handlers ---
   const handleExport = () => {
     const headers = ["ID,Category Name,Color Code,Status"];
     const rows = filteredData.map(cat => `${cat.id},${cat.name},${cat.colorCode},${cat.status}`);
@@ -69,7 +74,6 @@ export default function CategoryPage() {
     document.body.removeChild(link);
   };
 
-  // --- Delete Logic ---
   const executeDelete = () => {
     if (confirmModal.type === 'single' && confirmModal.targetId) {
       setData(prev => prev.filter(item => item.id !== confirmModal.targetId));
@@ -81,6 +85,14 @@ export default function CategoryPage() {
     setConfirmModal({ isOpen: false, type: 'single' });
   };
 
+  const handleEditSave = () => {
+    if (!editModal.category) return;
+    setData(prev => prev.map(item => 
+      item.id === editModal.category.id ? editModal.category : item
+    ));
+    setEditModal({ isOpen: false, category: null });
+  };
+
   const toggleSelectAll = () => {
     if (selectedIds.length === filteredData.length) setSelectedIds([]);
     else setSelectedIds(filteredData.map(item => item.id));
@@ -89,9 +101,73 @@ export default function CategoryPage() {
   return (
     <div className="min-h-screen bg-slate-50 p-6 md:p-8 font-sans relative">
       
-      {/* --- CUSTOM MODAL --- */}
+      {/* ─── EDIT CATEGORY MODAL ─── */}
+      {editModal.isOpen && editModal.category && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-200 border border-slate-200">
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h3 className="font-bold text-slate-800">Edit Category #{editModal.category.id}</h3>
+              <button onClick={() => setEditModal({ isOpen: false, category: null })} className="text-slate-400 hover:text-slate-600 transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-5">
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">Category Name</label>
+                <input 
+                  type="text" 
+                  value={editModal.category.name}
+                  onChange={(e) => setEditModal({ ...editModal, category: { ...editModal.category, name: e.target.value } })}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">Color Code</label>
+                  <div className="flex gap-2">
+                    <input 
+                      type="color" 
+                      value={editModal.category.colorCode}
+                      onChange={(e) => setEditModal({ ...editModal, category: { ...editModal.category, colorCode: e.target.value } })}
+                      className="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer overflow-hidden p-0"
+                    />
+                    <input 
+                      type="text"
+                      value={editModal.category.colorCode}
+                      onChange={(e) => setEditModal({ ...editModal, category: { ...editModal.category, colorCode: e.target.value } })}
+                      className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono uppercase"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">Status</label>
+                  <select 
+                    value={editModal.category.status}
+                    onChange={(e) => setEditModal({ ...editModal, category: { ...editModal.category, status: e.target.value } })}
+                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <option value="Enable">Enable</option>
+                    <option value="Disable">Disable</option>
+                  </select>
+                </div>
+              </div>
+
+              <button 
+                onClick={handleEditSave}
+                className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+              >
+                <Save size={16} /> Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── DELETE CONFIRMATION MODAL ─── */}
       {confirmModal.isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in duration-200">
             <div className="p-6 text-center">
               <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-rose-100">
@@ -237,12 +313,12 @@ export default function CategoryPage() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
-                      <Link 
-                        href={`/dashboard/product/category/add?id=${cat.id}&name=${encodeURIComponent(cat.name)}&color=${encodeURIComponent(cat.colorCode)}`}
+                      <button 
+                        onClick={() => setEditModal({ isOpen: true, category: { ...cat } })}
                         className="p-2 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors"
                       >
                         <Edit2 size={16}/>
-                      </Link>
+                      </button>
                       <button 
                         onClick={() => setConfirmModal({ isOpen: true, type: 'single', targetId: cat.id })}
                         className="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"

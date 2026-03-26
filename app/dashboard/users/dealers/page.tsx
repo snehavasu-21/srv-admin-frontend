@@ -6,7 +6,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { 
   Search, Plus, FileDown, Eye, Edit2, Trash2, 
   Building2, CheckCircle2, XCircle, Filter,
-  ChevronLeft, ChevronRight, AlertCircle, X, RotateCcw
+  ChevronLeft, ChevronRight, AlertCircle, RotateCcw, X
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -42,22 +42,20 @@ export default function DealersPage() {
   const router = useRouter();
   const filterRef = useRef<HTMLDivElement>(null);
   
-  // --- States ---
   const [data, setData] = useState<Dealer[]>(INITIAL_DEALERS);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  
-  // Filter Criteria
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [cityFilter, setCityFilter] = useState<string>("All");
 
+  // --- New States for View & Confirm ---
+  const [viewDealer, setViewDealer] = useState<Dealer | null>(null);
   const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; type: 'single' | 'bulk'; targetId?: string }>({
     isOpen: false,
     type: 'single'
   });
 
-  // --- Close filter on click outside ---
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
@@ -68,21 +66,31 @@ export default function DealersPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // --- Filter Logic ---
   const filteredData = data.filter(dealer => {
     const matchesSearch = dealer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         dealer.firmName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         dealer.id.includes(searchTerm);
-    
+                          dealer.firmName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          dealer.id.includes(searchTerm);
     const matchesStatus = statusFilter === "All" || dealer.status === statusFilter;
     const matchesCity = cityFilter === "All" || dealer.city === cityFilter;
-
     return matchesSearch && matchesStatus && matchesCity;
   });
 
   const cities = Array.from(new Set(data.map(d => d.city)));
 
-  // --- Actions ---
+  // --- 1. Export Functionality (CSV) ---
+  const handleExport = () => {
+    const headers = ["ID,Name,Firm Name,GST No,City,Phone,Status"];
+    const rows = filteredData.map(d => `${d.id},${d.name},${d.firmName},${d.gstNo},${d.city},${d.phone},${d.status}`);
+    const csvContent = "data:text/csv;charset=utf-8," + headers.concat(rows).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "dealers_list.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const executeDelete = () => {
     if (confirmModal.type === 'single' && confirmModal.targetId) {
       setData(data.filter(item => item.id !== confirmModal.targetId));
@@ -102,15 +110,35 @@ export default function DealersPage() {
   return (
     <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans relative">
       
-      {/* Custom Confirmation Modal */}
+      {/* --- View Modal --- */}
+      {viewDealer && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setViewDealer(null)} />
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative z-[111] overflow-hidden animate-in zoom-in duration-200">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-bold text-slate-800">Dealer Profile Details</h3>
+              <button onClick={() => setViewDealer(null)} className="p-1 hover:bg-slate-200 rounded-full transition-colors"><X size={18}/></button>
+            </div>
+            <div className="p-6 space-y-4 text-sm">
+              <div className="flex justify-between border-b pb-2"> <span className="text-slate-500 font-medium">Dealer ID:</span> <span className="font-bold text-blue-600">#{viewDealer.id}</span> </div>
+              <div className="flex justify-between border-b pb-2"> <span className="text-slate-500 font-medium">Full Name:</span> <span className="text-slate-800 font-semibold">{viewDealer.name}</span> </div>
+              <div className="flex justify-between border-b pb-2"> <span className="text-slate-500 font-medium">Firm Name:</span> <span className="text-slate-800">{viewDealer.firmName}</span> </div>
+              <div className="flex justify-between border-b pb-2"> <span className="text-slate-500 font-medium">GST Number:</span> <span className="font-mono text-slate-700">{viewDealer.gstNo}</span> </div>
+              <div className="flex justify-between border-b pb-2"> <span className="text-slate-500 font-medium">Phone:</span> <span className="text-slate-800">{viewDealer.phone}</span> </div>
+              <div className="flex justify-between border-b pb-2"> <span className="text-slate-500 font-medium">City:</span> <span className="text-slate-800">{viewDealer.city}</span> </div>
+              <div className="flex justify-between"> <span className="text-slate-500 font-medium">Status:</span> <span className={`font-bold ${viewDealer.status === "Active" ? "text-green-600" : "text-amber-600"}`}>{viewDealer.status}</span> </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
       {confirmModal.isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })} />
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm relative z-[101] overflow-hidden animate-in fade-in zoom-in duration-200">
             <div className="p-6 text-center">
-              <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <AlertCircle size={32} />
-              </div>
+              <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4"> <AlertCircle size={32} /> </div>
               <h3 className="text-lg font-bold text-slate-800">Confirm Deletion</h3>
               <p className="text-sm text-slate-500 mt-2">Are you sure you want to remove this data?</p>
             </div>
@@ -129,7 +157,8 @@ export default function DealersPage() {
           <p className="text-sm text-slate-500">Manage your dealer network</p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50 flex items-center gap-2">
+          {/* EXPORT WORKING NOW */}
+          <button onClick={handleExport} className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50 flex items-center gap-2">
             <FileDown size={15}/> Export
           </button>
           <Link href="/dashboard/users/dealers/add" className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium shadow-md hover:bg-blue-700 transition-all">
@@ -138,6 +167,7 @@ export default function DealersPage() {
         </div>
       </div>
 
+      {/* Stats Section */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
         <StatCard icon={Building2} label="Total Dealers" value={data.length.toString()} iconBg="bg-blue-100" iconColor="text-blue-600" borderAccent="border-t-blue-500" />
         <StatCard icon={CheckCircle2} label="Active" value={data.filter(d => d.status === "Active").length} iconBg="bg-green-100" iconColor="text-green-600" borderAccent="border-t-green-500" />
@@ -152,24 +182,16 @@ export default function DealersPage() {
             </div>
             
             <div className="flex items-center gap-2 w-full sm:w-auto relative" ref={filterRef}>
-              <select 
-                onChange={(e) => e.target.value === "delete" && setConfirmModal({isOpen: true, type: 'bulk'})} 
-                className="px-3 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium outline-none cursor-pointer"
-              >
+              <select onChange={(e) => e.target.value === "delete" && setConfirmModal({isOpen: true, type: 'bulk'})} className="px-3 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium outline-none cursor-pointer">
                 <option value="">Bulk Actions</option>
                 <option value="delete">Delete Selected ({selectedIds.length})</option>
               </select>
 
-              {/* Filter Button */}
-              <button 
-                onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-sm font-medium transition-colors ${isFilterOpen ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
-              >
+              <button onClick={() => setIsFilterOpen(!isFilterOpen)} className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-sm font-medium transition-colors ${isFilterOpen ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}>
                 <Filter size={14} /> Filter
                 {(statusFilter !== "All" || cityFilter !== "All") && <span className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />}
               </button>
 
-              {/* Filter Dropdown */}
               {isFilterOpen && (
                 <div className="absolute right-0 top-full mt-2 w-64 bg-white border border-slate-200 shadow-xl rounded-xl z-50 p-4 animate-in slide-in-from-top-2 duration-200">
                   <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-50">
@@ -178,32 +200,20 @@ export default function DealersPage() {
                       <RotateCcw size={10}/> Reset
                     </button>
                   </div>
-                  
                   <div className="space-y-4">
                     <div>
                       <label className="text-[11px] font-semibold text-slate-500 block mb-1.5">Status</label>
-                      <select 
-                        value={statusFilter} 
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500"
-                      >
+                      <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500">
                         <option value="All">All Status</option>
                         <option value="Active">Active</option>
-                        <option value="Pending">Pending</option>
+                        <option value="Pending">Inactive</option>
                       </select>
                     </div>
-
                     <div>
                       <label className="text-[11px] font-semibold text-slate-500 block mb-1.5">City</label>
-                      <select 
-                        value={cityFilter} 
-                        onChange={(e) => setCityFilter(e.target.value)}
-                        className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500"
-                      >
+                      <select value={cityFilter} onChange={(e) => setCityFilter(e.target.value)} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500">
                         <option value="All">All Cities</option>
-                        {cities.map(city => (
-                          <option key={city} value={city}>{city}</option>
-                        ))}
+                        {cities.map(city => <option key={city} value={city}>{city}</option>)}
                       </select>
                     </div>
                   </div>
@@ -251,8 +261,11 @@ export default function DealersPage() {
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex gap-1">
-                      <button className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-md transition-colors"><Eye size={15}/></button>
-                      <button onClick={() => router.push(`/dashboard/users/dealers/add?id=${dealer.id}`)} className="p-1.5 text-amber-500 hover:bg-amber-50 rounded-md transition-colors"><Edit2 size={15}/></button>
+                      {/* VIEW WORKING NOW */}
+                      <button onClick={() => setViewDealer(dealer)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-md transition-colors"><Eye size={15}/></button>
+                      
+                      <button onClick={() => router.push(`/dashboard/users/dealers/edit?id=${dealer.id}`)} className="p-1.5 text-amber-500 hover:bg-amber-50 rounded-md transition-colors"><Edit2 size={15}/></button>
+                      
                       <button onClick={() => setConfirmModal({ isOpen: true, type: 'single', targetId: dealer.id })} className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-md transition-colors"><Trash2 size={15}/></button>
                     </div>
                   </td>
@@ -267,7 +280,6 @@ export default function DealersPage() {
           </table>
         </div>
         
-        {/* Pagination placeholder */}
         <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400 font-medium">
           Showing {filteredData.length} results
           <div className="flex gap-1">
