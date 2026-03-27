@@ -25,7 +25,8 @@ interface Electrician {
   status: "Active" | "Inactive";
 }
 
-const INITIAL_DATA: Electrician[] = Array.from({ length: 8 }).map((_, i) => ({
+// Ye tab chalega jab localStorage khali ho
+const DEFAULT_DATA: Electrician[] = Array.from({ length: 8 }).map((_, i) => ({
   id: (3347 - i).toString(),
   name: i % 2 === 0 ? "Arshdeep Singh" : "Anmol Preet",
   wallet: (1250 + (i * 100)).toLocaleString(),
@@ -40,18 +41,20 @@ const INITIAL_DATA: Electrician[] = Array.from({ length: 8 }).map((_, i) => ({
 
 // --- Sub-components ---
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-  <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mt-6 mb-3">{children}</p>
+  <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400 mt-6 mb-3 flex items-center gap-2">
+     <span className="w-8 h-[1px] bg-slate-200"></span> {children}
+  </p>
 );
 
 const StatCard = ({ icon: Icon, label, value, iconBg, iconColor, borderAccent }: any) => (
-  <div className={`bg-white rounded-xl border border-slate-200 border-t-4 ${borderAccent} p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-md shadow-sm`}>
-    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBg} ${iconColor}`}><Icon size={18} /></div>
+  <div className={`bg-white rounded-xl border border-slate-200 border-t-4 ${borderAccent} p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-md shadow-sm group cursor-default`}>
+    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 ${iconBg} ${iconColor}`}><Icon size={18} /></div>
     <div><p className="text-2xl font-semibold text-slate-800">{value}</p><p className="text-xs text-slate-500 mt-1">{label}</p></div>
   </div>
 );
 
 const StatusBadge = ({ status }: { status: "Active" | "Inactive" }) => (
-  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${status === "Active" ? "bg-green-50 text-green-700 border-green-200" : "bg-slate-50 text-slate-700 border-slate-200"}`}>
+  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border cursor-pointer ${status === "Active" ? "bg-green-50 text-green-700 border-green-200" : "bg-slate-50 text-slate-700 border-slate-200"}`}>
     <span className={`w-1.5 h-1.5 rounded-full ${status === "Active" ? "bg-green-500" : "bg-slate-400"}`} /> {status}
   </span>
 );
@@ -61,13 +64,11 @@ export default function ElectriciansPage() {
   const filterRef = useRef<HTMLDivElement>(null);
   
   // --- States ---
-  const [data, setData] = useState<Electrician[]>(INITIAL_DATA);
+  const [data, setData] = useState<Electrician[]>([]); // Start with empty
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [viewingUser, setViewingUser] = useState<Electrician | null>(null);
-  
-  // Filter Criteria
   const [statusFilter, setStatusFilter] = useState<string>("All");
   const [typeFilter, setTypeFilter] = useState<string>("All");
 
@@ -76,7 +77,25 @@ export default function ElectriciansPage() {
     type: 'single'
   });
 
-  // --- Click Outside Filter Dropdown ---
+  // --- Persistence Logic ---
+  // Load data from localStorage on mount
+  useEffect(() => {
+    const savedData = localStorage.getItem("electricians_list");
+    if (savedData) {
+      setData(JSON.parse(savedData));
+    } else {
+      setData(DEFAULT_DATA);
+      localStorage.setItem("electricians_list", JSON.stringify(DEFAULT_DATA));
+    }
+  }, []);
+
+  // Update localStorage whenever data changes
+  const updateData = (newData: Electrician[]) => {
+    setData(newData);
+    localStorage.setItem("electricians_list", JSON.stringify(newData));
+  };
+
+  // --- Click Outside Filter ---
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
@@ -93,10 +112,8 @@ export default function ElectriciansPage() {
       const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                             user.phone.includes(searchTerm) || 
                             user.id.includes(searchTerm);
-      
       const matchesStatus = statusFilter === "All" || user.status === statusFilter;
       const matchesType = typeFilter === "All" || user.type === typeFilter;
-
       return matchesSearch && matchesStatus && matchesType;
     });
   }, [searchTerm, data, statusFilter, typeFilter]);
@@ -108,13 +125,10 @@ export default function ElectriciansPage() {
       headers.join(","),
       ...filteredData.map(u => [u.id, u.name, u.email, u.phone, u.wallet, u.dealerCode, u.reffCode, u.status].join(","))
     ].join("\n");
-
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
+    link.href = URL.createObjectURL(blob);
     link.setAttribute("download", `electricians_export_${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -122,13 +136,15 @@ export default function ElectriciansPage() {
 
   // --- Deletion Logic ---
   const executeDelete = () => {
+    let newData;
     if (confirmModal.type === 'single' && confirmModal.targetId) {
-      setData(data.filter(item => item.id !== confirmModal.targetId));
+      newData = data.filter(item => item.id !== confirmModal.targetId);
       setSelectedIds(selectedIds.filter(sid => sid !== confirmModal.targetId));
-    } else if (confirmModal.type === 'bulk') {
-      setData(data.filter(item => !selectedIds.includes(item.id)));
+    } else {
+      newData = data.filter(item => !selectedIds.includes(item.id));
       setSelectedIds([]);
     }
+    updateData(newData);
     setConfirmModal({ isOpen: false, type: 'single' });
   };
 
@@ -203,12 +219,12 @@ export default function ElectriciansPage() {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-xl font-semibold text-slate-800">Electricians</h1>
+          <h1 className="text-xl font-semibold text-slate-800 tracking-tight">Electricians</h1>
           <p className="text-sm text-slate-500">Manage workforce</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 cursor-pointer transition-colors shadow-sm"><FileDown size={15} /> Export</button>
-          <Link href="/dashboard/users/electricians/add" className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium shadow-sm hover:bg-blue-700 transition-all cursor-pointer">
+          <Link href="/dashboard/users/electricians/add" className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium shadow-sm hover:bg-blue-700 transition-all cursor-pointer active:scale-95">
             <Plus size={15} /> Add Electrician
           </Link>
         </div>
@@ -219,7 +235,7 @@ export default function ElectriciansPage() {
         <StatCard icon={Users} label="Total Electricians" value={data.length.toString()} iconBg="bg-blue-100" iconColor="text-blue-600" borderAccent="border-t-blue-500" />
         <StatCard icon={CheckCircle2} label="Active" value={data.filter(d => d.status === "Active").length.toString()} iconBg="bg-green-100" iconColor="text-green-600" borderAccent="border-t-green-500" />
         <StatCard icon={XCircle} label="Inactive" value={data.filter(d => d.status === "Inactive").length.toString()} iconBg="bg-slate-100" iconColor="text-slate-500" borderAccent="border-t-slate-400" />
-        <StatCard icon={Zap} label="Pro Active" value="200" iconBg="bg-purple-100" iconColor="text-purple-600" borderAccent="border-t-purple-500" />
+        <StatCard icon={Zap} label="Pro Members" value={data.filter(d => d.type === "Pro").length.toString()} iconBg="bg-purple-100" iconColor="text-purple-600" borderAccent="border-t-purple-500" />
       </div>
 
       <SectionLabel>All Electricians</SectionLabel>
@@ -273,21 +289,21 @@ export default function ElectriciansPage() {
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50">
                 <th className="px-5 py-4 w-10">
-                  <input type="checkbox" checked={selectedIds.length > 0 && selectedIds.length === filteredData.length} onChange={() => {
+                  <input type="checkbox" checked={filteredData.length > 0 && selectedIds.length === filteredData.length} onChange={() => {
                     if (selectedIds.length === filteredData.length) setSelectedIds([]);
                     else setSelectedIds(filteredData.map(item => item.id));
                   }} className="w-4 h-4 rounded accent-blue-600 cursor-pointer" />
                 </th>
-                {["ID", "Name", "Wallet", "Dealer Code", "Electrician Code", "QR", "Phone", "Status", "Actions"].map((h) => (
+                {["ID", "Name", "Wallet", "Dealer", "Ref Code", "QR", "Phone", "Status", "Actions"].map((h) => (
                   <th key={h} className="px-5 py-4 text-[10px] font-bold uppercase tracking-wider text-slate-400">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredData.map((user) => (
-                <tr key={user.id} className="hover:bg-slate-50/80 group transition-colors">
+                <tr key={user.id} className="hover:bg-slate-50/80 group transition-colors cursor-pointer">
                   <td className="px-5 py-4">
-                    <input type="checkbox" checked={selectedIds.includes(user.id)} onChange={() => setSelectedIds(prev => prev.includes(user.id) ? prev.filter(i => i !== user.id) : [...prev, user.id])} className="w-4 h-4 rounded accent-blue-600 cursor-pointer" />
+                    <input type="checkbox" checked={selectedIds.includes(user.id)} onChange={(e) => {e.stopPropagation(); setSelectedIds(prev => prev.includes(user.id) ? prev.filter(i => i !== user.id) : [...prev, user.id])}} className="w-4 h-4 rounded accent-blue-600 cursor-pointer" />
                   </td>
                   <td className="px-5 py-4 text-xs text-slate-400">#{user.id}</td>
                   <td className="px-5 py-4">
@@ -304,14 +320,14 @@ export default function ElectriciansPage() {
                   <td className="px-5 py-4"><StatusBadge status={user.status} /></td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-1">
-                      <button onClick={() => setViewingUser(user)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"><Eye size={15} /></button>
+                      <button onClick={(e) => {e.stopPropagation(); setViewingUser(user)}} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"><Eye size={15} /></button>
                       <button 
-                        onClick={() => router.push(`/dashboard/users/electricians/edit?id=${user.id}`)} 
+                        onClick={(e) => {e.stopPropagation(); router.push(`/dashboard/users/electricians/edit?id=${user.id}`)}} 
                         className="p-1.5 text-amber-500 hover:bg-amber-50 rounded-md transition-colors cursor-pointer"
                       >
                         <Edit2 size={15} />
                       </button>
-                      <button onClick={() => setConfirmModal({ isOpen: true, type: 'single', targetId: user.id })} className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"><Trash2 size={15} /></button>
+                      <button onClick={(e) => {e.stopPropagation(); setConfirmModal({ isOpen: true, type: 'single', targetId: user.id })}} className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"><Trash2 size={15} /></button>
                     </div>
                   </td>
                 </tr>
@@ -325,12 +341,12 @@ export default function ElectriciansPage() {
             </div>
           )}
         </div>
-        <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between">
+        <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/30">
           <p className="text-xs text-slate-400 font-medium">Showing {filteredData.length} records</p>
           <div className="flex gap-1">
-            <button className="p-2 border border-slate-200 rounded-lg text-slate-400 hover:bg-slate-50 cursor-pointer"><ChevronLeft size={14} /></button>
-            <button className="w-8 h-8 rounded-lg text-xs font-bold bg-blue-600 text-white cursor-pointer">1</button>
-            <button className="p-2 border border-slate-200 rounded-lg text-slate-400 hover:bg-slate-50 cursor-pointer"><ChevronRight size={14} /></button>
+            <button className="p-2 border border-slate-200 rounded-lg text-slate-400 hover:bg-slate-50 cursor-pointer transition-all"><ChevronLeft size={14} /></button>
+            <button className="w-8 h-8 rounded-lg text-xs font-bold bg-blue-600 text-white cursor-pointer shadow-md shadow-blue-200">1</button>
+            <button className="p-2 border border-slate-200 rounded-lg text-slate-400 hover:bg-slate-50 cursor-pointer transition-all"><ChevronRight size={14} /></button>
           </div>
         </div>
       </div>
