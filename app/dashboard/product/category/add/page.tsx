@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ArrowLeft, LayoutGrid } from "lucide-react";
+import { ArrowLeft, LayoutGrid, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -11,6 +11,9 @@ export default function AddCategoryPage() {
   const [categoryName, setCategoryName] = useState("");
   const [colorCode, setColorCode] = useState("#000000");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  
+  // --- Centered Message State ---
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -23,18 +26,56 @@ export default function AddCategoryPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Category saved successfully!");
-    // ✅ FIXED: Path changed from products to product
-    router.push("/dashboard/product/category");
+
+    // 1. Get existing data
+    const existingData = JSON.parse(localStorage.getItem("srv_categories") || "[]");
+
+    // 2. Create new category object 
+    // Yahan colorCode key add kar di hai jo list page par render hogi
+    const newCategory = {
+      id: Math.floor(Math.random() * 1000).toString(),
+      name: categoryName,
+      colorCode: colorCode, // Ab ye sahi se save hoga
+      status: "Enable",
+      image: imagePreview || ""
+    };
+
+    // 3. Save back to LocalStorage
+    localStorage.setItem("srv_categories", JSON.stringify([newCategory, ...existingData]));
+
+    // 4. Show custom centered message box
+    setShowSuccess(true);
+
+    // 5. Redirect after 2 seconds
+    setTimeout(() => {
+      router.push("/dashboard/product/category");
+    }, 2000);
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans">
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans relative">
       
+      {/* ─── CENTERED SUCCESS BOX ─── */}
+      {showSuccess && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/10 backdrop-blur-[2px]">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xs overflow-hidden border border-slate-100 animate-in zoom-in duration-300">
+            <div className="p-6 text-center">
+              <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                <CheckCircle2 size={28} />
+              </div>
+              <h3 className="font-bold text-slate-800">Saved Successfully!</h3>
+              <p className="text-xs text-slate-500 mt-1">New category has been added to the list.</p>
+            </div>
+            <div className="bg-slate-50 py-3 text-[10px] font-bold text-slate-400 text-center uppercase tracking-widest border-t">
+              Redirecting...
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="max-w-4xl mx-auto flex items-center justify-between mb-8">
         <h1 className="text-xl font-bold text-slate-800">Add Category</h1>
-        {/* ✅ FIXED: Path changed from products to product */}
         <Link 
           href="/dashboard/product/category" 
           className="flex items-center gap-2 bg-[#2563eb] text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 shadow-md transition-all"
@@ -60,7 +101,7 @@ export default function AddCategoryPage() {
             />
           </div>
 
-          {/* Color Picker */}
+          {/* Color Picker - Fixed Logic */}
           <div className="flex flex-col md:flex-row md:items-center gap-6">
             <label className="w-48 text-sm font-bold text-slate-600 uppercase tracking-wide">Color Code :-</label>
             <div className="flex items-center gap-4">
@@ -70,7 +111,14 @@ export default function AddCategoryPage() {
                 onChange={(e) => setColorCode(e.target.value)}
                 className="w-14 h-14 p-1 bg-white border border-slate-200 rounded-xl cursor-pointer shadow-sm"
               />
-              <span className="text-sm font-mono font-bold text-slate-500 bg-slate-100 px-4 py-2 rounded-lg uppercase tracking-wider">{colorCode}</span>
+              <span className="text-sm font-mono font-bold text-slate-500 bg-slate-100 px-4 py-2 rounded-lg uppercase tracking-wider">
+                {colorCode}
+              </span>
+              {/* Added a small circle for visual confirmation */}
+              <div 
+                className="w-6 h-6 rounded-full border border-slate-200" 
+                style={{ backgroundColor: colorCode }}
+              />
             </div>
           </div>
 
@@ -117,7 +165,6 @@ export default function AddCategoryPage() {
             </button>
             <button 
               type="button"
-              // ✅ FIXED: Path changed from products to product
               onClick={() => router.push("/dashboard/product/category")}
               className="bg-rose-500 text-white px-10 py-3 rounded-xl font-bold hover:bg-rose-600 shadow-lg shadow-rose-100 transition-all active:scale-95 text-sm"
             >

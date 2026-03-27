@@ -1,9 +1,9 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import React, { useState, ChangeEvent, useMemo } from "react";
 import { 
-  Search, Eye, ChevronLeft, ChevronRight, 
-  Filter, UserCheck, Users, X, Plus, Save, Trash2, ImageIcon, AlertCircle
+  Search, Eye, UserCheck, Users, X, Plus, Save, Trash2, ImageIcon, AlertCircle, Edit3
 } from "lucide-react";
 
 // ─── Types & Interfaces ──────────────────────────────────────────────────────
@@ -39,10 +39,10 @@ export default function CompletedKYCPage() {
   ]);
 
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [filterStatus, setFilterStatus] = useState<string>("All");
   
   // Modals State
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<Partial<UserKYC> | null>(null);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
@@ -60,27 +60,45 @@ export default function CompletedKYCPage() {
     }
   };
 
-  const openModal = (user?: UserKYC) => {
+  const openEditModal = (user?: UserKYC) => {
     setCurrentUser(user || { 
       id: Date.now().toString().slice(-4), 
-      name: "", phone: "", status: "Pending", 
+      name: "", phone: "", status: "Completed", 
       aadhaarFront: "-", aadhaarBack: "-", pan: "-" 
     });
-    setIsModalOpen(true);
+    setIsEditModalOpen(true);
+  };
+
+  const openViewModal = (user: UserKYC) => {
+    setCurrentUser(user);
+    setIsViewModalOpen(true);
   };
 
   const handleSave = () => {
     if (!currentUser) return;
+
+    // --- Validation Logic ---
+    const nameRegex = /^[a-zA-Z\s]*$/;
+    const phoneRegex = /^[0-9]*$/;
+
+    if (!currentUser.name || !nameRegex.test(currentUser.name)) {
+      alert("Please enter a valid name (letters only).");
+      return;
+    }
+    if (!currentUser.phone || !phoneRegex.test(currentUser.phone) || currentUser.phone.length !== 10) {
+      alert("Please enter a valid 10-digit phone number.");
+      return;
+    }
+
     const exists = users.find(u => u.id === currentUser.id);
     if (exists) {
       setUsers(users.map(u => u.id === currentUser.id ? (currentUser as UserKYC) : u));
     } else {
       setUsers([currentUser as UserKYC, ...users]);
     }
-    setIsModalOpen(false);
+    setIsEditModalOpen(false);
   };
 
-  // Center Delete Logic
   const initiateDelete = (id: string) => {
     setUserToDelete(id);
     setIsDeleteConfirmOpen(true);
@@ -90,82 +108,130 @@ export default function CompletedKYCPage() {
     if (userToDelete) {
       setUsers(users.filter(u => u.id !== userToDelete));
       setIsDeleteConfirmOpen(false);
-      setIsModalOpen(false);
+      setIsEditModalOpen(false);
       setUserToDelete(null);
     }
   };
 
   const filteredUsers = useMemo(() => {
     return users.filter((u) => {
-      const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.phone.includes(searchTerm);
-      const matchesFilter = filterStatus === "All" || u.status === filterStatus;
-      return matchesSearch && matchesFilter;
+      return u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.phone.includes(searchTerm);
     });
-  }, [users, searchTerm, filterStatus]);
+  }, [users, searchTerm]);
 
   return (
     <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans">
       
-      {/* ── Custom Centered Delete Confirmation ── */}
+      {/* ── Delete Confirmation ── */}
       {isDeleteConfirmOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6 text-center animate-in fade-in zoom-in duration-200">
             <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertCircle className="text-red-500" size={32} />
             </div>
             <h3 className="text-lg font-bold text-slate-800">Delete User?</h3>
-            <p className="text-sm text-slate-500 mt-2">
-              This action cannot be undone. All data for this user will be removed.
-            </p>
+            <p className="text-sm text-slate-500 mt-2">This action cannot be undone.</p>
             <div className="flex gap-3 mt-6">
-              <button 
-                onClick={() => setIsDeleteConfirmOpen(false)}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={confirmDelete}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 shadow-lg shadow-red-100 transition-all"
-              >
-                Yes, Delete
-              </button>
+              <button onClick={() => setIsDeleteConfirmOpen(false)} className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all">Cancel</button>
+              <button onClick={confirmDelete} className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-all">Yes, Delete</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Main Data Modal ── */}
-      {isModalOpen && (
+      {/* ── View Modal (Read Only) ── */}
+      {isViewModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in slide-in-from-bottom-4 duration-300">
             <div className="p-5 border-b flex justify-between items-center bg-slate-50">
-              <h2 className="font-bold text-slate-800">User Details & Documents</h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
+              <h2 className="font-bold text-slate-800">View User Details</h2>
+              <button onClick={() => setIsViewModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
             </div>
-            
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Full Name</p>
+                    <p className="text-sm text-slate-800 font-semibold py-2 border-b">{currentUser?.name}</p>
+                </div>
+                <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Phone</p>
+                    <p className="text-sm text-slate-800 font-semibold py-2 border-b">{currentUser?.phone}</p>
+                </div>
+                <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Status</p>
+                    <p className="text-sm text-green-600 font-bold py-2 border-b">{currentUser?.status}</p>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <label className="text-[10px] font-bold text-slate-400 uppercase">Documents</label>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { label: "Aadhaar Front", key: "aadhaarFront" },
+                    { label: "Aadhaar Back", key: "aadhaarBack" },
+                    { label: "PAN Card", key: "pan" }
+                  ].map((doc) => (
+                    <div key={doc.key}>
+                      <div className="aspect-[4/3] bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center overflow-hidden">
+                        {currentUser?.[doc.key as keyof UserKYC] !== "-" ? (
+                          <img src={currentUser?.[doc.key as keyof UserKYC]} alt="preview" className="w-full h-full object-cover" />
+                        ) : (
+                          <ImageIcon className="text-slate-200" size={24} />
+                        )}
+                      </div>
+                      <p className="text-[9px] text-center mt-1.5 font-bold text-slate-500 uppercase">{doc.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <button onClick={() => setIsViewModalOpen(false)} className="w-full bg-slate-800 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-slate-900 transition-all">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Edit Modal (Editable) ── */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="p-5 border-b flex justify-between items-center bg-slate-50">
+              <h2 className="font-bold text-slate-800">Edit User & Documents</h2>
+              <button onClick={() => setIsEditModalOpen(false)} className="text-slate-400 hover:text-slate-600"><X size={20}/></button>
+            </div>
             <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                     <label className="text-[10px] font-bold text-slate-400 uppercase">Full Name</label>
-                    <input className="w-full border rounded-lg p-2 text-sm mt-1 focus:ring-2 focus:ring-blue-500 outline-none" value={currentUser?.name} onChange={e => setCurrentUser({...currentUser!, name: e.target.value})} />
+                    <input 
+                      className="w-full border rounded-lg p-2 text-sm mt-1 focus:ring-2 focus:ring-blue-500 outline-none" 
+                      placeholder="Enter name (letters only)"
+                      value={currentUser?.name} 
+                      onChange={e => {
+                        const val = e.target.value;
+                        if (/^[a-zA-Z\s]*$/.test(val)) {
+                          setCurrentUser({...currentUser!, name: val})
+                        }
+                      }} 
+                    />
                 </div>
-                <div>
+                <div className="col-span-2">
                     <label className="text-[10px] font-bold text-slate-400 uppercase">Phone</label>
-                    <input className="w-full border rounded-lg p-2 text-sm mt-1 focus:ring-2 focus:ring-blue-500 outline-none" value={currentUser?.phone} onChange={e => setCurrentUser({...currentUser!, phone: e.target.value})} />
-                </div>
-                <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase">Status</label>
-                    <select className="w-full border rounded-lg p-2 text-sm mt-1 focus:ring-2 focus:ring-blue-500 outline-none" value={currentUser?.status} onChange={e => setCurrentUser({...currentUser!, status: e.target.value as any})}>
-                        <option value="Completed">Completed</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Rejected">Rejected</option>
-                    </select>
+                    <input 
+                      className="w-full border rounded-lg p-2 text-sm mt-1 focus:ring-2 focus:ring-blue-500 outline-none" 
+                      placeholder="10-digit number"
+                      maxLength={10}
+                      value={currentUser?.phone} 
+                      onChange={e => {
+                        const val = e.target.value;
+                        if (/^[0-9]*$/.test(val)) {
+                          setCurrentUser({...currentUser!, phone: val})
+                        }
+                      }} 
+                    />
                 </div>
               </div>
 
               <div className="space-y-4">
-                <label className="text-[10px] font-bold text-slate-400 uppercase">Documents</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase">Upload Documents</label>
                 <div className="grid grid-cols-3 gap-3">
                   {[
                     { label: "Aadhaar Front", key: "aadhaarFront" },
@@ -188,13 +254,10 @@ export default function CompletedKYCPage() {
               </div>
 
               <div className="pt-4 flex gap-2">
-                <button onClick={handleSave} className="flex-1 bg-blue-600 text-white py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all">
+                <button onClick={handleSave} className="flex-1 bg-blue-600 text-white py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:bg-blue-700 transition-all">
                     <Save size={16}/> Save Changes
                 </button>
-                <button 
-                  onClick={() => initiateDelete(currentUser!.id!)} 
-                  className="p-2.5 text-red-500 bg-red-50 border border-red-100 rounded-xl hover:bg-red-100 transition-all"
-                >
+                <button onClick={() => initiateDelete(currentUser!.id!)} className="p-2.5 text-red-500 bg-red-50 border border-red-100 rounded-xl hover:bg-red-100 transition-all">
                     <Trash2 size={18}/>
                 </button>
               </div>
@@ -211,11 +274,11 @@ export default function CompletedKYCPage() {
           </div>
           <div>
             <h1 className="text-xl font-semibold text-slate-800">Completed KYC</h1>
-            <p className="text-sm text-slate-500 mt-0.5">Real-time user management</p>
+            <p className="text-sm text-slate-500 mt-0.5">Manage verified users</p>
           </div>
         </div>
-        <button onClick={() => openModal()} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all active:scale-95">
-          <Plus size={16} /> New Entry
+        <button onClick={() => openEditModal()} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all">
+          <Plus size={16} /> Add KYC
         </button>
       </div>
 
@@ -229,7 +292,7 @@ export default function CompletedKYCPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-slate-800">{users.length}</p>
-              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Users</p>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Verified</p>
             </div>
           </div>
         </div>
@@ -239,36 +302,26 @@ export default function CompletedKYCPage() {
               <UserCheck size={24} className="text-green-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-slate-800">{users.filter(u => u.status === "Completed").length}</p>
-              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Completed</p>
+              <p className="text-2xl font-bold text-slate-800">100%</p>
+              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Verified Rate</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── Search + Filter ── */}
-      <SectionLabel>Filters</SectionLabel>
-      <div className="bg-white rounded-2xl border border-slate-200 p-3 mb-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
-        <div className="relative w-full sm:w-80">
+      {/* ── Search ── */}
+      <SectionLabel>Search User</SectionLabel>
+      <div className="bg-white rounded-2xl border border-slate-200 p-3 mb-4 shadow-sm">
+        <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
           <input
             type="text"
-            placeholder="Search users..."
+            placeholder="Search by name or phone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none"
           />
         </div>
-        <select 
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-          className="w-full sm:w-auto bg-slate-50 border border-slate-200 text-slate-600 rounded-xl px-4 py-2 text-sm font-semibold outline-none cursor-pointer"
-        >
-          <option value="All">All Status</option>
-          <option value="Completed">Completed</option>
-          <option value="Pending">Pending</option>
-          <option value="Rejected">Rejected</option>
-        </select>
       </div>
 
       {/* ── Table ── */}
@@ -288,7 +341,6 @@ export default function CompletedKYCPage() {
                   <td className="px-6 py-4 text-sm font-medium text-slate-400">{user.id}</td>
                   <td className="px-6 py-4 text-sm font-bold text-slate-800">{user.name}</td>
                   <td className="px-6 py-4 text-sm font-medium text-slate-600">{user.phone}</td>
-                  
                   <td className="px-6 py-4">
                     <div className="flex gap-1.5">
                       {[user.aadhaarFront, user.aadhaarBack].map((doc, i) => (
@@ -298,25 +350,25 @@ export default function CompletedKYCPage() {
                       ))}
                     </div>
                   </td>
-                  
                   <td className="px-6 py-4">
                     <div className="w-7 h-7 rounded bg-slate-100 border border-slate-200 overflow-hidden">
                       {user.pan !== "-" ? <img src={user.pan} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[8px] text-slate-300">-</div>}
                     </div>
                   </td>
-
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-tighter ${
-                        user.status === "Completed" ? "bg-green-50 text-green-600 border-green-100" : 
-                        user.status === "Pending" ? "bg-amber-50 text-amber-600 border-amber-100" : "bg-red-50 text-red-600 border-red-100"
-                    }`}>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-tighter bg-green-50 text-green-600 border-green-100">
                       {user.status}
                     </span>
                   </td>
                   <td className="px-6 py-4">
-                    <button onClick={() => openModal(user)} className="w-9 h-9 flex items-center justify-center rounded-xl text-blue-500 hover:bg-blue-50 transition-all shadow-sm border border-transparent hover:border-blue-100">
-                      <Eye size={16} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => openViewModal(user)} className="w-8 h-8 flex items-center justify-center rounded-lg text-blue-500 hover:bg-blue-50 transition-all border border-transparent hover:border-blue-100" title="View">
+                        <Eye size={15} />
+                      </button>
+                      <button onClick={() => openEditModal(user)} className="w-8 h-8 flex items-center justify-center rounded-lg text-emerald-500 hover:bg-emerald-50 transition-all border border-transparent hover:border-emerald-100" title="Edit">
+                        <Edit3 size={15} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

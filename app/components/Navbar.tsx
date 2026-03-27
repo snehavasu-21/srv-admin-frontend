@@ -2,14 +2,13 @@
 
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-// 1. useRouter ko import karein
+import Link from "next/link"; // Import Link for navigation
 import { useRouter } from "next/navigation"; 
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   
-  // 2. Router initialize karein
   const router = useRouter(); 
 
   // 👉 Close dropdown when clicking outside
@@ -23,24 +22,25 @@ export default function Navbar() {
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      return document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
-  // 3. Logout Function banayein
+  // Logout Function
   const handleLogout = () => {
-    // Agar koi session/cookie delete karni hai toh yahan likhein
     // localStorage.clear(); 
-    
-    // Redirect to login page
     router.push("/login"); 
   };
 
   return (
     <div className="w-full bg-[#0B1F3A] text-white px-6 py-3 flex justify-between items-center shadow">
 
-      {/* LEFT TITLE */}
-      <h1 className="text-lg font-semibold">SRV Electricals</h1>
+      {/* LEFT TITLE - Wrapped in Link for redirection and pointer cursor */}
+      <Link href="/dashboard" className="cursor-pointer">
+        <h1 className="text-lg font-semibold hover:text-blue-300 transition-colors">
+          SRV Electricals
+        </h1>
+      </Link>
 
       {/* RIGHT PROFILE */}
       <div className="relative" ref={dropdownRef}>
@@ -70,7 +70,6 @@ export default function Navbar() {
               Profile
             </button>
 
-            {/* 4. Logout button par onClick lagayein */}
             <button 
               onClick={handleLogout}               
               className="w-full text-left px-4 py-2 hover:bg-gray-100 transition text-red-500 font-medium"
