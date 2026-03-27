@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -62,7 +63,9 @@ export default function TopRedeemPage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isMonthView, setIsMonthView] = useState(false);
   
-  // Logic for filtering data
+  // State for applied date range
+  const [appliedRange, setAppliedRange] = useState({ from: "", to: "" });
+  
   const filteredData = useMemo(() => {
     return reportData.filter((item) => {
       const matchesSearch = 
@@ -70,18 +73,21 @@ export default function TopRedeemPage() {
         item.phone.includes(searchQuery);
 
       let matchesDate = true;
-      if (fromDate && toDate) {
+      if (appliedRange.from && appliedRange.to) {
         const itemDate = new Date(item.lastRedeem);
-        const start = new Date(fromDate);
-        const end = new Date(toDate);
+        const start = new Date(appliedRange.from);
+        const end = new Date(appliedRange.to);
         matchesDate = itemDate >= start && itemDate <= end;
       }
 
       return matchesSearch && matchesDate;
     });
-  }, [searchQuery, fromDate, toDate]);
+  }, [searchQuery, appliedRange]);
 
-  // Handle CSV Export
+  const handleApplyFilter = () => {
+    setAppliedRange({ from: fromDate, to: toDate });
+  };
+
   const handleExport = () => {
     alert("Exporting " + filteredData.length + " records to CSV...");
   };
@@ -100,9 +106,7 @@ export default function TopRedeemPage() {
               {isMonthView ? "Top 20 Electricians Redeem Points Report" : "Electricians Redeem Points Report"}
             </h1>
             <p className="text-sm text-slate-500 mt-0.5">
-              {isMonthView 
-                ? "Highest redeemed points are shown first so you can review unusually high redemption activity faster." 
-                : "Highest redeemed points are shown first"}
+              Highest redeemed points are shown first
             </p>
           </div>
         </div>
@@ -113,14 +117,15 @@ export default function TopRedeemPage() {
               setFilterType("This Month");
               setFromDate("2026-03-01");
               setToDate("2026-03-31");
+              setAppliedRange({ from: "2026-03-01", to: "2026-03-31" });
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 hover:shadow-sm transition-all duration-200 text-sm font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-all text-sm font-medium cursor-pointer"
           >
             This Month
           </button>
           <button 
             onClick={handleExport}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 hover:shadow-sm transition-all duration-200 text-sm font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-all text-sm font-medium cursor-pointer"
           >
             <FileDown size={15} />
             CSV Export
@@ -128,7 +133,7 @@ export default function TopRedeemPage() {
           
           <button 
             onClick={() => router.push("/dashboard/gift-store-order")}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-sm font-medium cursor-pointer"
           >
             <ShoppingBag size={15} />
             View Gift Store Orders
@@ -144,7 +149,7 @@ export default function TopRedeemPage() {
           placeholder="Search by name or phone..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+          className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none cursor-pointer"
         />
       </div>
 
@@ -156,7 +161,7 @@ export default function TopRedeemPage() {
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium cursor-pointer"
           >
             <option>All Time</option>
             <option>This Month</option>
@@ -171,7 +176,7 @@ export default function TopRedeemPage() {
             type="date"
             value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm cursor-pointer"
           />
         </div>
 
@@ -181,12 +186,13 @@ export default function TopRedeemPage() {
             type="date"
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm cursor-pointer"
           />
         </div>
 
         <button 
-          className="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-all duration-200 shadow-sm"
+          onClick={handleApplyFilter}
+          className="px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 cursor-pointer"
         >
           Apply
         </button>
@@ -197,8 +203,9 @@ export default function TopRedeemPage() {
             setSearchQuery("");
             setFilterType("All Time"); 
             setIsMonthView(false); 
+            setAppliedRange({ from: "", to: "" });
           }}
-          className="px-5 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition-all duration-200"
+          className="px-5 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 cursor-pointer"
         >
           Reset
         </button>
@@ -224,7 +231,7 @@ export default function TopRedeemPage() {
             <tbody className="divide-y divide-slate-100">
               {filteredData.length > 0 ? (
                 filteredData.map((item) => (
-                  <tr key={item.userId} className="hover:bg-slate-50 transition-colors duration-150">
+                  <tr key={item.userId} className="hover:bg-slate-50 transition-colors">
                     <td className="px-4 py-4">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${getRankStyle(item.rank)}`}>
                         {item.rank}
@@ -244,10 +251,9 @@ export default function TopRedeemPage() {
                     <td className="px-4 py-4 text-sm font-semibold text-green-600">{item.totalPoints}</td>
                     <td className="px-4 py-4 text-sm text-slate-500 whitespace-nowrap">{item.lastRedeem}</td>
                     <td className="px-4 py-4">
-                      {/* UPDATED: Passing userId as a query parameter */}
                       <button 
                         onClick={() => router.push(`/dashboard/gift-store-order?userId=${item.userId}`)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg text-xs font-medium hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all duration-200 whitespace-nowrap"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg text-xs font-medium hover:bg-blue-600 hover:text-white transition-all cursor-pointer whitespace-nowrap"
                       >
                         View Orders <ArrowRight size={12} />
                       </button>
@@ -256,7 +262,7 @@ export default function TopRedeemPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={11} className="px-4 py-10 text-center text-sm text-slate-500 font-medium">
+                  <td colSpan={11} className="px-4 py-10 text-center text-sm text-slate-500 font-medium italic">
                     No records found matching your criteria.
                   </td>
                 </tr>
