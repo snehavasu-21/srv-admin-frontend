@@ -1,10 +1,10 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import React, { useState, ChangeEvent, useRef, useEffect } from "react";
+import React, { useState, ChangeEvent } from "react";
 import { 
   Search, Eye, ChevronLeft, ChevronRight, 
-  Filter, UserX, Users, X, RotateCcw
+  UserX, Users, X
 } from "lucide-react";
 
 // ─── Types & Interfaces ──────────────────────────────────────────────────────
@@ -14,7 +14,7 @@ interface RejectedUser {
   name: string;
   phone: string;
   address: string;
-  status: "Incomplete" | "Rejected" | "Action Required";
+  status: "Rejected" | "Action Required";
 }
 
 interface SectionLabelProps {
@@ -24,11 +24,11 @@ interface SectionLabelProps {
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
 const usersData: RejectedUser[] = [
-  { id: "3334", name: "Sandeep Singh", phone: "9417320275", address: "Mari Nauabad, Punjab", status: "Incomplete" },
-  { id: "3327", name: "-",             phone: "8571063074", address: "-",                    status: "Incomplete" },
-  { id: "3323", name: "Aman Juneja",   phone: "7889269954", address: "Khuban, Punjab",       status: "Incomplete" },
-  { id: "3312", name: "Puneet Kumar",  phone: "9417345313", address: "Fazilka, Punjab",      status: "Incomplete" },
-  { id: "3303", name: "Manjeet Singh", phone: "7009976900", address: "Mansa, Punjab",        status: "Incomplete" },
+  { id: "3334", name: "Sandeep Singh", phone: "9417320275", address: "Mari Nauabad, Punjab", status: "Rejected" },
+  { id: "3327", name: "-",             phone: "8571063074", address: "-",                    status: "Rejected" },
+  { id: "3323", name: "Aman Juneja",   phone: "7889269954", address: "Khuban, Punjab",       status: "Rejected" },
+  { id: "3312", name: "Puneet Kumar",  phone: "9417345313", address: "Fazilka, Punjab",      status: "Rejected" },
+  { id: "3303", name: "Manjeet Singh", phone: "7009976900", address: "Mansa, Punjab",         status: "Rejected" },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -46,29 +46,11 @@ const SectionLabel: React.FC<SectionLabelProps> = ({ children }) => {
 export default function RejectedKYCPage() {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  
-  // --- New States for View & Filter ---
   const [viewUser, setViewUser] = useState<RejectedUser | null>(null);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<string>("All");
-  const filterRef = useRef<HTMLDivElement>(null);
 
-  // Close filter on click outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
-        setIsFilterOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // --- Filtering Logic ---
+  // --- Filtering Logic (Search Only) ---
   const filtered = usersData.filter((u) => {
-    const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.phone.includes(searchTerm);
-    const matchesStatus = statusFilter === "All" || u.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    return u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.phone.includes(searchTerm);
   });
 
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -93,7 +75,7 @@ export default function RejectedKYCPage() {
               <div className="flex justify-between border-b border-slate-50 pb-2"> <span className="text-slate-500">Name:</span> <span className="text-slate-800 font-semibold">{viewUser.name}</span> </div>
               <div className="flex justify-between border-b border-slate-50 pb-2"> <span className="text-slate-500">Phone:</span> <span className="text-slate-800">{viewUser.phone}</span> </div>
               <div className="flex justify-between border-b border-slate-50 pb-2"> <span className="text-slate-500">Address:</span> <span className="text-slate-800 text-right max-w-[200px]">{viewUser.address}</span> </div>
-              <div className="flex justify-between"> <span className="text-slate-500">Status:</span> <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[11px] font-bold border border-amber-200">{viewUser.status}</span> </div>
+              <div className="flex justify-between"> <span className="text-slate-500">Status:</span> <span className="px-2 py-0.5 rounded-full bg-red-50 text-red-700 text-[11px] font-bold border border-red-200">{viewUser.status}</span> </div>
             </div>
           </div>
         </div>
@@ -136,7 +118,7 @@ export default function RejectedKYCPage() {
         </div>
       </div>
 
-      {/* ── Search + Filter ── */}
+      {/* ── Search ── */}
       <SectionLabel>All Users</SectionLabel>
       <div className="bg-white rounded-xl border border-slate-200 p-4 mb-4 flex flex-col sm:flex-row items-center justify-between gap-3 relative">
         <div className="relative w-full sm:w-72">
@@ -148,38 +130,6 @@ export default function RejectedKYCPage() {
             onChange={handleSearchChange}
             className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
           />
-        </div>
-        
-        <div className="relative" ref={filterRef}>
-          <button 
-            onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-sm font-medium transition-all ${isFilterOpen ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}`}
-          >
-            <Filter size={14} />
-            Filters
-            {statusFilter !== "All" && <span className="w-2 h-2 bg-amber-400 rounded-full" />}
-          </button>
-
-          {isFilterOpen && (
-            <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-slate-200 shadow-xl rounded-xl z-50 p-4 animate-in slide-in-from-top-2">
-              <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-50">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status Filter</span>
-                <button onClick={() => setStatusFilter("All")} className="text-[10px] text-blue-600 font-bold flex items-center gap-1 hover:underline">
-                  <RotateCcw size={10}/> Reset
-                </button>
-              </div>
-              <select 
-                value={statusFilter} 
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none focus:border-blue-500 font-sans"
-              >
-                <option value="All">All Status</option>
-                <option value="Incomplete">Incomplete</option>
-                <option value="Rejected">Rejected</option>
-                <option value="Action Required">Action Required</option>
-              </select>
-            </div>
-          )}
         </div>
       </div>
 
@@ -204,8 +154,8 @@ export default function RejectedKYCPage() {
                   <td className="px-5 py-4 text-sm font-medium text-slate-700">{user.phone}</td>
                   <td className="px-5 py-4 text-sm text-slate-500 max-w-[200px] truncate">{user.address}</td>
                   <td className="px-5 py-4">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-red-50 text-red-700 border border-red-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />
                       {user.status}
                     </span>
                   </td>

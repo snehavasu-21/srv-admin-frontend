@@ -1,10 +1,11 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import React, { useState, useMemo } from "react";
 import {
   Search, Plus, ChevronLeft,
   Wallet, TrendingUp, Users, Receipt,
-  Save, Edit2, RotateCcw, Trash2
+  Save, Edit2, RotateCcw, Trash2, X, AlertCircle, CheckCircle2
 } from "lucide-react";
 
 // --- Interfaces ---
@@ -16,12 +17,6 @@ interface Transaction {
   point: string;
   type: "Credit" | "Debit";
 }
-
-const initialHistoryData: Transaction[] = [
-  { id: "24457", userName: "Amarjeet Singh", description: "Earned 0.5 from Junction Box 1", date: "2026-03-20 10:07", point: "0.5", type: "Credit" },
-  { id: "24456", userName: "Varinder", description: "Earned 1.0 from FDB 4", date: "2026-03-20 10:07", point: "1.0", type: "Credit" },
-  { id: "24452", userName: "Jagjeevan Sharma", description: "Earned 5.0 from 9x3 Draw", date: "2026-03-20 10:03", point: "5.0", type: "Credit" },
-];
 
 export default function WalletHistoryPage() {
   // 1. Primary Data State
@@ -44,19 +39,25 @@ export default function WalletHistoryPage() {
     type: "Credit" as "Credit" | "Debit"
   });
 
-  // --- FILTER LOGIC (Deep Search) ---
+  // 5. Custom Modal State
+  const [modal, setModal] = useState<{
+    show: boolean;
+    title: string;
+    message: string;
+    type: "confirm" | "alert";
+    onConfirm?: () => void;
+  }>({ show: false, title: "", message: "", type: "alert" });
+
+  // --- FILTER LOGIC ---
   const filteredHistory = useMemo(() => {
     return data.filter((item) => {
-      // Convert everything to lowercase for a "fuzzy" search
       const s = searchTerm.toLowerCase();
       const matchesSearch = 
         item.userName.toLowerCase().includes(s) ||
         item.description.toLowerCase().includes(s) ||
         item.id.toLowerCase().includes(s) ||
         item.point.includes(s);
-
       const matchesDropdown = userFilter === "All Users" || item.userName === userFilter;
-      
       return matchesSearch && matchesDropdown;
     });
   }, [data, searchTerm, userFilter]);
@@ -82,7 +83,7 @@ export default function WalletHistoryPage() {
   };
 
   const handleStartEdit = (e: React.MouseEvent, item: Transaction) => {
-    e.stopPropagation(); // STOP the click from selecting the row checkbox
+    e.stopPropagation();
     setEditId(item.id);
     setFormData({
       userName: item.userName,
@@ -94,13 +95,19 @@ export default function WalletHistoryPage() {
   };
 
   const handleSave = () => {
-    if (!formData.userName || !formData.point) return alert("Please fill all fields");
+    if (!formData.userName || !formData.point) {
+      setModal({
+        show: true,
+        title: "Missing Information",
+        message: "Please fill in both the Account Name and Points Value before saving.",
+        type: "alert"
+      });
+      return;
+    }
 
     if (editId) {
-      // UPDATE logic
       setData(prev => prev.map(item => item.id === editId ? { ...item, ...formData } : item));
     } else {
-      // CREATE logic
       const newEntry: Transaction = {
         id: Math.floor(10000 + Math.random() * 90000).toString(),
         ...formData,
@@ -109,22 +116,70 @@ export default function WalletHistoryPage() {
       setData(prev => [newEntry, ...prev]);
     }
 
-    // Reset UI
     setIsAdding(false);
     setEditId(null);
     setFormData({ userName: "", point: "", description: "", type: "Credit" });
   };
 
   const handleDelete = () => {
-    if (window.confirm("Delete selected items?")) {
-      setData(prev => prev.filter(item => !selectedIds.includes(item.id)));
-      setSelectedIds([]);
-    }
+    setModal({
+      show: true,
+      title: "Delete Transactions",
+      message: `Are you sure you want to delete ${selectedIds.length} selected record(s)? This action cannot be undone.`,
+      type: "confirm",
+      onConfirm: () => {
+        setData(prev => prev.filter(item => !selectedIds.includes(item.id)));
+        setSelectedIds([]);
+        setModal(prev => ({ ...prev, show: false }));
+      }
+    });
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] p-4 md:p-10 text-slate-900 font-sans">
+    <div className="min-h-screen bg-[#f8fafc] p-4 md:p-10 text-slate-900 font-sans relative">
       
+      {/* CUSTOM CENTERED MESSAGE BOX (MODAL) */}
+      {modal.show && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in duration-300">
+            <div className="p-8 text-center">
+              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 ${modal.type === 'confirm' ? 'bg-red-50 text-red-500' : 'bg-amber-50 text-amber-500'}`}>
+                {modal.type === 'confirm' ? <Trash2 size={32} /> : <AlertCircle size={32} />}
+              </div>
+              <h3 className="text-xl font-black text-slate-900 tracking-tight">{modal.title}</h3>
+              <p className="text-slate-500 text-sm font-medium mt-3 leading-relaxed">
+                {modal.message}
+              </p>
+            </div>
+            <div className="flex border-t border-slate-100 p-4 gap-3 bg-slate-50/50">
+              {modal.type === "confirm" ? (
+                <>
+                  <button 
+                    onClick={() => setModal(prev => ({ ...prev, show: false }))}
+                    className="flex-1 px-4 py-3 text-sm font-bold text-slate-500 hover:bg-white rounded-xl transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={modal.onConfirm}
+                    className="flex-1 px-4 py-3 text-sm font-bold bg-red-600 text-white rounded-xl shadow-lg shadow-red-100 hover:bg-red-700 transition-all"
+                  >
+                    Yes, Delete
+                  </button>
+                </>
+              ) : (
+                <button 
+                  onClick={() => setModal(prev => ({ ...prev, show: false }))}
+                  className="w-full px-4 py-3 text-sm font-bold bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all"
+                >
+                  Understood
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* HEADER SECTION */}
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
         <div>
@@ -148,7 +203,6 @@ export default function WalletHistoryPage() {
 
       {!isAdding ? (
         <div className="max-w-6xl mx-auto space-y-6">
-          
           {/* STATS AREA */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
@@ -351,3 +405,9 @@ export default function WalletHistoryPage() {
     </div>
   );
 }
+
+const initialHistoryData: Transaction[] = [
+  { id: "24457", userName: "Amarjeet Singh", description: "Earned 0.5 from Junction Box 1", date: "2026-03-20 10:07", point: "0.5", type: "Credit" },
+  { id: "24456", userName: "Varinder", description: "Earned 1.0 from FDB 4", date: "2026-03-20 10:07", point: "1.0", type: "Credit" },
+  { id: "24452", userName: "Jagjeevan Sharma", description: "Earned 5.0 from 9x3 Draw", date: "2026-03-20 10:03", point: "5.0", type: "Credit" },
+];

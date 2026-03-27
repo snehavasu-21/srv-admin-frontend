@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -113,6 +114,27 @@ export default function WithdrawalPage() {
     }
   };
 
+  // --- NEW: CSV Export Logic ---
+  const downloadCSV = () => {
+    const headers = ["ID", "User ID", "User Name", "Phone", "Date", "UPI ID", "Points", "Status"];
+    const csvContent = [
+      headers.join(","),
+      ...filteredData.map(item => 
+        [item.id, item.userId, `"${item.userName}"`, item.phone, item.date, item.upiId, item.points, item.status].join(",")
+      )
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `withdrawals_report_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans text-slate-900 relative">
       
@@ -179,7 +201,10 @@ export default function WithdrawalPage() {
           <h1 className="text-xl font-semibold text-slate-800">Manage Withdrawals</h1>
           <p className="text-sm text-slate-500 mt-0.5">Review and process user payout requests</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-all text-sm font-medium">
+        <button 
+          onClick={downloadCSV}
+          className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-all text-sm font-medium active:scale-95"
+        >
           <FileDown size={15} /> CSV Export
         </button>
       </div>

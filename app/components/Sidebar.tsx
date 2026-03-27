@@ -98,8 +98,11 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <div className="px-4 py-5 flex items-center justify-between flex-shrink-0"
         style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
         
-        {/* Profile/Logo with Hover Effect */}
-        <div className="flex items-center gap-3 overflow-hidden group cursor-pointer hover:opacity-80 transition-all">
+        {/* Redirecting Logo & Text Area */}
+        <Link 
+          href="/dashboard" 
+          className="flex items-center gap-3 overflow-hidden group cursor-pointer hover:opacity-80 transition-all"
+        >
           <div className="w-9 h-9 relative rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105"
             style={{ background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.2)" }}>
             <div className="w-full h-full bg-blue-500/20 flex items-center justify-center text-[10px] font-bold text-blue-400">SRV</div>
@@ -111,7 +114,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
               <p className="text-[10px]" style={{ color: "#60A5FA" }}>Admin Panel</p>
             </div>
           )}
-        </div>
+        </Link>
 
         {/* Toggle Button */}
         <button 
