@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -159,34 +160,78 @@ export default function GiftStoreOrderPage() {
   return (
     <div className="min-h-screen bg-slate-50 p-6 md:p-8 font-sans">
       
-      {/* ─── EDIT MODAL ─── */}
+      {/* ─── EDIT MODAL (Screenshot Fields Added) ─── */}
       {editingOrder && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-          <form onSubmit={handleUpdateOrder} className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-              <h3 className="font-bold text-slate-800">Edit Details</h3>
+          <form onSubmit={handleUpdateOrder} className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-bold text-slate-800 text-lg">Edit User Redeem</h3>
               <button type="button" onClick={() => setEditingOrder(null)} className="text-slate-400 cursor-pointer hover:text-slate-600"><X size={20}/></button>
             </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Receiver Name</label>
-                <input type="text" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none cursor-pointer" value={editingOrder.receiverName} onChange={(e) => setEditingOrder({...editingOrder, receiverName: e.target.value})} />
+            
+            <div className="p-8 space-y-5 max-h-[75vh] overflow-y-auto">
+              {/* User Name */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-bold text-slate-600">User Name :-</label>
+                <input type="text" readOnly className="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded text-sm text-slate-500 outline-none" value={editingOrder.userName} />
               </div>
-              <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Phone Number (10 Digits)</label>
-                <input type="text" maxLength={10} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none cursor-pointer" value={editingOrder.receiverPhone} onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, "");
-                  setEditingOrder({...editingOrder, receiverPhone: val});
-                }} />
+
+              {/* Product Name */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-bold text-slate-600">Product Name :-</label>
+                <input type="text" readOnly className="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded text-sm text-slate-500 outline-none" value={editingOrder.productName} />
               </div>
-              <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Address</label>
-                <textarea className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none resize-none cursor-pointer" rows={3} value={editingOrder.address} onChange={(e) => setEditingOrder({...editingOrder, address: e.target.value})} />
+
+              {/* Product Image */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-bold text-slate-600">Product Image :-</label>
+                <div className="w-32 h-32 border border-slate-200 rounded bg-white flex items-center justify-center overflow-hidden p-2">
+                   <img src="/api/placeholder/120/120" alt="prod" className="max-h-full max-w-full object-contain" />
+                </div>
+              </div>
+
+              {/* Receiver Name */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-bold text-slate-600">Receiver Name :-</label>
+                <input type="text" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded text-sm outline-none cursor-pointer focus:ring-1 focus:ring-blue-500" value={editingOrder.receiverName} onChange={(e) => setEditingOrder({...editingOrder, receiverName: e.target.value})} />
+              </div>
+
+              {/* Receiver Phone */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-bold text-slate-600">Receiver Phone :-</label>
+                <input type="text" maxLength={10} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded text-sm outline-none cursor-pointer" value={editingOrder.receiverPhone} onChange={(e) => setEditingOrder({...editingOrder, receiverPhone: e.target.value.replace(/\D/g, "")})} />
+              </div>
+
+              {/* Address */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-bold text-slate-600">Address :-</label>
+                <textarea className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded text-sm outline-none resize-none cursor-pointer" rows={3} value={editingOrder.address} onChange={(e) => setEditingOrder({...editingOrder, address: e.target.value})} />
+              </div>
+
+              {/* Date */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-bold text-slate-600">Date :-</label>
+                <input type="text" readOnly className="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded text-sm text-slate-500 outline-none" value={editingOrder.date} />
+              </div>
+
+              {/* Redeem Status */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-bold text-slate-600">Redeem Status :-</label>
+                <select 
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded text-sm font-bold outline-none cursor-pointer"
+                  value={editingOrder.status}
+                  onChange={(e) => setEditingOrder({...editingOrder, status: e.target.value as any})}
+                >
+                  <option value="Pending">Pending</option>
+                  <option value="Delivered">Delivered</option>
+                  <option value="Rejected">Rejected</option>
+                </select>
               </div>
             </div>
-            <div className="p-6 bg-slate-50 flex gap-3">
-              <button type="submit" className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold cursor-pointer hover:bg-blue-700 transition-colors">Update</button>
-              <button type="button" onClick={() => setEditingOrder(null)} className="flex-1 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold cursor-pointer hover:bg-slate-50 transition-colors">Cancel</button>
+
+            <div className="p-8 border-t flex gap-4 bg-white">
+              <button type="submit" className="flex-1 py-3 bg-[#1e66b3] text-white rounded font-bold text-sm cursor-pointer shadow-md hover:opacity-90 transition-opacity">Save</button>
+              <button type="button" onClick={() => setEditingOrder(null)} className="flex-1 py-3 bg-[#e64a3b] text-white rounded font-bold text-sm cursor-pointer shadow-md hover:opacity-90 transition-opacity">Cancel</button>
             </div>
           </form>
         </div>

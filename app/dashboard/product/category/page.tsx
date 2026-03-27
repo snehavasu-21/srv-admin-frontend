@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react/no-unescaped-entities */
 "use client";
@@ -6,7 +7,7 @@ import React, { useState, useMemo, useRef, useEffect } from "react";
 import { 
   Search, Plus, FileDown, Edit2, Trash2, 
   Filter, LayoutGrid, AlertCircle, X, Save, Image as ImageIcon, CheckCircle2
-} from "lucide-react";
+} from "lucide-center";
 import Link from "next/link";
 
 const INITIAL_DATA = [
@@ -19,10 +20,17 @@ const INITIAL_DATA = [
 ];
 
 export default function CategoryPage() {
-  const [data, setData] = useState<any[]>([]);
+  // FIXED: Using initializer function to prevent cascading renders
+  const [data, setData] = useState<any[]>(() => {
+    if (typeof window !== "undefined") {
+      const savedData = localStorage.getItem("srv_categories");
+      return savedData ? JSON.parse(savedData) : INITIAL_DATA;
+    }
+    return INITIAL_DATA;
+  });
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("All");
   const filterRef = useRef<HTMLDivElement>(null);
@@ -43,13 +51,9 @@ export default function CategoryPage() {
     message: ""
   });
 
-  // Load from LocalStorage on mount
+  // Ensure initial data is in localStorage after first mount
   useEffect(() => {
-    const savedData = localStorage.getItem("srv_categories");
-    if (savedData) {
-      setData(JSON.parse(savedData));
-    } else {
-      setData(INITIAL_DATA);
+    if (!localStorage.getItem("srv_categories")) {
       localStorage.setItem("srv_categories", JSON.stringify(INITIAL_DATA));
     }
   }, []);
@@ -114,17 +118,14 @@ export default function CategoryPage() {
       showCenterMessage("Updated!", `Status set to ${confirmModal.statusToSet}.`);
     }
     updateDataAndStorage(newData);
-    setConfirmModal({ isOpen: false, type: 'single' });
+    setConfirmModal({ ...confirmModal, isOpen: false });
   };
 
-  // FIXED: Saving logic for Edit Modal
   const handleEditSave = () => {
     if (!editModal.category) return;
-    
     const newData = data.map(item => 
       item.id === editModal.category.id ? { ...editModal.category } : item
     );
-    
     updateDataAndStorage(newData);
     setEditModal({ isOpen: false, category: null });
     showCenterMessage("Saved!", "Category details updated successfully.");
@@ -155,7 +156,7 @@ export default function CategoryPage() {
               <h3 className="font-bold text-slate-800">{messageBox.title}</h3>
               <p className="text-xs text-slate-500 mt-1">{messageBox.message}</p>
             </div>
-            <button onClick={() => setMessageBox({...messageBox, isOpen: false})} className="w-full py-3 bg-slate-50 border-t border-slate-100 text-xs font-bold text-slate-600">Dismiss</button>
+            <button onClick={() => setMessageBox({...messageBox, isOpen: false})} className="w-full py-3 bg-slate-50 border-t border-slate-100 text-xs font-bold text-slate-600 cursor-pointer">Dismiss</button>
           </div>
         </div>
       )}
@@ -166,7 +167,7 @@ export default function CategoryPage() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-200">
             <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
               <h3 className="font-bold text-slate-800">Edit Category #{editModal.category.id}</h3>
-              <button onClick={() => setEditModal({ isOpen: false, category: null })} className="text-slate-400 hover:text-slate-600 transition-colors hover:rotate-90"><X size={20} /></button>
+              <button onClick={() => setEditModal({ isOpen: false, category: null })} className="text-slate-400 hover:text-slate-600 transition-colors hover:rotate-90 cursor-pointer"><X size={20} /></button>
             </div>
             <div className="p-6 space-y-5">
               <div>
@@ -206,14 +207,14 @@ export default function CategoryPage() {
                 </div>
                 <div>
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 block">Status</label>
-                  <select value={editModal.category.status} onChange={(e) => setEditModal({ ...editModal, category: { ...editModal.category, status: e.target.value } })} className="w-full px-3 py-[11px] bg-slate-50 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20">
+                  <select value={editModal.category.status} onChange={(e) => setEditModal({ ...editModal, category: { ...editModal.category, status: e.target.value } })} className="w-full px-3 py-[11px] bg-slate-50 border rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer">
                     <option value="Enable">Enable</option>
                     <option value="Disable">Disable</option>
                   </select>
                 </div>
               </div>
 
-              <button onClick={handleEditSave} className="w-full py-3.5 bg-blue-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-700 transition-all active:scale-[0.98] shadow-lg shadow-blue-100"><Save size={16} /> Save Changes</button>
+              <button onClick={handleEditSave} className="w-full py-3.5 bg-blue-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-700 transition-all active:scale-[0.98] shadow-lg shadow-blue-100 cursor-pointer"><Save size={16} /> Save Changes</button>
             </div>
           </div>
         </div>
@@ -229,8 +230,8 @@ export default function CategoryPage() {
               <p className="text-sm text-slate-500 mt-2">Are you sure you want to proceed?</p>
             </div>
             <div className="flex border-t border-slate-100">
-              <button onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })} className="flex-1 px-4 py-4 text-sm font-semibold border-r hover:bg-slate-50 transition-colors text-slate-600">Cancel</button>
-              <button onClick={executeAction} className={`flex-1 px-4 py-4 text-sm font-semibold hover:bg-slate-50 transition-colors ${confirmModal.type.includes('status') ? 'text-blue-600' : 'text-rose-600'}`}>Confirm</button>
+              <button onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })} className="flex-1 px-4 py-4 text-sm font-semibold border-r hover:bg-slate-50 transition-colors text-slate-600 cursor-pointer">Cancel</button>
+              <button onClick={executeAction} className={`flex-1 px-4 py-4 text-sm font-semibold hover:bg-slate-50 transition-colors cursor-pointer ${confirmModal.type.includes('status') ? 'text-blue-600' : 'text-rose-600'}`}>Confirm</button>
             </div>
           </div>
         </div>
@@ -246,7 +247,7 @@ export default function CategoryPage() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-all shadow-sm font-semibold"><FileDown size={16} /> Export</button>
+          <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition-all shadow-sm font-semibold cursor-pointer"><FileDown size={16} /> Export</button>
           <Link href="/dashboard/product/category/add" className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-all shadow-md shadow-blue-100"><Plus size={16} /> Add Category</Link>
         </div>
       </div>
@@ -259,7 +260,7 @@ export default function CategoryPage() {
             <input type="text" placeholder="Search categories..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500/10" />
           </div>
           <div className="flex items-center gap-2 relative" ref={filterRef}>
-            <button onClick={() => setIsFilterOpen(!isFilterOpen)} className={`px-4 py-2.5 border rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${isFilterOpen ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'bg-white text-slate-600'}`}><Filter size={16} /> Filter</button>
+            <button onClick={() => setIsFilterOpen(!isFilterOpen)} className={`px-4 py-2.5 border rounded-lg text-sm font-bold flex items-center gap-2 transition-all cursor-pointer ${isFilterOpen ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'bg-white text-slate-600'}`}><Filter size={16} /> Filter</button>
             {isFilterOpen && (
               <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-slate-100 shadow-2xl rounded-2xl z-50 p-4 animate-in slide-in-from-top-2">
                 {["All", "Enable", "Disable"].map((s) => (
@@ -284,7 +285,7 @@ export default function CategoryPage() {
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50/80 text-slate-400 font-bold uppercase text-[10px] tracking-widest border-b border-slate-100">
               <tr>
-                <th className="px-6 py-4 w-10 text-center"><input type="checkbox" checked={selectedIds.length === filteredData.length && filteredData.length > 0} onChange={toggleSelectAll} className="w-4 h-4 rounded accent-blue-600" /></th>
+                <th className="px-6 py-4 w-10 text-center"><input type="checkbox" checked={selectedIds.length === filteredData.length && filteredData.length > 0} onChange={toggleSelectAll} className="w-4 h-4 rounded accent-blue-600 cursor-pointer" /></th>
                 <th className="px-6 py-4">Image</th>
                 <th className="px-6 py-4">ID</th>
                 <th className="px-6 py-4">Category Name</th>
@@ -315,8 +316,8 @@ export default function CategoryPage() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-1">
-                      <button onClick={() => setEditModal({ isOpen: true, category: { ...cat } })} className="p-2 text-amber-500 hover:bg-amber-100 rounded-lg transition-all active:scale-90"><Edit2 size={16}/></button>
-                      <button onClick={() => setConfirmModal({ isOpen: true, type: 'single', targetId: cat.id })} className="p-2 text-rose-500 hover:bg-rose-100 rounded-lg transition-all active:scale-90"><Trash2 size={16}/></button>
+                      <button onClick={() => setEditModal({ isOpen: true, category: { ...cat } })} className="p-2 text-amber-500 hover:bg-amber-100 rounded-lg transition-all active:scale-90 cursor-pointer"><Edit2 size={16}/></button>
+                      <button onClick={() => setConfirmModal({ isOpen: true, type: 'single', targetId: cat.id })} className="p-2 text-rose-500 hover:bg-rose-100 rounded-lg transition-all active:scale-90 cursor-pointer"><Trash2 size={16}/></button>
                     </div>
                   </td>
                 </tr>
