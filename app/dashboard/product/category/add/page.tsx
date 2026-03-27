@@ -30,11 +30,12 @@ export default function AddCategoryPage() {
     // 1. Get existing data
     const existingData = JSON.parse(localStorage.getItem("srv_categories") || "[]");
 
-    // 2. Create new category object
+    // 2. Create new category object 
+    // Yahan colorCode key add kar di hai jo list page par render hogi
     const newCategory = {
-      id: Math.floor(Math.random() * 1000).toString(), // Generating a random ID for demo
+      id: Math.floor(Math.random() * 1000).toString(),
       name: categoryName,
-      colorCode: colorCode,
+      colorCode: colorCode, // Ab ye sahi se save hoga
       status: "Enable",
       image: imagePreview || ""
     };
@@ -100,7 +101,7 @@ export default function AddCategoryPage() {
             />
           </div>
 
-          {/* Color Picker */}
+          {/* Color Picker - Fixed Logic */}
           <div className="flex flex-col md:flex-row md:items-center gap-6">
             <label className="w-48 text-sm font-bold text-slate-600 uppercase tracking-wide">Color Code :-</label>
             <div className="flex items-center gap-4">
@@ -110,7 +111,14 @@ export default function AddCategoryPage() {
                 onChange={(e) => setColorCode(e.target.value)}
                 className="w-14 h-14 p-1 bg-white border border-slate-200 rounded-xl cursor-pointer shadow-sm"
               />
-              <span className="text-sm font-mono font-bold text-slate-500 bg-slate-100 px-4 py-2 rounded-lg uppercase tracking-wider">{colorCode}</span>
+              <span className="text-sm font-mono font-bold text-slate-500 bg-slate-100 px-4 py-2 rounded-lg uppercase tracking-wider">
+                {colorCode}
+              </span>
+              {/* Added a small circle for visual confirmation */}
+              <div 
+                className="w-6 h-6 rounded-full border border-slate-200" 
+                style={{ backgroundColor: colorCode }}
+              />
             </div>
           </div>
 

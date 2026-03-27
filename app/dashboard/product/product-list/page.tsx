@@ -2,12 +2,12 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import React, { useState, useRef, useMemo } from "react";
+import React, { useState, useRef, useMemo, useEffect } from "react";
 import {
   Search, Plus, Package, Edit2, Trash2,
   ChevronLeft, ChevronRight, X, Save,
   AlertCircle, CheckCircle2, FileDown,
-  Image as ImageIcon, MoreVertical
+  Image as ImageIcon, Video, Layers
 } from "lucide-react";
 
 // ─── TypeScript Interfaces ──────────────────────────────────────────────────
@@ -18,9 +18,18 @@ interface Product {
   id: string;
   category: string;
   name: string;
-  productImage: string; 
+  productImage: string;
+  galleryImage: string;
   oriPrice: string;
   offerPrice: string;
+  description: string;
+  howToUse: string;
+  video1: string;
+  video2: string;
+  qty: string;
+  unit: string;
+  point: string;
+  variation: string;
   status: ToggleStatus;
   featured: ToggleStatus;
 }
@@ -29,14 +38,18 @@ interface SectionLabelProps {
   children: React.ReactNode;
 }
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
+// ─── Categories ─────────────────────────────────────────────────────────────
 
-const productsData: Product[] = [
-  { id: "302", category: "PVC Casing Batten", name: "PVC Casing Batten", productImage: "", oriPrice: "76", offerPrice: "45.6", status: "Enable", featured: "Disable" },
-  { id: "301", category: "PVC Casing Batten", name: "PVC Casing Batten", productImage: "", oriPrice: "70", offerPrice: "42", status: "Enable", featured: "Disable" },
-  { id: "300", category: "PVC Casing Batten", name: "PVC Casing Batten", productImage: "", oriPrice: "51", offerPrice: "30.6", status: "Enable", featured: "Disable" },
-  { id: "299", category: "PVC Conduit Bend",  name: "Conduit Bend Medium 2.5\"", productImage: "", oriPrice: "91", offerPrice: "54.6", status: "Enable", featured: "Disable" },
-  { id: "298", category: "PVC Conduit Pipe",  name: "Conduit Pipe Medium 1.50\"", productImage: "", oriPrice: "356", offerPrice: "213.6", status: "Disable", featured: "Disable" },
+const CATEGORIES = [
+  "Bus Bar Premium", "Bus Bar Super", "Change Over", "Concealed Box",
+  "Draw SPN MCB Box", "DRAW TPN MCB Box", "ECO SPN DD MCB Box", "Fan Box",
+  "Fan Rods", "GI TPN MCB BOX", "Junction Box", "Kitkat Fuses",
+  "Knife Type Change Over Switches", "Main Switch Fuse Units",
+  "Modular Box Draw Pc", "Module Box Draw GP", "Module Box Eco BR",
+  "Module Box ECO MS PC", "Module Box Platinum PC", "Module Box Super PC",
+  "NOVA SPN DD MCB Box", "Plastic Round Sheet", "PVC Casing Batten",
+  "PVC CONDUIT BEND", "PVC CONDUIT PIPE", "PVC Junction Box",
+  "SPN SD MCB Box", "SURFACE TYPE PVC MCB", "VENTOGUARD"
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -52,7 +65,7 @@ function SectionLabel({ children }: SectionLabelProps) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ProductListPage() {
-  const [products, setProducts] = useState<Product[]>(productsData);
+  const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [categoryFilter, setCategoryFilter] = useState<string>("All Categories");
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -70,18 +83,42 @@ export default function ProductListPage() {
 
   // Refs for Image Uploads
   const modalFileInputRef = useRef<HTMLInputElement>(null);
+  const galleryFileInputRef = useRef<HTMLInputElement>(null);
   const tableFileInputRef = useRef<HTMLInputElement>(null);
   const [activeTableId, setActiveTableId] = useState<string | null>(null);
 
   // Form State
-  const [formData, setFormData] = useState({
+  const initialFormState = {
     name: "",
-    category: "PVC Casing Batten",
+    category: "",
     productImage: "",
+    galleryImage: "",
     oriPrice: "",
     offerPrice: "",
+    description: "",
+    howToUse: "",
+    video1: "",
+    video2: "",
+    qty: "",
+    unit: "",
+    point: "",
+    variation: "",
     status: "Enable" as ToggleStatus
-  });
+  };
+
+  const [formData, setFormData] = useState(initialFormState);
+
+  // --- LOCAL STORAGE LOGIC ---
+  useEffect(() => {
+    const saved = localStorage.getItem("srv_products");
+    if (saved) {
+      setProducts(JSON.parse(saved));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("srv_products", JSON.stringify(products));
+  }, [products]);
 
   // --- LOGIC ---
 
@@ -98,9 +135,8 @@ export default function ProductListPage() {
     });
   }, [products, searchTerm, categoryFilter]);
 
-  // --- SELECTION LOGIC ---
   const toggleSelectAll = () => {
-    if (selectedIds.length === filteredProducts.length) {
+    if (selectedIds.length === filteredProducts.length && filteredProducts.length > 0) {
       setSelectedIds([]);
     } else {
       setSelectedIds(filteredProducts.map(p => p.id));
@@ -118,13 +154,11 @@ export default function ProductListPage() {
       showToast("Please select items first");
       return;
     }
-
     if (action === "Delete") {
       setIsBulkDelete(true);
       setIsDeleteModalOpen(true);
       return;
     }
-
     if (action === "Enable" || action === "Disable") {
       setProducts(prev => prev.map(p => 
         selectedIds.includes(p.id) ? { ...p, status: action as ToggleStatus } : p
@@ -134,13 +168,15 @@ export default function ProductListPage() {
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, isTable: boolean = false) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'main' | 'gallery' | 'table' = 'main') => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
       const imageUrl = URL.createObjectURL(file);
-      if (isTable && activeTableId) {
+      if (type === 'table' && activeTableId) {
         setProducts(prev => prev.map(p => p.id === activeTableId ? { ...p, productImage: imageUrl } : p));
         showToast("Image updated");
+      } else if (type === 'gallery') {
+        setFormData(prev => ({ ...prev, galleryImage: imageUrl }));
       } else {
         setFormData(prev => ({ ...prev, productImage: imageUrl }));
       }
@@ -150,20 +186,13 @@ export default function ProductListPage() {
 
   const handleOpenAdd = () => {
     setEditingProduct(null);
-    setFormData({ name: "", category: "PVC Casing Batten", productImage: "", oriPrice: "", offerPrice: "", status: "Enable" });
+    setFormData(initialFormState);
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (prod: Product) => {
     setEditingProduct(prod);
-    setFormData({
-      name: prod.name,
-      category: prod.category,
-      productImage: prod.productImage,
-      oriPrice: prod.oriPrice,
-      offerPrice: prod.offerPrice,
-      status: prod.status
-    });
+    setFormData({ ...prod });
     setIsModalOpen(true);
   };
 
@@ -200,27 +229,16 @@ export default function ProductListPage() {
   };
 
   const handleExportCSV = () => {
-    const headers = ["ID", "Category", "Name", "Original Price", "Offer Price", "Status"];
-    const csvRows = filteredProducts.map(p => [
-      p.id,
-      p.category,
-      `"${p.name}"`, 
-      p.oriPrice,
-      p.offerPrice,
-      p.status
-    ].join(","));
-
+    const headers = ["ID", "Category", "Name", "Price", "Offer", "Qty", "Unit"];
+    const csvRows = filteredProducts.map(p => [p.id, p.category, `"${p.name}"`, p.oriPrice, p.offerPrice, p.qty, p.unit].join(","));
     const csvContent = [headers.join(","), ...csvRows].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "srv_electricals_inventory.csv");
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
+    link.href = url;
+    link.download = "srv_inventory.csv";
     link.click();
-    document.body.removeChild(link);
-    showToast("CSV Exported successfully");
+    showToast("CSV Exported");
   };
 
   const enabledCount = products.filter(p => p.status === "Enable").length;
@@ -229,8 +247,9 @@ export default function ProductListPage() {
   return (
     <div className="min-h-screen bg-slate-100 p-6 md:p-8 font-sans relative">
       
-      <input type="file" ref={modalFileInputRef} onChange={(e) => handleImageUpload(e)} accept="image/*" className="hidden" />
-      <input type="file" ref={tableFileInputRef} onChange={(e) => handleImageUpload(e, true)} accept="image/*" className="hidden" />
+      <input type="file" ref={modalFileInputRef} onChange={(e) => handleImageUpload(e, 'main')} accept="image/*" className="hidden" />
+      <input type="file" ref={galleryFileInputRef} onChange={(e) => handleImageUpload(e, 'gallery')} accept="image/*" className="hidden" />
+      <input type="file" ref={tableFileInputRef} onChange={(e) => handleImageUpload(e, 'table')} accept="image/*" className="hidden" />
 
       {toast.visible && (
         <div className="fixed bottom-10 right-10 z-[110] flex items-center gap-3 px-6 py-3 bg-slate-900 text-white rounded-2xl shadow-2xl transition-all animate-bounce">
@@ -239,6 +258,7 @@ export default function ProductListPage() {
         </div>
       )}
 
+      {/* Delete Confirmation Modal */}
       {isDeleteModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
           <div className="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl text-center">
@@ -255,61 +275,119 @@ export default function ProductListPage() {
         </div>
       )}
 
+      {/* Main Add/Edit Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-          <form onSubmit={handleSaveProduct} className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b flex justify-between items-center">
+          <form onSubmit={handleSaveProduct} className="bg-white w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b flex justify-between items-center bg-white sticky top-0 z-10">
               <h3 className="font-bold text-slate-800">{editingProduct ? 'Edit' : 'Add'} Product</h3>
               <X className="cursor-pointer text-slate-400" onClick={() => setIsModalOpen(false)} />
             </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase">Product Image</label>
-                <div 
-                  onClick={() => modalFileInputRef.current?.click()}
-                  className="mt-1 w-full h-32 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 transition-all overflow-hidden"
-                >
-                  {formData.productImage ? (
-                    <img src={formData.productImage} alt="Preview" className="w-full h-full object-cover" />
-                  ) : (
-                    <>
-                      <ImageIcon size={20} className="text-slate-300 mb-1" />
-                      <p className="text-[10px] font-bold text-slate-400">Click to upload</p>
-                    </>
-                  )}
-                </div>
-              </div>
-              <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase">Name</label>
-                <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full mt-1 px-4 py-2 bg-slate-50 border rounded-xl cursor-pointer" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+            
+            <div className="p-6 overflow-y-auto space-y-6">
+              {/* Category and Name */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Price (₹)</label>
-                  <input required type="number" value={formData.oriPrice} onChange={e => setFormData({...formData, oriPrice: e.target.value})} className="w-full mt-1 px-4 py-2 bg-slate-50 border rounded-xl cursor-pointer" />
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Category Name :-</label>
+                  <select required value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full mt-1 px-4 py-2 bg-slate-50 border rounded-xl text-sm">
+                    <option value="">--Select Category--</option>
+                    {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  </select>
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Offer (₹)</label>
-                  <input required type="number" value={formData.offerPrice} onChange={e => setFormData({...formData, offerPrice: e.target.value})} className="w-full mt-1 px-4 py-2 bg-slate-50 border rounded-xl cursor-pointer" />
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Name :-</label>
+                  <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full mt-1 px-4 py-2 bg-slate-50 border rounded-xl text-sm" />
                 </div>
               </div>
-              <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase">Category</label>
-                <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="w-full mt-1 px-4 py-2 bg-slate-50 border rounded-xl cursor-pointer">
-                  <option>PVC Casing Batten</option>
-                  <option>PVC Conduit Bend</option>
-                  <option>PVC Conduit Pipe</option>
-                </select>
+
+              {/* Images */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Select Image :- (300x300 Square)</label>
+                  <div onClick={() => modalFileInputRef.current?.click()} className="mt-1 w-full h-32 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 overflow-hidden">
+                    {formData.productImage ? <img src={formData.productImage} className="w-full h-full object-cover" alt="" /> : <ImageIcon size={24} className="text-slate-300" />}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Gallery Image :- (300x300 Square)</label>
+                  <div onClick={() => galleryFileInputRef.current?.click()} className="mt-1 w-full h-32 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 overflow-hidden">
+                    {formData.galleryImage ? <img src={formData.galleryImage} className="w-full h-full object-cover" alt="" /> : <ImageIcon size={24} className="text-slate-300" />}
+                  </div>
+                </div>
+              </div>
+
+              {/* Prices */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Original Price :-</label>
+                  <input type="number" value={formData.oriPrice} onChange={e => setFormData({...formData, oriPrice: e.target.value})} className="w-full mt-1 px-4 py-2 bg-slate-50 border rounded-xl text-sm" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Offer Price :-</label>
+                  <input type="number" value={formData.offerPrice} onChange={e => setFormData({...formData, offerPrice: e.target.value})} className="w-full mt-1 px-4 py-2 bg-slate-50 border rounded-xl text-sm" />
+                </div>
+              </div>
+
+              {/* Text Areas */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Description :-</label>
+                  <textarea rows={3} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full mt-1 px-4 py-2 bg-slate-50 border rounded-xl text-sm" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">How to Use :-</label>
+                  <textarea rows={3} value={formData.howToUse} onChange={e => setFormData({...formData, howToUse: e.target.value})} className="w-full mt-1 px-4 py-2 bg-slate-50 border rounded-xl text-sm" />
+                </div>
+              </div>
+
+              {/* Videos */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Video1 (URL) :-</label>
+                  <div className="flex items-center gap-2 mt-1 px-4 py-2 bg-slate-50 border rounded-xl">
+                    <Video size={14} className="text-slate-400" />
+                    <input value={formData.video1} onChange={e => setFormData({...formData, video1: e.target.value})} className="bg-transparent w-full text-sm outline-none" placeholder="https://..." />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase">Video2 (URL) :-</label>
+                  <div className="flex items-center gap-2 mt-1 px-4 py-2 bg-slate-50 border rounded-xl">
+                    <Video size={14} className="text-slate-400" />
+                    <input value={formData.video2} onChange={e => setFormData({...formData, video2: e.target.value})} className="bg-transparent w-full text-sm outline-none" placeholder="https://..." />
+                  </div>
+                </div>
+              </div>
+
+              {/* Variations & Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                <div>
+                  <label className="text-[10px] font-bold text-blue-400 uppercase">Qty *</label>
+                  <input required value={formData.qty} onChange={e => setFormData({...formData, qty: e.target.value})} className="w-full mt-1 px-3 py-1.5 bg-white border rounded-lg text-sm" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-blue-400 uppercase">Unit *</label>
+                  <input required value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})} className="w-full mt-1 px-3 py-1.5 bg-white border rounded-lg text-sm" placeholder="e.g. Pcs" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-blue-400 uppercase">Point *</label>
+                  <input required value={formData.point} onChange={e => setFormData({...formData, point: e.target.value})} className="w-full mt-1 px-3 py-1.5 bg-white border rounded-lg text-sm" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-blue-400 uppercase">Variation</label>
+                  <input value={formData.variation} onChange={e => setFormData({...formData, variation: e.target.value})} className="w-full mt-1 px-3 py-1.5 bg-white border rounded-lg text-sm" />
+                </div>
               </div>
             </div>
-            <div className="p-6 bg-slate-50 flex justify-end gap-3">
-              <button type="button" onClick={() => setIsModalOpen(false)} className="text-slate-500 text-sm font-bold cursor-pointer">Cancel</button>
-              <button type="submit" className="px-6 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold flex items-center gap-2 cursor-pointer"><Save size={16}/> Save</button>
+
+            <div className="p-6 bg-slate-50 flex justify-end gap-3 border-t">
+              <button type="button" onClick={() => setIsModalOpen(false)} className="text-slate-500 text-sm font-bold px-4">Cancel</button>
+              <button type="submit" className="px-8 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-blue-200"><Save size={16}/> Save Product</button>
             </div>
           </form>
         </div>
       )}
 
+      {/* Header UI */}
       <div className="flex flex-wrap items-end justify-between gap-3 mb-2">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center shadow-sm">
@@ -362,32 +440,25 @@ export default function ProductListPage() {
               className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/10 outline-none cursor-pointer"
             />
           </div>
-          {/* ── BULK ACTION DROPDOWN ── */}
-          <div className="flex items-center gap-2">
-            <select 
-              className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
-              value=""
-              onChange={(e) => handleBulkAction(e.target.value)}
-            >
-              <option value="" disabled>Bulk Action ({selectedIds.length})</option>
-              <option value="Enable">Set Enabled</option>
-              <option value="Disable">Set Disabled</option>
-              <option value="Delete">Delete Selected</option>
-            </select>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
           <select 
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
+            className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm font-bold outline-none cursor-pointer"
+            value=""
+            onChange={(e) => handleBulkAction(e.target.value)}
           >
-            <option>All Categories</option>
-            <option>PVC Casing Batten</option>
-            <option>PVC Conduit Bend</option>
-            <option>PVC Conduit Pipe</option>
+            <option value="" disabled>Bulk Action ({selectedIds.length})</option>
+            <option value="Enable">Set Enabled</option>
+            <option value="Disable">Set Disabled</option>
+            <option value="Delete">Delete Selected</option>
           </select>
         </div>
+        <select 
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-lg text-sm font-medium outline-none"
+        >
+          <option>All Categories</option>
+          {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+        </select>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
@@ -396,52 +467,42 @@ export default function ProductListPage() {
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
                 <th className="px-5 py-3.5 w-10">
-                  <input 
-                    type="checkbox" 
-                    className="w-4 h-4 rounded cursor-pointer" 
-                    checked={selectedIds.length === filteredProducts.length && filteredProducts.length > 0}
-                    onChange={toggleSelectAll}
-                  />
+                  <input type="checkbox" className="w-4 h-4 rounded" checked={selectedIds.length === filteredProducts.length && filteredProducts.length > 0} onChange={toggleSelectAll} />
                 </th>
-                {["ID", "Product", "Category", "Status", "Price", "Actions"].map((h) => (
+                {["ID", "Product", "Category", "Stock Info", "Status", "Price", "Actions"].map((h) => (
                   <th key={h} className="px-5 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredProducts.map((prod) => (
-                <tr key={prod.id} className={`hover:bg-slate-50/80 transition-colors group ${selectedIds.includes(prod.id) ? 'bg-blue-50/40' : ''}`}>
+                <tr key={prod.id} className={`hover:bg-slate-50/80 transition-colors ${selectedIds.includes(prod.id) ? 'bg-blue-50/40' : ''}`}>
                   <td className="px-5 py-4">
-                    <input 
-                      type="checkbox" 
-                      className="w-4 h-4 rounded cursor-pointer" 
-                      checked={selectedIds.includes(prod.id)}
-                      onChange={() => toggleSelectRow(prod.id)}
-                    />
+                    <input type="checkbox" className="w-4 h-4 rounded" checked={selectedIds.includes(prod.id)} onChange={() => toggleSelectRow(prod.id)} />
                   </td>
                   <td className="px-5 py-4 text-xs font-medium text-slate-400">#{prod.id}</td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <div className="flex flex-col items-center gap-1">
                         <div className="w-10 h-10 rounded-lg bg-orange-50 border border-slate-100 flex items-center justify-center overflow-hidden">
-                          {prod.productImage ? (
-                            <img src={prod.productImage} className="w-full h-full object-cover" alt="" />
-                          ) : (
-                            <Package size={16} className="text-orange-500" />
-                          )}
+                          {prod.productImage ? <img src={prod.productImage} className="w-full h-full object-cover" alt="" /> : <Package size={16} className="text-orange-500" />}
                         </div>
-                        <button 
-                          onClick={() => { setActiveTableId(prod.id); tableFileInputRef.current?.click(); }}
-                          className="text-[8px] font-bold text-blue-600 uppercase hover:underline cursor-pointer"
-                        >
-                          Change
-                        </button>
+                        <button onClick={() => { setActiveTableId(prod.id); tableFileInputRef.current?.click(); }} className="text-[8px] font-bold text-blue-600 uppercase hover:underline">Change</button>
                       </div>
-                      <span className="text-sm font-medium text-slate-800">{prod.name}</span>
+                      <div>
+                        <p className="text-sm font-medium text-slate-800">{prod.name}</p>
+                        <p className="text-[10px] text-slate-400 truncate w-32">{prod.variation || 'No variation'}</p>
+                      </div>
                     </div>
                   </td>
                   <td className="px-5 py-4">
                     <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">{prod.category}</span>
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-1.5 text-slate-600">
+                      <Layers size={12} />
+                      <span className="text-xs font-bold">{prod.qty} {prod.unit}</span>
+                    </div>
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex bg-slate-100 p-0.5 rounded-lg w-[120px] border">
@@ -470,13 +531,9 @@ export default function ProductListPage() {
             Showing <span className="text-slate-600 font-semibold">{filteredProducts.length}</span> of <span className="text-slate-600 font-semibold">{products.length}</span>
           </p>
           <div className="flex items-center gap-1.5">
-            <button disabled={currentPage === 1} className="w-8 h-8 flex items-center justify-center rounded-lg border opacity-30 cursor-not-allowed">
-              <ChevronLeft size={14} />
-            </button>
-            <button className="w-8 h-8 rounded-lg text-xs font-bold bg-blue-600 text-white cursor-pointer">1</button>
-            <button disabled className="w-8 h-8 flex items-center justify-center rounded-lg border opacity-30 cursor-not-allowed">
-              <ChevronRight size={14} />
-            </button>
+            <button disabled className="w-8 h-8 flex items-center justify-center rounded-lg border opacity-30 cursor-not-allowed"><ChevronLeft size={14} /></button>
+            <button className="w-8 h-8 rounded-lg text-xs font-bold bg-blue-600 text-white">1</button>
+            <button disabled className="w-8 h-8 flex items-center justify-center rounded-lg border opacity-30 cursor-not-allowed"><ChevronRight size={14} /></button>
           </div>
         </div>
       </div>
