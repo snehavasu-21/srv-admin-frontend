@@ -135,7 +135,7 @@ export default function NotificationPage() {
       {isPanelOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           {/* Overlay */}
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in" onClick={() => setIsPanelOpen(false)}></div>
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in cursor-pointer" onClick={() => setIsPanelOpen(false)}></div>
           
           {/* Modal Box */}
           <div className="relative bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
@@ -147,7 +147,7 @@ export default function NotificationPage() {
                   </h3>
                   <p className="text-xs text-slate-500 mt-1">Send push notifications to your users</p>
                 </div>
-                <button onClick={() => setIsPanelOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors"><X size={20}/></button>
+                <button onClick={() => setIsPanelOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors cursor-pointer"><X size={20}/></button>
               </div>
               
               <form onSubmit={handleSend} className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -155,7 +155,7 @@ export default function NotificationPage() {
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Select Target</label>
                   <div className="flex gap-3 mt-2">
                     {(["All Users", "Individual User"] as const).map((t) => (
-                      <button key={t} type="button" onClick={() => setFormData({...formData, type: t})} className={`flex-1 py-3 rounded-xl text-xs font-bold border transition-all ${formData.type === t ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'}`}>
+                      <button key={t} type="button" onClick={() => setFormData({...formData, type: t})} className={`flex-1 py-3 rounded-xl text-xs font-bold border transition-all cursor-pointer ${formData.type === t ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'}`}>
                         {t}
                       </button>
                     ))}
@@ -181,8 +181,8 @@ export default function NotificationPage() {
               </form>
 
               <div className="p-6 border-t bg-slate-50 flex gap-4">
-                <button type="button" onClick={() => setIsPanelOpen(false)} className="flex-1 py-3.5 text-slate-600 font-bold text-sm">Cancel</button>
-                <button onClick={handleSend} className="flex-[2] py-3.5 bg-blue-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all active:scale-95">
+                <button type="button" onClick={() => setIsPanelOpen(false)} className="flex-1 py-3.5 text-slate-600 font-bold text-sm cursor-pointer hover:bg-slate-100 rounded-xl transition-all">Cancel</button>
+                <button onClick={handleSend} className="flex-[2] py-3.5 bg-blue-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all active:scale-95 cursor-pointer">
                   <Send size={18}/> Send Now
                 </button>
               </div>
@@ -197,7 +197,7 @@ export default function NotificationPage() {
           <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Manage Notification</h1>
           <p className="text-sm text-slate-500 mt-1">Push Messaging Center and Broadcast Control</p>
         </div>
-        <button onClick={() => setIsPanelOpen(true)} className="flex items-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all text-sm font-bold shadow-lg shadow-blue-200 active:scale-95">
+        <button onClick={() => setIsPanelOpen(true)} className="flex items-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all text-sm font-bold shadow-lg shadow-blue-200 active:scale-95 cursor-pointer">
           <Megaphone size={16} />
           Broadcast Notification
         </button>
@@ -226,7 +226,7 @@ export default function NotificationPage() {
         </div>
         
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-100 transition-all">
+          <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-100 transition-all cursor-pointer">
             <Filter size={14} className="text-slate-400" />
             <select 
                 value={filterType} 
@@ -260,7 +260,7 @@ export default function NotificationPage() {
                 <tr key={note.id} className="hover:bg-slate-50/80 transition-colors duration-150 group">
                   <td className="px-6 py-5 text-xs font-bold text-slate-400">#{note.id}</td>
                   <td className="px-6 py-5">
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-bold uppercase border ${
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-bold uppercase border cursor-default ${
                       note.type === 'All Users' ? 'bg-purple-50 text-purple-700 border-purple-100' : 'bg-blue-50 text-blue-700 border-blue-100'
                     }`}>
                       {note.type === 'All Users' ? <Users size={10} /> : <User size={10} />}
@@ -291,11 +291,11 @@ export default function NotificationPage() {
                     <div className="flex justify-end">
                       {confirmDeleteId === note.id ? (
                         <div className="flex items-center bg-rose-50 border border-rose-100 rounded-lg overflow-hidden animate-in fade-in slide-in-from-right-2">
-                           <button onClick={() => deleteLog(note.id)} className="px-3 py-1.5 text-[10px] font-bold text-rose-600 hover:bg-rose-100 border-r border-rose-100">Delete</button>
-                           <button onClick={() => setConfirmDeleteId(null)} className="px-3 py-1.5 text-[10px] font-bold text-slate-400 hover:bg-white">No</button>
+                           <button onClick={() => deleteLog(note.id)} className="px-3 py-1.5 text-[10px] font-bold text-rose-600 hover:bg-rose-100 border-r border-rose-100 cursor-pointer">Delete</button>
+                           <button onClick={() => setConfirmDeleteId(null)} className="px-3 py-1.5 text-[10px] font-bold text-slate-400 hover:bg-white cursor-pointer">No</button>
                         </div>
                       ) : (
-                        <button onClick={() => setConfirmDeleteId(note.id)} className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-all">
+                        <button onClick={() => setConfirmDeleteId(note.id)} className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-all cursor-pointer">
                           <Trash2 size={16} />
                         </button>
                       )}
@@ -313,9 +313,9 @@ export default function NotificationPage() {
             Showing <span className="text-slate-700">{filteredLogs.length}</span> entries
           </p>
           <div className="flex items-center gap-1.5">
-            <button className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-500 hover:bg-slate-100 transition-all shadow-sm"><ChevronLeft size={16} /></button>
-            <button className="w-9 h-9 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-lg shadow-blue-200">1</button>
-            <button className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-500 hover:bg-slate-100 transition-all shadow-sm"><ChevronRight size={16} /></button>
+            <button className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-500 hover:bg-slate-100 transition-all shadow-sm cursor-pointer"><ChevronLeft size={16} /></button>
+            <button className="w-9 h-9 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-lg shadow-blue-200 cursor-pointer">1</button>
+            <button className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-500 hover:bg-slate-100 transition-all shadow-sm cursor-pointer"><ChevronRight size={16} /></button>
           </div>
         </div>
       </div>

@@ -268,8 +268,8 @@ export default function ProductListPage() {
               {isBulkDelete ? `Selected ${selectedIds.length} products` : "This product"} will be permanently deleted.
             </p>
             <div className="flex gap-3 mt-8">
-              <button onClick={() => { setIsDeleteModalOpen(false); setIsBulkDelete(false); }} className="flex-1 px-4 py-2 bg-slate-100 rounded-xl font-bold">Cancel</button>
-              <button onClick={handleDelete} className="flex-1 px-4 py-2 bg-rose-600 text-white rounded-xl font-bold">Delete</button>
+              <button onClick={() => { setIsDeleteModalOpen(false); setIsBulkDelete(false); }} className="flex-1 px-4 py-2 bg-slate-100 rounded-xl font-bold cursor-pointer">Cancel</button>
+              <button onClick={handleDelete} className="flex-1 px-4 py-2 bg-rose-600 text-white rounded-xl font-bold cursor-pointer">Delete</button>
             </div>
           </div>
         </div>
@@ -399,10 +399,10 @@ export default function ProductListPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={handleExportCSV} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors">
+          <button onClick={handleExportCSV} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors cursor-pointer">
             <FileDown size={15} /> Export
           </button>
-          <button onClick={handleOpenAdd} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">
+          <button onClick={handleOpenAdd} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm cursor-pointer">
             <Plus size={15} /> Add Product
           </button>
         </div>
@@ -437,7 +437,7 @@ export default function ProductListPage() {
               placeholder="Search by name or ID..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/10 outline-none"
+              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/10 outline-none cursor-pointer"
             />
           </div>
           <select 
@@ -506,8 +506,8 @@ export default function ProductListPage() {
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex bg-slate-100 p-0.5 rounded-lg w-[120px] border">
-                      <button onClick={() => toggleStatus(prod.id, "Enable")} className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all ${prod.status === "Enable" ? "bg-green-500 text-white shadow-sm" : "text-slate-400"}`}>Enable</button>
-                      <button onClick={() => toggleStatus(prod.id, "Disable")} className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all ${prod.status === "Disable" ? "bg-rose-500 text-white shadow-sm" : "text-slate-400"}`}>Disable</button>
+                      <button onClick={() => toggleStatus(prod.id, "Enable")} className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${prod.status === "Enable" ? "bg-green-500 text-white shadow-sm" : "text-slate-400"}`}>Enable</button>
+                      <button onClick={() => toggleStatus(prod.id, "Disable")} className={`flex-1 py-1 rounded-md text-[10px] font-bold transition-all cursor-pointer ${prod.status === "Disable" ? "bg-rose-500 text-white shadow-sm" : "text-slate-400"}`}>Disable</button>
                     </div>
                   </td>
                   <td className="px-5 py-4">
@@ -516,8 +516,8 @@ export default function ProductListPage() {
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-1">
-                      <button onClick={() => handleOpenEdit(prod)} className="w-8 h-8 flex items-center justify-center text-amber-500 hover:bg-amber-50 rounded-lg"><Edit2 size={15} /></button>
-                      <button onClick={() => { setProductToDelete(prod.id); setIsBulkDelete(false); setIsDeleteModalOpen(true); }} className="w-8 h-8 flex items-center justify-center text-rose-500 hover:bg-rose-50 rounded-lg"><Trash2 size={15} /></button>
+                      <button onClick={() => handleOpenEdit(prod)} className="w-8 h-8 flex items-center justify-center text-amber-500 hover:bg-amber-50 rounded-lg cursor-pointer"><Edit2 size={15} /></button>
+                      <button onClick={() => { setProductToDelete(prod.id); setIsBulkDelete(false); setIsDeleteModalOpen(true); }} className="w-8 h-8 flex items-center justify-center text-rose-500 hover:bg-rose-50 rounded-lg cursor-pointer"><Trash2 size={15} /></button>
                     </div>
                   </td>
                 </tr>

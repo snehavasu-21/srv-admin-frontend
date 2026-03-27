@@ -16,7 +16,9 @@ interface Gift {
   id: string;
   type: string;
   name: string;
+  mrp: string; // Added MRP
   points: string;
+  description: string; // Added Description
   status: "Enable" | "Disable";
   image?: string;
 }
@@ -62,9 +64,9 @@ function StatCard({ icon: Icon, label, value, iconBg, iconColor, borderAccent }:
 export default function GiftStorePage() {
   // 1. STATE
   const [gifts, setGifts] = useState<Gift[]>([
-    { id: "17", type: "Electrician", name: "Electrician Bag", points: "500", status: "Enable" },
-    { id: "16", type: "Electrician", name: "Drill Machine", points: "1200", status: "Enable" },
-    { id: "15", type: "Dealer", name: "Digital Multimeter", points: "3500", status: "Enable" },
+    { id: "17", type: "Electrician", name: "Electrician Bag", mrp: "1200", points: "500", description: "Tool kit bag", status: "Enable" },
+    { id: "16", type: "Electrician", name: "Drill Machine", mrp: "3500", points: "1200", description: "Power drill", status: "Enable" },
+    { id: "15", type: "Dealer", name: "Digital Multimeter", mrp: "2000", points: "3500", description: "Testing tool", status: "Enable" },
   ]);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -79,8 +81,10 @@ export default function GiftStorePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: "",
+    mrp: "",
     type: "Electrician",
     points: "",
+    description: "",
     status: "Enable" as "Enable" | "Disable",
     image: ""
   });
@@ -148,13 +152,13 @@ export default function GiftStorePage() {
 
   const handleOpenAdd = () => {
     setEditingId(null);
-    setFormData({ name: "", type: "Electrician", points: "", status: "Enable", image: "" });
+    setFormData({ name: "", mrp: "", type: "Electrician", points: "", description: "", status: "Enable", image: "" });
     setIsPanelOpen(true);
   };
 
   const handleOpenEdit = (gift: Gift) => {
     setEditingId(gift.id);
-    setFormData({ name: gift.name, type: gift.type, points: gift.points, status: gift.status, image: gift.image || "" });
+    setFormData({ name: gift.name, mrp: gift.mrp, type: gift.type, points: gift.points, description: gift.description, status: gift.status, image: gift.image || "" });
     setIsPanelOpen(true);
   };
 
@@ -194,79 +198,70 @@ export default function GiftStorePage() {
         </div>
       )}
 
-      {/* ── CENTERED MODAL PANEL ── */}
+      {/* ── MODAL PANEL (FIXED CONTENT) ── */}
       {isPanelOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm cursor-pointer" onClick={() => setIsPanelOpen(false)}></div>
           
-          <div className="relative w-full max-w-lg bg-white shadow-2xl rounded-3xl overflow-hidden animate-in zoom-in-95 duration-300">
+          <div className="relative w-full max-w-xl bg-white shadow-2xl rounded-3xl overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="h-full flex flex-col">
-              <div className="px-6 py-6 border-b flex justify-between items-center bg-slate-50">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-800">{editingId ? 'Edit Item' : 'Add New Gift'}</h3>
-                  <p className="text-xs text-slate-500 mt-1">Set points and inventory details</p>
-                </div>
+              <div className="px-6 py-5 border-b flex justify-between items-center bg-slate-50">
+                <h3 className="text-xl font-bold text-slate-800">{editingId ? 'Edit Redeem Product' : 'Add Redeem Product'}</h3>
                 <button onClick={() => setIsPanelOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors cursor-pointer"><X size={20}/></button>
               </div>
               
-              <form onSubmit={handleSave} className="overflow-y-auto p-8 space-y-6 max-h-[70vh]">
-                <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer group" onClick={() => fileInputRef.current?.click()}>
-                  {formData.image ? (
-                    <img src={formData.image} alt="Preview" className="w-24 h-24 object-cover rounded-xl shadow-md" />
-                  ) : (
-                    <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center text-slate-400 shadow-sm group-hover:scale-110 transition-transform">
-                      <Upload size={24} />
-                    </div>
-                  )}
-                  <p className="mt-3 text-xs font-bold text-slate-500 uppercase tracking-widest">
-                    {formData.image ? "Change Product Image" : "Upload Product Image"}
-                  </p>
-                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
+              <form onSubmit={handleSave} className="overflow-y-auto p-8 space-y-5 max-h-[75vh]">
+                
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-bold text-slate-600">Name :-</label>
+                  <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none" placeholder="Product Name" />
                 </div>
 
-                <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Gift Name</label>
-                  <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full mt-2 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none" placeholder="e.g. Smart Watch" />
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-bold text-slate-600">MRP :-</label>
+                  <input type="number" required value={formData.mrp} onChange={e => setFormData({...formData, mrp: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none" placeholder="0.00" />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Points Required</label>
-                    <input type="number" required value={formData.points} onChange={e => setFormData({...formData, points: e.target.value})} className="w-full mt-2 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none" placeholder="1000" />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Category</label>
-                    <select value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})} className="w-full mt-2 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none cursor-pointer">
-                      <option value="Electrician">Electrician</option>
-                      <option value="Dealer">Dealer</option>
-                    </select>
-                  </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-bold text-slate-600">User Type :-</label>
+                  <select value={formData.type} onChange={e => setFormData({...formData, type: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none cursor-pointer">
+                    <option value="Electrician">Electrician</option>
+                    <option value="Dealer">Dealer</option>
+                  </select>
                 </div>
 
-                <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Visibility</label>
-                  <div className="flex gap-3 mt-2">
-                    {(["Enable", "Disable"] as const).map((s) => (
-                      <button key={s} type="button" onClick={() => setFormData({...formData, status: s})} className={`flex-1 py-3 rounded-xl text-xs font-bold border transition-all cursor-pointer ${formData.status === s ? 'bg-blue-600 border-blue-600 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-500'}`}>
-                        {s}
-                      </button>
-                    ))}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-bold text-slate-600">Select Image :-</label>
+                  <div className="flex items-center gap-4 p-3 border border-slate-200 rounded-xl bg-slate-50">
+                    <button type="button" onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 bg-white border border-slate-300 rounded text-[11px] font-bold shadow-sm hover:bg-slate-100 transition-all">Choose File</button>
+                    <span className="text-xs text-slate-400">{formData.image ? "File selected" : "No file chosen"}</span>
+                    {formData.image && <img src={formData.image} alt="prev" className="w-10 h-10 rounded object-cover ml-auto" />}
+                    <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
                   </div>
+                  <p className="text-[10px] text-red-500 font-bold">(Recommended resolution: 300x300, 400x400 or Square Image)</p>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-bold text-slate-600">Points :-</label>
+                  <input type="number" required value={formData.points} onChange={e => setFormData({...formData, points: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none" placeholder="Points" />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-bold text-slate-600">Description :-</label>
+                  <textarea rows={3} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none resize-none" placeholder="Product details..." />
                 </div>
               </form>
 
-              <div className="p-8 border-t bg-slate-50 flex gap-4">
-                <button type="button" onClick={() => setIsPanelOpen(false)} className="flex-1 py-3.5 text-slate-600 font-bold text-sm cursor-pointer hover:bg-slate-200 rounded-xl transition-all">Cancel</button>
-                <button onClick={handleSave} className="flex-[2] py-3.5 bg-blue-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all active:scale-95 cursor-pointer">
-                  <Save size={18}/> {editingId ? 'Update Gift' : 'Save Item'}
-                </button>
+              <div className="p-8 border-t bg-slate-50 flex justify-center gap-4">
+                <button onClick={handleSave} className="px-12 py-3 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 shadow-lg cursor-pointer transition-all active:scale-95">Save</button>
+                <button type="button" onClick={() => setIsPanelOpen(false)} className="px-12 py-3 bg-rose-500 text-white rounded-xl font-bold text-sm hover:bg-rose-600 shadow-lg cursor-pointer transition-all">Cancel</button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── HEADER ── */}
+      {/* ── HEADER (PEHLE JAISA) ── */}
       <div className="flex flex-wrap items-end justify-between gap-4 mb-2">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center shadow-inner">
@@ -283,15 +278,15 @@ export default function GiftStorePage() {
         </button>
       </div>
 
-      {/* ── STATS ── */}
+      {/* ── STATS (PEHLE JAISA) ── */}
       <SectionLabel>Inventory Overview</SectionLabel>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <StatCard icon={GiftIcon} label="Total Gifts" value={gifts.length} iconBg="bg-amber-50" iconColor="text-amber-600" borderAccent="border-t-amber-500" />
         <StatCard icon={CheckCircle2} label="Active Gifts" value={enabledCount} iconBg="bg-emerald-50" iconColor="text-emerald-600" borderAccent="border-t-emerald-500" />
-        <StatCard icon={Award} label="Highest Points" value={Math.max(...gifts.map(g => parseInt(g.points) || 0)).toLocaleString()} iconBg="bg-purple-50" iconColor="text-purple-600" borderAccent="border-t-purple-500" />
+        <StatCard icon={Award} label="Highest Points" value={gifts.length > 0 ? Math.max(...gifts.map(g => parseInt(g.points) || 0)).toLocaleString() : 0} iconBg="bg-purple-50" iconColor="text-purple-600" borderAccent="border-t-purple-500" />
       </div>
 
-      {/* ── SEARCH + FILTER ── */}
+      {/* ── SEARCH + FILTER (PEHLE JAISA) ── */}
       <SectionLabel>All Store Items</SectionLabel>
       <div className="bg-white rounded-2xl border border-slate-200 p-4 mb-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
         <div className="relative w-full sm:w-80">
@@ -301,7 +296,7 @@ export default function GiftStorePage() {
             placeholder="Search gifts..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm"
           />
         </div>
         
@@ -328,47 +323,24 @@ export default function GiftStorePage() {
             </button>
             {actionOpen && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl border border-slate-100 shadow-2xl z-50 overflow-hidden py-2 animate-in fade-in zoom-in-95">
-                <button 
-                  onClick={handleBulkEnable}
-                  disabled={selectedIds.length === 0}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50 cursor-pointer"
-                >
-                  <CheckCircle2 size={14} className="text-emerald-500" /> Enable Selected
-                </button>
-                <button 
-                   onClick={handleBulkDisable}
-                   disabled={selectedIds.length === 0}
-                   className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50 cursor-pointer"
-                >
-                  <XCircle size={14} className="text-amber-500" /> Disable Selected
-                </button>
+                <button onClick={handleBulkEnable} className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer transition-colors"><CheckCircle2 size={14} className="text-emerald-500" /> Enable Selected</button>
+                <button onClick={handleBulkDisable} className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 cursor-pointer transition-colors"><XCircle size={14} className="text-amber-500" /> Disable Selected</button>
                 <div className="h-px bg-slate-100 mx-2 my-2" />
-                <button 
-                   onClick={handleBulkDelete}
-                   disabled={selectedIds.length === 0}
-                   className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-rose-500 hover:bg-rose-50 transition-colors disabled:opacity-50 cursor-pointer"
-                >
-                  <Trash2 size={14} /> Delete Selected
-                </button>
+                <button onClick={handleBulkDelete} className="w-full flex items-center gap-3 px-4 py-2 text-xs font-bold text-rose-500 hover:bg-rose-50 cursor-pointer transition-colors"><Trash2 size={14} /> Delete Selected</button>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* ── TABLE ── */}
+      {/* ── TABLE (PEHLE JAISA) ── */}
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50">
                 <th className="px-6 py-4 w-12 text-center">
-                  <input 
-                    type="checkbox" 
-                    checked={filtered.length > 0 && selectedIds.length === filtered.length}
-                    onChange={handleSelectAll}
-                    className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" 
-                  />
+                  <input type="checkbox" checked={filtered.length > 0 && selectedIds.length === filtered.length} onChange={handleSelectAll} className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" />
                 </th>
                 {["ID", "Gift Detail", "Category", "Status", "Actions"].map((h) => (
                   <th key={h} className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-400 whitespace-nowrap">
@@ -381,67 +353,35 @@ export default function GiftStorePage() {
               {filtered.map((gift) => (
                 <tr key={gift.id} className={`hover:bg-slate-50/80 transition-colors duration-150 group cursor-pointer ${selectedIds.includes(gift.id) ? 'bg-blue-50/30' : ''}`}>
                   <td className="px-6 py-5 text-center">
-                    <input 
-                      type="checkbox" 
-                      checked={selectedIds.includes(gift.id)}
-                      onChange={() => handleSelectOne(gift.id)}
-                      className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" 
-                    />
+                    <input type="checkbox" checked={selectedIds.includes(gift.id)} onChange={() => handleSelectOne(gift.id)} className="w-4 h-4 rounded border-slate-300 accent-blue-600 cursor-pointer" />
                   </td>
                   <td className="px-6 py-5 text-xs font-bold text-slate-400">#{gift.id}</td>
                   <td className="px-6 py-5">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center flex-shrink-0 group-hover:bg-amber-100 transition-all overflow-hidden">
-                        {gift.image ? (
-                          <img src={gift.image} alt={gift.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <ImageIcon size={20} className="text-amber-400" />
-                        )}
+                      <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center flex-shrink-0">
+                        {gift.image ? <img src={gift.image} alt={gift.name} className="w-full h-full object-cover" /> : <ImageIcon size={20} className="text-amber-400" />}
                       </div>
                       <div>
                         <p className="text-sm font-bold text-slate-800 whitespace-nowrap">{gift.name}</p>
                         <span className="inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-0.5 bg-amber-100/50 text-amber-700 border border-amber-200 rounded-lg text-[10px] font-bold uppercase">
-                          <Award size={12} />
-                          {parseInt(gift.points).toLocaleString()} pts
+                          <Award size={12} /> {gift.points} pts
                         </span>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-5">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-3 py-1 rounded-lg">
-                      {gift.type}
-                    </span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-3 py-1 rounded-lg">{gift.type}</span>
                   </td>
                   <td className="px-6 py-5">
-                    <button 
-                      onClick={() => toggleStatus(gift.id)}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-bold uppercase border transition-all cursor-pointer ${
-                        gift.status === "Enable"
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100"
-                          : "bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200"
-                      }`}
-                    >
-                      <span className={`w-1.5 h-1.5 rounded-full ${gift.status === "Enable" ? "bg-emerald-500" : "bg-slate-400"}`} />
+                    <button onClick={() => toggleStatus(gift.id)} className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-bold uppercase border transition-all cursor-pointer ${gift.status === "Enable" ? "bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100" : "bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200"}`}>
                       {gift.status}
                     </button>
                   </td>
-                  <td className="px-6 py-5">
+                  <td className="px-6 py-5 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      {confirmDeleteId === gift.id ? (
-                        <div className="flex items-center bg-rose-50 border border-rose-100 rounded-lg overflow-hidden animate-in slide-in-from-right-2">
-                           <button onClick={() => deleteGift(gift.id)} className="px-3 py-1.5 text-[10px] font-bold text-rose-600 hover:bg-rose-100 border-r border-rose-100 cursor-pointer">Delete</button>
-                           <button onClick={() => setConfirmDeleteId(null)} className="px-3 py-1.5 text-[10px] font-bold text-slate-400 hover:bg-white cursor-pointer">No</button>
-                        </div>
-                      ) : (
-                        <>
-                          <button onClick={() => handleOpenEdit(gift)} className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-all cursor-pointer" title="Edit">
-                            <Edit2 size={16} />
-                          </button>
-                          <button onClick={() => setConfirmDeleteId(gift.id)} className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-all cursor-pointer" title="Delete">
-                            <Trash2 size={16} />
-                          </button>
-                        </>
-                      )}
+                      <button onClick={() => handleOpenEdit(gift)} className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:bg-blue-50 hover:text-blue-600 transition-all cursor-pointer"><Edit2 size={16} /></button>
+                      <button onClick={() => setConfirmDeleteId(gift.id)} className="w-9 h-9 flex items-center justify-center rounded-xl text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-all cursor-pointer"><Trash2 size={16} /></button>
+                      {confirmDeleteId === gift.id && <button onClick={() => deleteGift(gift.id)} className="text-rose-600 text-[10px] font-bold underline ml-2">Confirm?</button>}
                     </div>
                   </td>
                 </tr>

@@ -10,7 +10,7 @@ import {
 
 // ─── Types & Interfaces ──────────────────────────────────────────────────────
 
-type UserType = "Retailer" | "Distributor" | "Wholesaler";
+type UserType = "Electrician" | "Dealer"; // Restricted types
 
 interface PendingUser {
   id: string;
@@ -35,9 +35,8 @@ const SectionLabel = ({ children }: { children: React.ReactNode }) => (
 
 const TypeBadge = ({ type }: { type: UserType }) => {
   const styles: Record<UserType, string> = {
-    Retailer: "bg-blue-50 text-blue-700 border-blue-200",
-    Distributor: "bg-purple-50 text-purple-700 border-purple-200",
-    Wholesaler: "bg-teal-50 text-teal-700 border-teal-200",
+    Electrician: "bg-blue-50 text-blue-700 border-blue-200",
+    Dealer: "bg-purple-50 text-purple-700 border-purple-200",
   };
   return (
     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold border ${styles[type]}`}>
@@ -53,7 +52,7 @@ export default function PendingKYCPage() {
   const [users, setUsers] = useState<PendingUser[]>([
     {
       id: "3401",
-      type: "Retailer",
+      type: "Electrician",
       name: "Harpreet Singh",
       phone: "9876543210",
       address: "Ludhiana, Punjab",
@@ -65,7 +64,7 @@ export default function PendingKYCPage() {
     },
     {
       id: "3398",
-      type: "Distributor",
+      type: "Dealer",
       name: "Rajesh Kumar",
       phone: "8765432109",
       address: "Amritsar, Punjab",
@@ -83,7 +82,6 @@ export default function PendingKYCPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
 
-  // States for Modals
   const [selectedImage, setSelectedImage] = useState<{url: string, title: string} | null>(null);
   const [selectedUser, setSelectedUser] = useState<PendingUser | null>(null);
   const [userToReject, setUserToReject] = useState<PendingUser | null>(null);
@@ -104,7 +102,6 @@ export default function PendingKYCPage() {
 
   const saveEdit = () => {
     if (editingUser) {
-      // Basic validation check before saving
       if (editingUser.phone.length !== 10) {
         alert("Phone number must be exactly 10 digits");
         return;
@@ -179,7 +176,6 @@ export default function PendingKYCPage() {
                     type="text" 
                     value={editingUser.name} 
                     onChange={e => {
-                      // Logic: Allow only alphabets and spaces
                       const val = e.target.value.replace(/[^a-zA-Z\s]/g, "");
                       setEditingUser({...editingUser, name: val})
                     }} 
@@ -192,7 +188,6 @@ export default function PendingKYCPage() {
                     type="text" 
                     value={editingUser.phone} 
                     onChange={e => {
-                      // Logic: Allow only numbers and max 10 digits
                       const val = e.target.value.replace(/[^\d]/g, "").slice(0, 10);
                       setEditingUser({...editingUser, phone: val})
                     }} 
@@ -320,9 +315,8 @@ export default function PendingKYCPage() {
               </div>
               <select value={typeFilter} onChange={(e) => {setTypeFilter(e.target.value); setIsFilterOpen(false);}} className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs outline-none">
                 <option value="All">All Types</option>
-                <option value="Retailer">Retailer</option>
-                <option value="Distributor">Distributor</option>
-                <option value="Wholesaler">Wholesaler</option>
+                <option value="Electrician">Electrician</option>
+                <option value="Dealer">Dealer</option>
               </select>
             </div>
           )}
