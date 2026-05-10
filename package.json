@@ -2,7 +2,7 @@
   "name": "srv-admin-frontend-runner",
   "private": true,
   "scripts": {
-    "dev": "node scripts/dev.js",
+    "dev": "npm --prefix srv-admin-frontend run dev",
     "build": "npm --prefix srv-admin-frontend run build",
     "start": "npm --prefix srv-admin-frontend run start",
     "lint": "npm --prefix srv-admin-frontend run lint"
